@@ -13,3 +13,34 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# macOS junk
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Redis dump
+dump.rdb
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
