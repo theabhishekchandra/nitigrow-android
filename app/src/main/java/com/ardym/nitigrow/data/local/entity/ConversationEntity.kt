@@ -1,0 +1,28 @@
+package com.ardym.nitigrow.data.local.entity
+
+import androidx.room.Entity
+import androidx.room.Index
+import androidx.room.PrimaryKey
+
+@Entity(
+    tableName = "conversations",
+    indices = [
+        Index("lastMessageAtEpochMs"),
+        Index("isPinned"),
+        Index("contactName")
+    ]
+)
+data class ConversationEntity(
+    @PrimaryKey val id: String,
+    val contactId: String,
+    val contactName: String,
+    val contactPhone: String,
+    val avatarUrl: String?,
+    val lastMessage: String,
+    val lastMessageAtEpochMs: Long,
+    val lastMessageStatus: String,
+    val lastMessageOutbound: Boolean,
+    val unreadCount: Int,
+    val isPinned: Boolean,
+    val isMuted: Boolean
+)
