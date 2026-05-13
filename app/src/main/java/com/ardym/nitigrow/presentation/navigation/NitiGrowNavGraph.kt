@@ -11,17 +11,27 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.ardym.nitigrow.presentation.feature.analytics.AnalyticsScreen
+import com.ardym.nitigrow.presentation.feature.auth.forgot.ForgotPasswordScreen
 import com.ardym.nitigrow.presentation.feature.auth.login.LoginScreen
 import com.ardym.nitigrow.presentation.feature.auth.otp.OtpScreen
 import com.ardym.nitigrow.presentation.feature.billing.BillingScreen
 import com.ardym.nitigrow.presentation.feature.campaigns.create.CreateCampaignScreen
 import com.ardym.nitigrow.presentation.feature.campaigns.detail.CampaignDetailScreen
+import com.ardym.nitigrow.presentation.feature.conflicts.ConflictsScreen
 import com.ardym.nitigrow.presentation.feature.inbox.chat.ChatScreen
 import com.ardym.nitigrow.presentation.feature.leads.LeadsScreen
+import com.ardym.nitigrow.presentation.feature.leads.kanban.LeadsKanbanScreen
 import com.ardym.nitigrow.presentation.feature.onboarding.OnboardingScreen
+import com.ardym.nitigrow.presentation.feature.payments.PaymentLinkScreen
+import com.ardym.nitigrow.presentation.feature.settings.autoreply.AutoReplyScreen
+import com.ardym.nitigrow.presentation.feature.settings.business.BusinessProfileScreen
 import com.ardym.nitigrow.presentation.feature.settings.profile.ProfileEditScreen
 import com.ardym.nitigrow.presentation.feature.settings.team.TeamScreen
+import com.ardym.nitigrow.presentation.feature.settings.waba.WabaNumberScreen
 import com.ardym.nitigrow.presentation.feature.splash.SplashScreen
+import com.ardym.nitigrow.presentation.feature.templates.CreateTemplateScreen
+import com.ardym.nitigrow.presentation.feature.templates.TemplatesScreen
 
 @Composable
 fun NitiGrowNavGraph(
@@ -67,7 +77,13 @@ fun NitiGrowNavGraph(
             ChatScreen(onBack = { navController.popBackStack() })
         }
         composable(NavRoutes.LEADS) {
-            LeadsScreen()
+            LeadsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(NavRoutes.LEADS_KANBAN) {
+            LeadsKanbanScreen(
+                onLeadClick = { _ -> /* TODO: lead detail route when wired */ },
+                onBack = { navController.popBackStack() }
+            )
         }
         composable(NavRoutes.CAMPAIGN_CREATE) {
             CreateCampaignScreen(
@@ -90,13 +106,45 @@ fun NitiGrowNavGraph(
         composable(NavRoutes.TEAM) {
             TeamScreen(onBack = { navController.popBackStack() })
         }
+
+        // ── Phase-3 round-out screens ──────────────────────────────────────────
+        composable(NavRoutes.TEMPLATES) {
+            TemplatesScreen(
+                onCreate = { navController.navigate(NavRoutes.TEMPLATE_CREATE) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(NavRoutes.TEMPLATE_CREATE) {
+            CreateTemplateScreen(onBack = { navController.popBackStack() })
+        }
+        composable(NavRoutes.ANALYTICS) {
+            AnalyticsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(NavRoutes.PAYMENT_LINK) {
+            PaymentLinkScreen(onBack = { navController.popBackStack() })
+        }
+        composable(NavRoutes.SETTINGS_BUSINESS) {
+            BusinessProfileScreen(onBack = { navController.popBackStack() })
+        }
+        composable(NavRoutes.SETTINGS_WABA) {
+            WabaNumberScreen(onBack = { navController.popBackStack() })
+        }
+        composable(NavRoutes.SETTINGS_AUTOREPLY) {
+            AutoReplyScreen(onBack = { navController.popBackStack() })
+        }
+        composable(NavRoutes.CONFLICTS) {
+            ConflictsScreen(onBack = { navController.popBackStack() })
+        }
     }
 }
 
 private fun NavGraphBuilder.authGraph(nav: NavHostController) {
     navigation(startDestination = NavRoutes.LOGIN, route = NavRoutes.GRAPH_AUTH) {
         composable(NavRoutes.LOGIN) {
-            LoginScreen(onOtpRequested = { phone -> nav.navigate(NavRoutes.otp(phone)) })
+            LoginScreen(
+                onOtpRequested = { phone -> nav.navigate(NavRoutes.otp(phone)) },
+                onForgotPassword = { nav.navigate(NavRoutes.FORGOT_PASSWORD) }
+            )
         }
         composable(
             route = NavRoutes.OTP,
@@ -107,6 +155,16 @@ private fun NavGraphBuilder.authGraph(nav: NavHostController) {
                     popUpTo(NavRoutes.GRAPH_AUTH) { inclusive = true }
                 }
             })
+        }
+        composable(NavRoutes.FORGOT_PASSWORD) {
+            ForgotPasswordScreen(
+                onBack = { nav.popBackStack() },
+                onComplete = {
+                    nav.navigate(NavRoutes.LOGIN) {
+                        popUpTo(NavRoutes.LOGIN) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

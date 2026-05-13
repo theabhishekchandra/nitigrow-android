@@ -11,6 +11,7 @@ import com.ardym.nitigrow.domain.repository.PushTokenRepository
 import com.ardym.nitigrow.domain.usecase.auth.LogoutUseCase
 import com.ardym.nitigrow.domain.usecase.profile.ObserveProfileUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
+import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +49,13 @@ class SettingsHubViewModel @Inject constructor(
     private val pushRepo: PushTokenRepository
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(SettingsHubUiState())
+    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+    private val _state = MutableStateFlow(
+        SettingsHubUiState(
+            profile = DummyData.profile(),
+            tenant  = DummyData.tenant()
+        )
+    )
     val state: StateFlow<SettingsHubUiState> = _state.asStateFlow()
 
     private val _effects = Channel<SettingsHubEffect>(Channel.BUFFERED)
@@ -56,10 +63,12 @@ class SettingsHubViewModel @Inject constructor(
 
     init {
         observeProfile()
-            .onEach { p -> _state.update { it.copy(profile = p) } }
+            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+            .onEach { p -> if (p != null) _state.update { it.copy(profile = p) } }
             .launchIn(viewModelScope)
         repo.observeTenant()
-            .onEach { t -> _state.update { it.copy(tenant = t) } }
+            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+            .onEach { t -> if (t != null) _state.update { it.copy(tenant = t) } }
             .launchIn(viewModelScope)
         repo.observeNotificationPreferences()
             .onEach { n -> _state.update { it.copy(notificationPrefs = n) } }

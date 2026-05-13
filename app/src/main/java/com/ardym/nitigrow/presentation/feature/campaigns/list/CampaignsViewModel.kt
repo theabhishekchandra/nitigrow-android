@@ -6,6 +6,7 @@ import com.ardym.nitigrow.domain.model.Campaign
 import com.ardym.nitigrow.domain.repository.CampaignRepository
 import com.ardym.nitigrow.domain.usecase.campaigns.ObserveCampaignsUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
+import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,12 +29,15 @@ class CampaignsViewModel @Inject constructor(
     private val repo: CampaignRepository
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(CampaignsUiState())
+    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+    private val _state = MutableStateFlow(CampaignsUiState(items = DummyData.campaigns()))
     val state: StateFlow<CampaignsUiState> = _state.asStateFlow()
 
     init {
         observe()
-            .onEach { items -> _state.update { it.copy(items = items) } }
+            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+            // Guard keeps the seeded DummyData visible until the real Room flow has at least one row.
+            .onEach { items -> if (items.isNotEmpty()) _state.update { it.copy(items = items) } }
             .launchIn(viewModelScope)
         refresh()
     }

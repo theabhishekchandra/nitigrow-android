@@ -18,6 +18,7 @@ object NavRoutes {
     const val LOGIN = "login"
     const val OTP = "otp/{phone}"
     fun otp(phone: String) = "otp/$phone"
+    const val FORGOT_PASSWORD = "forgot"
 
     // main bottom-nav
     const val DASHBOARD = "dashboard"
@@ -31,6 +32,7 @@ object NavRoutes {
     fun chat(conversationId: String) = "chat/$conversationId"
 
     const val LEADS = "leads"
+    const val LEADS_KANBAN = "leads/kanban"
 
     const val CAMPAIGN_CREATE = "campaign/new"
     const val CAMPAIGN_DETAIL = "campaign/{campaignId}"
@@ -39,4 +41,14 @@ object NavRoutes {
     const val BILLING = "billing"
     const val PROFILE_EDIT = "profile/edit"
     const val TEAM = "team"
+
+    // Phase-3 round-out screens
+    const val TEMPLATES = "templates"
+    const val TEMPLATE_CREATE = "templates/new"
+    const val ANALYTICS = "analytics"
+    const val PAYMENT_LINK = "payments/link"
+    const val SETTINGS_BUSINESS = "settings/business"
+    const val SETTINGS_WABA = "settings/waba"
+    const val SETTINGS_AUTOREPLY = "settings/autoreply"
+    const val CONFLICTS = "conflicts"
 }

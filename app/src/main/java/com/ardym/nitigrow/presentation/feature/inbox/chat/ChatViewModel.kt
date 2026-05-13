@@ -13,6 +13,7 @@ import com.ardym.nitigrow.domain.usecase.chat.PagedMessagesUseCase
 import com.ardym.nitigrow.domain.usecase.chat.RetryMessageUseCase
 import com.ardym.nitigrow.domain.usecase.chat.SendMessageUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
+import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -50,8 +52,18 @@ class ChatViewModel @Inject constructor(
     private val _effects = Channel<ChatEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
+    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+    // Replace with `pagedMessages(conversationId).cachedIn(viewModelScope)` once the chat API/Room
+    // pipeline is live. Single-shot PagingData.from(...) means no real paging — fine for dev preview.
+    // c-007 (Kavya Reddy) surfaces the rich-media sampler so every bubble subtype is reachable
+    // from the inbox during design review.
     val messages: Flow<PagingData<Message>> =
-        pagedMessages(conversationId).cachedIn(viewModelScope)
+        flowOf(
+            PagingData.from(
+                if (conversationId == "c-007") DummyChatRichData.all()
+                else DummyData.messages(conversationId)
+            )
+        ).cachedIn(viewModelScope)
 
     private val typingDraft = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
 

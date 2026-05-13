@@ -1,46 +1,23 @@
 *.iml
 .gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+local.properties
+.kotlin
 .DS_Store
+
+# Build outputs
 /build
+/app/build
 /captures
 .externalNativeBuild
 .cxx
-local.properties
 
-# macOS junk
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-Icon?
-ehthumbs.db
-Thumbs.db
+# Android Studio / IntelliJ personal config
+/.idea/
 
-# Dependencies
-node_modules/
-
-# Build output
-dist/
-build/
-
-# Environment
-.env
-.env.local
-.env.*.local
-
-# Redis dump
-dump.rdb
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-
+# Secrets — backend-only credentials must never be committed
+google-services.json
+**/google-services.json
+*.keystore
+*.jks
+key.properties
+keystore.properties

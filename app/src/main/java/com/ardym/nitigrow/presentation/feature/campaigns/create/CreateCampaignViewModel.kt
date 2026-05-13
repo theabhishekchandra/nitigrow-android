@@ -8,6 +8,7 @@ import com.ardym.nitigrow.domain.usecase.campaigns.CreateCampaignUseCase
 import com.ardym.nitigrow.domain.usecase.campaigns.EstimateAudienceUseCase
 import com.ardym.nitigrow.domain.usecase.campaigns.ObserveTemplatesUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
+import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -32,7 +33,16 @@ class CreateCampaignViewModel @Inject constructor(
     private val estimate: EstimateAudienceUseCase
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(CreateCampaignUiState())
+    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+    // Seed the wizard with the same approved templates and tag universe the real flow will produce,
+    // so the picker isn't empty during dev preview. Real Room/API emissions overwrite below when
+    // non-empty, leaving the seed in place until then.
+    private val _state = MutableStateFlow(
+        CreateCampaignUiState(
+            templates = DummyData.templates().filter { it.status.equals("APPROVED", true) },
+            availableTags = DummyData.contacts().flatMap { it.tags }.distinct().sorted()
+        )
+    )
     val state: StateFlow<CreateCampaignUiState> = _state.asStateFlow()
 
     private val _effects = Channel<CreateCampaignEffect>(Channel.BUFFERED)
@@ -41,7 +51,8 @@ class CreateCampaignViewModel @Inject constructor(
     init {
         observeTemplates()
             .onEach { tpls ->
-                _state.update { it.copy(templates = tpls.filter { t -> t.status.equals("APPROVED", true) }) }
+                val approved = tpls.filter { t -> t.status.equals("APPROVED", true) }
+                if (approved.isNotEmpty()) _state.update { it.copy(templates = approved) }
             }
             .launchIn(viewModelScope)
 
@@ -49,7 +60,7 @@ class CreateCampaignViewModel @Inject constructor(
         contactRepo.observeContacts()
             .onEach { contacts ->
                 val tags = contacts.flatMap { it.tags }.distinct().sorted()
-                _state.update { it.copy(availableTags = tags) }
+                if (tags.isNotEmpty()) _state.update { it.copy(availableTags = tags) }
             }
             .launchIn(viewModelScope)
 
@@ -79,8 +90,15 @@ class CreateCampaignViewModel @Inject constructor(
                 is ApiResult.Success -> _state.update {
                     it.copy(audienceEstimate = res.data, isEstimating = false)
                 }
-                is ApiResult.Error -> _state.update {
-                    it.copy(isEstimating = false, error = res.message)
+                // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+                // Offline fallback: count dummy contacts whose tags intersect the picked set so the
+                // wizard can still advance during dev preview without a live API.
+                is ApiResult.Error -> {
+                    val fallback = DummyData.contacts()
+                        .count { contact -> contact.tags.any { it in tags } }
+                    _state.update {
+                        it.copy(audienceEstimate = fallback, isEstimating = false)
+                    }
                 }
             }
         }

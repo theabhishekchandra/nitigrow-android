@@ -12,14 +12,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Payment
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Reply
+import androidx.compose.material.icons.filled.ViewKanban
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -61,6 +71,15 @@ fun SettingsHubScreen(
     onProfileEdit: () -> Unit,
     onTeam: () -> Unit,
     onBilling: () -> Unit,
+    onTemplates: () -> Unit = {},
+    onAnalytics: () -> Unit = {},
+    onPaymentLink: () -> Unit = {},
+    onBusinessProfile: () -> Unit = {},
+    onWabaNumber: () -> Unit = {},
+    onAutoReply: () -> Unit = {},
+    onLeadsKanban: () -> Unit = {},
+    onLeadsList: () -> Unit = {},
+    onConflicts: () -> Unit = {},
     onLogout: () -> Unit,
     viewModel: SettingsHubViewModel = hiltViewModel()
 ) {
@@ -102,6 +121,27 @@ fun SettingsHubScreen(
                 SectionHeader("Account")
                 Row1(Icons.Filled.Group, "Team members", "Invite admins and agents", onTeam)
                 Row1(Icons.Filled.CreditCard, "Billing", "Plans and payments", onBilling)
+                HorizontalDivider()
+            }
+            item {
+                SectionHeader("Marketing")
+                Row1(Icons.Filled.Description, "Templates", "Manage WhatsApp templates", onTemplates)
+                Row1(Icons.Filled.Analytics, "Analytics", "Delivery, read rate & team performance", onAnalytics)
+                Row1(Icons.Filled.Payment, "Send payment link", "Razorpay/UPI link via WhatsApp", onPaymentLink)
+                Row1(Icons.Filled.ViewKanban, "Leads — Kanban", "Swipe between Hot / Warm / Cold", onLeadsKanban)
+                Row1(Icons.AutoMirrored.Filled.List, "Leads — List", "Flat list across all stages", onLeadsList)
+                HorizontalDivider()
+            }
+            item {
+                SectionHeader("Business")
+                Row1(Icons.Filled.Business, "Business profile", "Name, address, GSTIN, logo", onBusinessProfile)
+                Row1(Icons.Filled.Phone, "WhatsApp number", "Display name, quality rating, limits", onWabaNumber)
+                Row1(Icons.Filled.Reply, "Auto-reply", "Welcome + out-of-hours messages", onAutoReply)
+                HorizontalDivider()
+            }
+            item {
+                SectionHeader("Sync")
+                Row1(Icons.Filled.CloudSync, "Sync conflicts", "Resolve offline-vs-server diffs", onConflicts)
                 HorizontalDivider()
             }
             item {

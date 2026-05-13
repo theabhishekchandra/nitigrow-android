@@ -7,6 +7,7 @@ import com.ardym.nitigrow.domain.usecase.leads.MoveLeadStageUseCase
 import com.ardym.nitigrow.domain.usecase.leads.ObserveLeadsUseCase
 import com.ardym.nitigrow.domain.usecase.leads.RefreshLeadsUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
+import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,12 +25,15 @@ class LeadsViewModel @Inject constructor(
     private val moveStage: MoveLeadStageUseCase
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(LeadsUiState())
+    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+    private val _state = MutableStateFlow(LeadsUiState(leads = DummyData.leads()))
     val state: StateFlow<LeadsUiState> = _state.asStateFlow()
 
     init {
         observe()
-            .onEach { leads -> _state.update { it.copy(leads = leads) } }
+            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+            // Guard keeps the seeded DummyData visible until the real Room flow has at least one row.
+            .onEach { leads -> if (leads.isNotEmpty()) _state.update { it.copy(leads = leads) } }
             .launchIn(viewModelScope)
         refresh()
     }

@@ -32,9 +32,11 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.ardym.nitigrow.core.util.TimeFormatter
 import com.ardym.nitigrow.domain.model.MessageStatus
+import com.ardym.nitigrow.domain.model.MessageType
 import com.ardym.nitigrow.presentation.feature.inbox.chat.components.DateSeparator
 import com.ardym.nitigrow.presentation.feature.inbox.chat.components.MessageBubble
 import com.ardym.nitigrow.presentation.feature.inbox.chat.components.MessageInput
+import com.ardym.nitigrow.presentation.feature.inbox.chat.components.RichMessageBubble
 import com.ardym.nitigrow.presentation.feature.inbox.chat.components.TypingIndicator
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -103,11 +105,14 @@ fun ChatScreen(
                     val msg = items[idx] ?: return@items
                     val prev = if (idx + 1 < items.itemCount) items[idx + 1] else null
 
-                    MessageBubble(
-                        message = msg,
-                        onRetry = if (msg.status == MessageStatus.FAILED)
-                            { { viewModel.onRetry(msg.id) } } else null
-                    )
+                    if (msg.type == MessageType.TEXT && msg.status == MessageStatus.FAILED) {
+                        MessageBubble(
+                            message = msg,
+                            onRetry = { viewModel.onRetry(msg.id) }
+                        )
+                    } else {
+                        RichMessageBubble(message = msg, isOutbound = msg.outbound)
+                    }
 
                     val msgDate = msg.sentAt.atZone(ZoneId.systemDefault()).toLocalDate()
                     val prevDate = prev?.sentAt?.atZone(ZoneId.systemDefault())?.toLocalDate()

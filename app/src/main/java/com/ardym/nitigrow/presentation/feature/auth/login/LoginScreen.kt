@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun LoginScreen(
     onOtpRequested: (String) -> Unit,
+    onForgotPassword: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -81,6 +83,11 @@ fun LoginScreen(
                 loading = state.isLoading,
                 enabled = state.isPhoneValid
             )
+            Spacer(Modifier.height(8.dp))
+            TextButton(
+                onClick = onForgotPassword,
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Forgot password?") }
         }
     }
 }

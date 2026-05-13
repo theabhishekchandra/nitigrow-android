@@ -1,4 +1,4 @@
-// Top-level build file
+// Top-level build file — registers plugins for sub-projects to consume.
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false

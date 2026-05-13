@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">Niti Grow</string>
+
+    <!-- Accessibility content descriptions — used by widgets and the new
+         screens added in phase-3 (Leads Kanban, Conflicts, a11y helpers).
+         Per phase-3-mobile.md Section 5.3 every interactive element must
+         carry a label for TalkBack. -->
+    <string name="cd_back">Back</string>
+    <string name="cd_more_actions">More actions</string>
+    <string name="cd_send_message">Send message</string>
+    <string name="cd_attach">Attach file</string>
+    <string name="cd_voice_record">Record voice note</string>
+    <string name="cd_emoji">Emoji picker</string>
+    <string name="cd_template">Pick template</string>
+    <string name="cd_quick_reply_segment_1">Quick broadcast to segment 1</string>
+    <string name="cd_quick_reply_segment_2">Quick broadcast to segment 2</string>
+    <string name="cd_quick_reply_segment_3">Quick broadcast to segment 3</string>
+    <string name="cd_festival_send">Send festival greeting</string>
+    <string name="widget_quick_broadcast_title">Quick broadcast</string>
+    <string name="widget_festival_send_title">Festival greetings</string>
+    <string name="widget_quick_broadcast_desc">Send a broadcast to a saved segment in one tap.</string>
+    <string name="widget_festival_send_desc">Send the next upcoming festival greeting in one tap.</string>
 </resources>

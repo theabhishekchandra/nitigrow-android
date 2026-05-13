@@ -6,6 +6,7 @@ import com.ardym.nitigrow.domain.model.TeamMember
 import com.ardym.nitigrow.domain.repository.ProfileRepository
 import com.ardym.nitigrow.domain.usecase.profile.InviteMemberUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
+import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +35,8 @@ class TeamViewModel @Inject constructor(
     private val invite: InviteMemberUseCase
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(TeamUiState())
+    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+    private val _state = MutableStateFlow(TeamUiState(members = DummyData.team()))
     val state: StateFlow<TeamUiState> = _state.asStateFlow()
 
     private val _effects = Channel<TeamEffect>(Channel.BUFFERED)
@@ -42,7 +44,8 @@ class TeamViewModel @Inject constructor(
 
     init {
         repo.observeTeam()
-            .onEach { items -> _state.update { it.copy(members = items) } }
+            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+            .onEach { items -> if (items.isNotEmpty()) _state.update { it.copy(members = items) } }
             .launchIn(viewModelScope)
         refresh()
     }

@@ -11,17 +11,24 @@ plugins {
 
 android {
     namespace = "com.ardym.nitigrow"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.ardym.nitigrow"
-        minSdk = 26
-        targetSdk = 35
+        minSdk = 26              // Android 8.0 — covers 95%+ of Indian devices
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+
+        // Firebase auto-init defaults — overridden per-build below.
+        // Off everywhere until a real google-services.json is in place.
+        manifestPlaceholders["firebaseCrashlyticsEnabled"] = "false"
+        manifestPlaceholders["firebasePerfEnabled"] = "false"
+        manifestPlaceholders["firebaseAnalyticsEnabled"] = "false"
+        manifestPlaceholders["firebaseMessagingAutoInit"] = "false"
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
@@ -31,7 +38,7 @@ android {
 
     signingConfigs {
         create("release") {
-            // Pulls from ~/.gradle/gradle.properties or CI env. Never commit keystore.
+            // Pulled from ~/.gradle/gradle.properties or CI env — keystore never lives in git.
             val storeFilePath = (findProperty("NITIGROW_STORE_FILE") as String?)
                 ?: System.getenv("NITIGROW_STORE_FILE")
             if (storeFilePath != null) {
@@ -53,7 +60,6 @@ android {
             versionNameSuffix = "-debug"
             buildConfigField("String", "BASE_URL", "\"https://staging.api.nitigrow.in/\"")
             buildConfigField("boolean", "ENABLE_LOGGING", "true")
-            // Crashlytics off in debug
             configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
                 mappingFileUploadEnabled = false
             }
@@ -106,7 +112,7 @@ android {
 }
 
 dependencies {
-    // Core
+    // Core AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -117,6 +123,7 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.profileinstaller)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
@@ -127,6 +134,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material3.window)
     implementation(libs.androidx.compose.material.icons)
+    implementation(libs.androidx.compose.ui.text.google.fonts)
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
@@ -146,6 +154,7 @@ dependencies {
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.room.paging)
     ksp(libs.room.compiler)
 
     // DataStore
@@ -159,7 +168,19 @@ dependencies {
     // Misc
     implementation(libs.coil.compose)
     implementation(libs.timber)
-    implementation(libs.androidx.profileinstaller)
+
+    // Paging
+    implementation(libs.paging.runtime)
+    implementation(libs.paging.compose)
+
+    // WorkManager + Hilt integration
+    implementation(libs.work.runtime)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
+
+    // Glance (home-screen widgets)
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -170,16 +191,6 @@ dependencies {
 
     // Razorpay
     implementation(libs.razorpay.checkout)
-
-    // Paging
-    implementation(libs.paging.runtime)
-    implementation(libs.paging.compose)
-    implementation(libs.room.paging)
-
-    // WorkManager + Hilt integration
-    implementation(libs.work.runtime)
-    implementation(libs.hilt.work)
-    ksp(libs.hilt.work.compiler)
 
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
@@ -192,7 +203,7 @@ dependencies {
     testImplementation(libs.truth)
     testImplementation(libs.kotlinx.coroutines.test)
 
-    // Instrumented
+    // Instrumented test
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

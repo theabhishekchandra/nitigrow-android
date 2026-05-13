@@ -12,6 +12,7 @@ import com.ardym.nitigrow.domain.usecase.billing.ReportPaymentFailureUseCase
 import com.ardym.nitigrow.domain.usecase.billing.StartCheckoutUseCase
 import com.ardym.nitigrow.domain.usecase.billing.VerifyPaymentUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
+import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +37,14 @@ class BillingViewModel @Inject constructor(
     private val razorpay: RazorpayBridge
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(BillingUiState())
+    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+    private val _state = MutableStateFlow(
+        BillingUiState(
+            plans        = DummyData.plans(),
+            subscription = DummyData.subscription(),
+            payments     = DummyData.payments()
+        )
+    )
     val state: StateFlow<BillingUiState> = _state.asStateFlow()
 
     private val _effects = Channel<BillingEffect>(Channel.BUFFERED)
@@ -44,13 +52,16 @@ class BillingViewModel @Inject constructor(
 
     init {
         observePlans()
-            .onEach { plans -> _state.update { it.copy(plans = plans) } }
+            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+            .onEach { plans -> if (plans.isNotEmpty()) _state.update { it.copy(plans = plans) } }
             .launchIn(viewModelScope)
         observeSubscription()
-            .onEach { sub -> _state.update { it.copy(subscription = sub) } }
+            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+            .onEach { sub -> if (sub != null) _state.update { it.copy(subscription = sub) } }
             .launchIn(viewModelScope)
         observePayments()
-            .onEach { p -> _state.update { it.copy(payments = p) } }
+            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+            .onEach { p -> if (p.isNotEmpty()) _state.update { it.copy(payments = p) } }
             .launchIn(viewModelScope)
 
         razorpay.events

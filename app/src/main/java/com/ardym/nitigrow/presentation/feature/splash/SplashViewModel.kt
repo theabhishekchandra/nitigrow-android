@@ -1,6 +1,7 @@
 package com.ardym.nitigrow.presentation.feature.splash
 
 import androidx.lifecycle.viewModelScope
+import com.ardym.nitigrow.BuildConfig
 import com.ardym.nitigrow.core.storage.TokenDataStore
 import com.ardym.nitigrow.presentation.base.BaseViewModel
 import com.ardym.nitigrow.presentation.navigation.NavRoutes
@@ -32,6 +33,10 @@ class SplashViewModel @Inject constructor(
             val onboarded = tokenStore.onboardingDone.first()
             val token = tokenStore.accessTokenBlocking()
             val route = when {
+                // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+                // Debug builds skip the auth gate so the design-review screens (Dashboard, Inbox, Contacts,
+                // Campaigns, Leads, Billing, Settings) are reachable without a live login backend.
+                BuildConfig.DEBUG -> NavRoutes.GRAPH_MAIN
                 !onboarded -> NavRoutes.ONBOARDING
                 token.isNullOrBlank() -> NavRoutes.GRAPH_AUTH
                 else -> NavRoutes.GRAPH_MAIN

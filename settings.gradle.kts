@@ -22,6 +22,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Niti Grow"
+rootProject.name = "NitiGrow"
 include(":app")
+
  

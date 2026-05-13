@@ -8,6 +8,7 @@ import com.ardym.nitigrow.domain.usecase.profile.ObserveProfileUseCase
 import com.ardym.nitigrow.domain.usecase.profile.UpdateProfileUseCase
 import com.ardym.nitigrow.domain.usecase.profile.UploadAvatarUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
+import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,19 +43,30 @@ class ProfileEditViewModel @Inject constructor(
     private val uploadAvatar: UploadAvatarUseCase
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(ProfileEditUiState())
+    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+    // Seeded so the form pre-fills even when offline / before the first refreshProfile() succeeds.
+    private val seed = DummyData.profile()
+
+    private val _state = MutableStateFlow(
+        ProfileEditUiState(profile = seed, name = seed.name, email = seed.email)
+    )
     val state: StateFlow<ProfileEditUiState> = _state.asStateFlow()
 
     private val _effects = Channel<ProfileEditEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
     init {
+        var hydratedFromBackend = false
         observeProfile()
             .onEach { p ->
+                if (p == null) return@onEach
                 _state.update {
-                    if (it.profile == null && p != null) {
+                    if (!hydratedFromBackend) {
+                        hydratedFromBackend = true
                         it.copy(profile = p, name = p.name, email = p.email)
-                    } else it.copy(profile = p)
+                    } else {
+                        it.copy(profile = p)
+                    }
                 }
             }
             .launchIn(viewModelScope)

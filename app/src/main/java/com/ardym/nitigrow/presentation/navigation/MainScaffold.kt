@@ -125,6 +125,15 @@ private fun TabHost(tabNav: NavHostController, rootNav: NavHostController) {
                 onProfileEdit = { rootNav.navigate(NavRoutes.PROFILE_EDIT) },
                 onTeam = { rootNav.navigate(NavRoutes.TEAM) },
                 onBilling = { rootNav.navigate(NavRoutes.BILLING) },
+                onTemplates = { rootNav.navigate(NavRoutes.TEMPLATES) },
+                onAnalytics = { rootNav.navigate(NavRoutes.ANALYTICS) },
+                onPaymentLink = { rootNav.navigate(NavRoutes.PAYMENT_LINK) },
+                onBusinessProfile = { rootNav.navigate(NavRoutes.SETTINGS_BUSINESS) },
+                onWabaNumber = { rootNav.navigate(NavRoutes.SETTINGS_WABA) },
+                onAutoReply = { rootNav.navigate(NavRoutes.SETTINGS_AUTOREPLY) },
+                onLeadsKanban = { rootNav.navigate(NavRoutes.LEADS_KANBAN) },
+                onLeadsList = { rootNav.navigate(NavRoutes.LEADS) },
+                onConflicts = { rootNav.navigate(NavRoutes.CONFLICTS) },
                 onLogout = {
                     rootNav.navigate(NavRoutes.GRAPH_AUTH) {
                         popUpTo(NavRoutes.GRAPH_ROOT) { inclusive = true }
