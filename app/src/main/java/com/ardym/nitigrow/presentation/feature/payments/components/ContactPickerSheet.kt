@@ -37,7 +37,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ardym.nitigrow.domain.model.Contact
-import com.ardym.nitigrow.presentation.dummy.DummyData
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
 import com.ardym.nitigrow.ui.theme.Theme
 import kotlinx.coroutines.launch
@@ -68,8 +67,7 @@ import kotlinx.coroutines.launch
 fun ContactPickerSheet(
     onPick: (contactId: String, contactName: String) -> Unit,
     onDismiss: () -> Unit,
-    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-    contacts: List<Contact> = DummyData.contacts(),
+    contacts: List<Contact>,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -215,7 +213,18 @@ private fun ContactRow(contact: Contact, onClick: () -> Unit) {
 private fun PreviewContactPickerContent() {
     NitiGrowTheme {
         ContactPickerContent(
-            contacts = DummyData.contacts(),
+            contacts = listOf(
+                Contact(
+                    id = "c1", name = "Riya Shah", phone = "+919812345678", email = "riya@shah.in",
+                    avatarUrl = null, tags = listOf("vip"), notes = null,
+                    createdAt = java.time.Instant.now(), updatedAt = java.time.Instant.now(), isBlocked = false
+                ),
+                Contact(
+                    id = "c2", name = "Aman Gupta", phone = "+919812300000", email = null,
+                    avatarUrl = null, tags = emptyList(), notes = null,
+                    createdAt = java.time.Instant.now(), updatedAt = java.time.Instant.now(), isBlocked = false
+                )
+            ),
             onPick = {}
         )
     }

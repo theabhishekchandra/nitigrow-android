@@ -329,7 +329,18 @@ private fun AvatarInitial(name: String) {
 private fun AnalyticsScreenPreview() {
     NitiGrowTheme {
         AnalyticsScreenContent(
-            state = DummyAnalyticsData.snapshot(DateRange.WEEK),
+            state = AnalyticsUiState(
+                range = DateRange.WEEK,
+                timeSeries = listOf(
+                    DailyPoint(java.time.LocalDate.now().minusDays(2), sent = 120, delivered = 110, read = 70),
+                    DailyPoint(java.time.LocalDate.now().minusDays(1), sent = 90, delivered = 85, read = 52),
+                    DailyPoint(java.time.LocalDate.now(), sent = 140, delivered = 132, read = 88)
+                ),
+                agentPerformance = listOf(
+                    AgentPerf(name = "Priya", chats = 24, avgResponseSeconds = 90),
+                    AgentPerf(name = "Aman", chats = 18, avgResponseSeconds = 140)
+                )
+            ),
             onRange = {},
             onBack = {},
         )

@@ -282,6 +282,15 @@ private fun formatVerifiedAt(instant: Instant): String =
 @Composable
 private fun PreviewWabaNumberBody() {
     NitiGrowTheme {
-        WabaNumberBody(state = DummyWabaData.status(), onReverify = {})
+        WabaNumberBody(
+            state = WabaNumberUiState(
+                phone = "+91 98765 43210",
+                displayName = "Aarav Traders",
+                status = com.ardym.nitigrow.domain.model.WabaStatus.ACTIVE,
+                qualityRating = "GREEN",
+                messagingLimit = "1K/24h"
+            ),
+            onReverify = {}
+        )
     }
 }

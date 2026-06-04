@@ -351,12 +351,19 @@ private fun SelectedContactChip(
 
 // ── Previews ────────────────────────────────────────────────────────────────
 
+// Inline sample data for @Preview only.
+private val previewPaymentLinks = listOf(
+    SentPaymentLink("p1", "Priya Sharma", 5000, SentLinkStatus.PAID, java.time.Instant.now()),
+    SentPaymentLink("p2", "Rahul Verma", 1200, SentLinkStatus.PENDING, java.time.Instant.now()),
+    SentPaymentLink("p3", "Anita Desai", 800, SentLinkStatus.EXPIRED, java.time.Instant.now())
+)
+
 @Preview(showBackground = true, name = "PaymentLinkScreen — empty")
 @Composable
 private fun PreviewPaymentLinkScreenEmpty() {
     NitiGrowTheme {
         PaymentLinkScreenContent(
-            state = PaymentLinkUiState(recentLinks = DummyPaymentLinkData.recent()),
+            state = PaymentLinkUiState(recentLinks = previewPaymentLinks),
             onBack = {},
             onAmountChange = {},
             onPickContact = { _, _ -> },
@@ -377,7 +384,7 @@ private fun PreviewPaymentLinkScreenReady() {
                 selectedContactId = "k-001",
                 selectedContactName = "Priya Sharma",
                 description = "Advance for saffron order",
-                recentLinks = DummyPaymentLinkData.recent(),
+                recentLinks = previewPaymentLinks,
             ),
             onBack = {},
             onAmountChange = {},
@@ -399,7 +406,7 @@ private fun PreviewPaymentLinkScreenSending() {
                 selectedContactId = "k-002",
                 selectedContactName = "Rahul Verma",
                 isSending = true,
-                recentLinks = DummyPaymentLinkData.recent(),
+                recentLinks = previewPaymentLinks,
             ),
             onBack = {},
             onAmountChange = {},

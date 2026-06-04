@@ -177,7 +177,28 @@ private fun FilterChipRow(
 private fun TemplatesScreenPreview() {
     NitiGrowTheme {
         TemplatesScreenContent(
-            state = TemplatesUiState(templates = DummyTemplatesData.all()),
+            state = TemplatesUiState(
+                templates = listOf(
+                    Template(
+                        id = "t1",
+                        name = "order_confirmation",
+                        language = TemplateLanguage.EN,
+                        category = TemplateCategory.UTILITY,
+                        status = TemplateStatus.APPROVED,
+                        body = "Hi {{1}}, your order {{2}} is confirmed. Total ₹{{3}}.",
+                        updatedAt = java.time.Instant.now()
+                    ),
+                    Template(
+                        id = "t2",
+                        name = "diwali_offer",
+                        language = TemplateLanguage.EN,
+                        category = TemplateCategory.MARKETING,
+                        status = TemplateStatus.PENDING,
+                        body = "Celebrate Diwali with 25% off! Use DIWALI25.",
+                        updatedAt = java.time.Instant.now()
+                    )
+                )
+            ),
             onFilter = {},
             onCreate = {},
             onBack = {},

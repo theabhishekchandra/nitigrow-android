@@ -227,7 +227,13 @@ private fun PreviewBusinessProfileForm() {
             modifier = Modifier.fillMaxWidth()
         ) {
             BusinessProfileForm(
-                state = DummyBusinessData.profile(),
+                state = BusinessProfileUiState(
+                    name = "Aarav Traders",
+                    address = "MG Road, Pune, MH",
+                    website = "aaravtraders.in",
+                    email = "owner@aaravtraders.in",
+                    gstin = "27AAACA1234A1Z5"
+                ),
                 onLogoTap = {},
                 onName = {},
                 onAddress = {},

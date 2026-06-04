@@ -307,7 +307,12 @@ private fun TimePickerStub(
 private fun PreviewAutoReplyBody() {
     NitiGrowTheme {
         AutoReplyBody(
-            state = DummyAutoReplyData.config(),
+            state = AutoReplyUiState(
+                welcomeEnabled = true,
+                welcomeMessage = "Hi! Welcome to Aarav Traders 🙏 How can we help?",
+                awayEnabled = true,
+                awayMessage = "We're away right now — we'll reply by 9 AM."
+            ),
             onWelcomeEnabled = {},
             onWelcomeMessage = {},
             onAwayEnabled = {},
