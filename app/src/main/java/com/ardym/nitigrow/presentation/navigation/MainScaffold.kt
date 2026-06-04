@@ -133,6 +133,7 @@ private fun TabHost(tabNav: NavHostController, rootNav: NavHostController) {
                 onAutoReply = { rootNav.navigate(NavRoutes.SETTINGS_AUTOREPLY) },
                 onLeadsKanban = { rootNav.navigate(NavRoutes.LEADS_KANBAN) },
                 onLeadsList = { rootNav.navigate(NavRoutes.LEADS) },
+                onReferrals = { rootNav.navigate(NavRoutes.REFERRALS) },
                 onConflicts = { rootNav.navigate(NavRoutes.CONFLICTS) },
                 onLogout = {
                     rootNav.navigate(NavRoutes.GRAPH_AUTH) {

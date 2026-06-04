@@ -31,7 +31,7 @@ class LoginViewModelTest {
 
     @Test
     fun `onPhoneChange filters non-digits`() = runTest {
-        vm.onPhoneChange("98a76b54310")
+        vm.onPhoneChange("98a76b543210")
         assertThat(vm.state.value.phone).isEqualTo("9876543210")
         assertThat(vm.state.value.isPhoneValid).isTrue()
     }

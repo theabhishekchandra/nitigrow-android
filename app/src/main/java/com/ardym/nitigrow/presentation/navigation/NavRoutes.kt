@@ -41,6 +41,7 @@ object NavRoutes {
     const val BILLING = "billing"
     const val PROFILE_EDIT = "profile/edit"
     const val TEAM = "team"
+    const val REFERRALS = "referrals"
 
     // Phase-3 round-out screens
     const val TEMPLATES = "templates"

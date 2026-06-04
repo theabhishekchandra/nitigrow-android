@@ -116,6 +116,31 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideReferralsApi(retrofit: Retrofit): com.ardym.nitigrow.data.remote.api.ReferralsApi =
+        retrofit.create(com.ardym.nitigrow.data.remote.api.ReferralsApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideTemplatesApi(retrofit: Retrofit): com.ardym.nitigrow.data.remote.api.TemplatesApi =
+        retrofit.create(com.ardym.nitigrow.data.remote.api.TemplatesApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideAnalyticsApi(retrofit: Retrofit): com.ardym.nitigrow.data.remote.api.AnalyticsApi =
+        retrofit.create(com.ardym.nitigrow.data.remote.api.AnalyticsApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideSettingsApi(retrofit: Retrofit): com.ardym.nitigrow.data.remote.api.SettingsApi =
+        retrofit.create(com.ardym.nitigrow.data.remote.api.SettingsApi::class.java)
+
+    @Provides
+    @Singleton
+    fun providePaymentLinksApi(retrofit: Retrofit): com.ardym.nitigrow.data.remote.api.PaymentLinksApi =
+        retrofit.create(com.ardym.nitigrow.data.remote.api.PaymentLinksApi::class.java)
+
+    @Provides
+    @Singleton
     fun provideBillingApi(retrofit: Retrofit): com.ardym.nitigrow.data.remote.api.BillingApi =
         retrofit.create(com.ardym.nitigrow.data.remote.api.BillingApi::class.java)
 

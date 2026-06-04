@@ -6,7 +6,6 @@ import com.ardym.nitigrow.domain.usecase.inbox.ObserveConversationsUseCase
 import com.ardym.nitigrow.domain.usecase.inbox.RefreshInboxUseCase
 import com.ardym.nitigrow.domain.usecase.inbox.TogglePinUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
-import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -30,8 +29,7 @@ class InboxViewModel @Inject constructor(
     private val togglePin: TogglePinUseCase
 ) : BaseViewModel() {
 
-    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-    private val _state = MutableStateFlow(InboxUiState(items = DummyData.conversations()))
+    private val _state = MutableStateFlow(InboxUiState(isRefreshing = true))
     val state: StateFlow<InboxUiState> = _state.asStateFlow()
 
     private val _query = MutableStateFlow("")
@@ -41,9 +39,7 @@ class InboxViewModel @Inject constructor(
             .debounce { if (it.isEmpty()) 0L else SEARCH_DEBOUNCE_MS }
             .distinctUntilChanged()
             .flatMapLatest { observe(it) }
-            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-            // Guard keeps the seeded DummyData visible until the real Room flow has at least one row.
-            .onEach { items -> if (items.isNotEmpty()) _state.update { it.copy(items = items) } }
+            .onEach { items -> _state.update { it.copy(items = items) } }
             .launchIn(viewModelScope)
         refresh()
     }

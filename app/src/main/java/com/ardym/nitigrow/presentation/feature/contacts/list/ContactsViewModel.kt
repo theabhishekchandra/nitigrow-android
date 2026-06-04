@@ -8,7 +8,6 @@ import com.ardym.nitigrow.domain.usecase.contacts.ObserveContactsUseCase
 import com.ardym.nitigrow.domain.usecase.contacts.RefreshContactsUseCase
 import com.ardym.nitigrow.domain.usecase.contacts.SaveContactUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
-import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -35,8 +34,7 @@ class ContactsViewModel @Inject constructor(
     private val importCsv: ImportCsvContactsUseCase
 ) : BaseViewModel() {
 
-    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-    private val _state = MutableStateFlow(ContactsUiState(items = DummyData.contacts()))
+    private val _state = MutableStateFlow(ContactsUiState(isRefreshing = true))
     val state: StateFlow<ContactsUiState> = _state.asStateFlow()
 
     private val _effects = Channel<ContactsEffect>(Channel.BUFFERED)
@@ -49,9 +47,7 @@ class ContactsViewModel @Inject constructor(
             .debounce { if (it.isEmpty()) 0L else 300L }
             .distinctUntilChanged()
             .flatMapLatest { observe(it) }
-            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-            // Guard keeps the seeded DummyData visible until the real Room flow has at least one row.
-            .onEach { items -> if (items.isNotEmpty()) _state.update { it.copy(items = items) } }
+            .onEach { items -> _state.update { it.copy(items = items) } }
             .launchIn(viewModelScope)
         refresh()
     }

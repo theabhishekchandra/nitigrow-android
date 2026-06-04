@@ -1,6 +1,8 @@
 package com.ardym.nitigrow.presentation.feature.templates
 
 import androidx.lifecycle.viewModelScope
+import com.ardym.nitigrow.core.network.ApiResult
+import com.ardym.nitigrow.domain.repository.TemplatesRepository
 import com.ardym.nitigrow.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -14,7 +16,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class CreateTemplateViewModel @Inject constructor() : BaseViewModel() {
+class CreateTemplateViewModel @Inject constructor(
+    private val repo: TemplatesRepository
+) : BaseViewModel() {
 
     private val _state = MutableStateFlow(CreateTemplateUiState())
     val state: StateFlow<CreateTemplateUiState> = _state.asStateFlow()
@@ -55,18 +59,28 @@ class CreateTemplateViewModel @Inject constructor() : BaseViewModel() {
         }
     }
 
-    /**
-     * Fake submit — emits a toast event after a tiny delay so the UI feels real.
-     * TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-     */
+    /** Submit the new template to Meta (via the backend) for approval. */
     fun submit() {
-        // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-        if (!_state.value.canSubmit) return
+        val s = _state.value
+        if (!s.canSubmit) return
         _state.update { it.copy(isSubmitting = true) }
         viewModelScope.launch {
-            // No real network call — just surface the success toast immediately.
-            _events.emit("Submitted for Meta approval")
-            _state.update { it.copy(isSubmitting = false) }
+            val res = repo.create(
+                name = s.name.trim(),
+                category = s.category.name,       // MARKETING | UTILITY | AUTHENTICATION
+                language = s.language.code,        // en | hi | mr
+                body = s.body
+            )
+            when (res) {
+                is ApiResult.Success -> {
+                    _state.update { it.copy(isSubmitting = false) }
+                    _events.emit("Submitted for Meta approval")
+                }
+                is ApiResult.Error -> {
+                    _state.update { it.copy(isSubmitting = false) }
+                    _events.emit(res.message)
+                }
+            }
         }
     }
 }

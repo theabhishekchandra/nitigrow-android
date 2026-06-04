@@ -1,44 +1,49 @@
 package com.ardym.nitigrow.presentation.feature.payments
 
 import androidx.lifecycle.viewModelScope
+import com.ardym.nitigrow.core.network.ApiResult
+import com.ardym.nitigrow.domain.model.PaymentLink
+import com.ardym.nitigrow.domain.repository.ContactRepository
+import com.ardym.nitigrow.domain.repository.PaymentLinksRepository
 import com.ardym.nitigrow.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.util.UUID
 import javax.inject.Inject
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PaymentLinkViewModel — form controller for "Send a payment link".
-//
-// Why no use-cases yet?
-//   The real flow goes through the backend's `POST /payments/links` →
-//   Razorpay Payment Link API → outbound WhatsApp template message. None of
-//   that is wired up; until it is, this VM fakes a send with a delay and
-//   appends to recentLinks so QA can see realistic UI behaviour.
-//
-// All public surface that touches dummy data carries the standard TODO so a
-// project-wide grep finds every removal point.
-// ─────────────────────────────────────────────────────────────────────────────
-
-private const val MAX_AMOUNT_DIGITS = 7         // ₹9,999,999 — well past SMB ceiling
-private const val FAKE_SEND_DELAY_MS = 800L
+private const val MAX_AMOUNT_DIGITS = 7 // ₹9,999,999 — well past SMB ceiling
 
 @HiltViewModel
-class PaymentLinkViewModel @Inject constructor() : BaseViewModel() {
+class PaymentLinkViewModel @Inject constructor(
+    private val repo: PaymentLinksRepository,
+    private val contacts: ContactRepository
+) : BaseViewModel() {
 
-    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-    private val _state = MutableStateFlow(
-        PaymentLinkUiState(recentLinks = DummyPaymentLinkData.recent())
-    )
-
-    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
+    private val _state = MutableStateFlow(PaymentLinkUiState())
     val state: StateFlow<PaymentLinkUiState> = _state.asStateFlow()
+
+    init {
+        // Real contacts feed the picker.
+        contacts.observeContacts()
+            .onEach { list -> _state.update { it.copy(contacts = list) } }
+            .launchIn(viewModelScope)
+        viewModelScope.launch { contacts.refresh() }
+        loadHistory()
+    }
+
+    private fun loadHistory() {
+        viewModelScope.launch {
+            (repo.list() as? ApiResult.Success)?.let { r ->
+                _state.update { it.copy(recentLinks = r.data.map(::toUi)) }
+            }
+        }
+    }
 
     /** Accept digits-only, capped at MAX_AMOUNT_DIGITS chars. */
     fun onAmountChange(s: String) {
@@ -47,56 +52,50 @@ class PaymentLinkViewModel @Inject constructor() : BaseViewModel() {
         _state.update { it.copy(amountInr = s, error = null) }
     }
 
-    /**
-     * Set the recipient for the payment link. Pass an empty `id` to clear
-     * the selection (the chip's ✕ button maps to this).
-     */
     fun onPickContact(id: String, name: String) {
         val newId = id.ifBlank { null }
         val newName = if (newId == null) null else name
-        _state.update {
-            it.copy(selectedContactId = newId, selectedContactName = newName, error = null)
-        }
+        _state.update { it.copy(selectedContactId = newId, selectedContactName = newName, error = null) }
     }
 
     fun onDescriptionChange(s: String) {
         _state.update { it.copy(description = s) }
     }
 
-    /**
-     * TODO: Real flow — call PaymentLinksRepository.create(amountInr, contactId,
-     *  description) which routes through Razorpay Payment Links + sends a
-     *  WhatsApp template message to the customer. Until that lands, fake the
-     *  network call and prepend a PENDING row to the recent list.
-     */
     fun send() {
         val s = _state.value
         if (!s.isReadyToSend || s.isSending) return
         val amount = s.amountInr.toLongOrNull() ?: return
         val contactId = s.selectedContactId ?: return
-        val contactName = s.selectedContactName ?: contactId
 
         viewModelScope.launch {
             _state.update { it.copy(isSending = true, error = null) }
-            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-            delay(FAKE_SEND_DELAY_MS)
-            val newLink = SentPaymentLink(
-                id = "pl-${UUID.randomUUID().toString().take(8)}",
-                contactName = contactName,
-                amountInr = amount,
-                status = SentLinkStatus.PENDING,
-                sentAt = Instant.now(),
-            )
-            _state.update {
-                it.copy(
-                    isSending = false,
-                    amountInr = "",
-                    selectedContactId = null,
-                    selectedContactName = null,
-                    description = "",
-                    recentLinks = listOf(newLink) + it.recentLinks,
-                )
+            when (val res = repo.create(contactId, amount, s.description.ifBlank { null })) {
+                is ApiResult.Success -> _state.update {
+                    it.copy(
+                        isSending = false,
+                        amountInr = "",
+                        selectedContactId = null,
+                        selectedContactName = null,
+                        description = "",
+                        recentLinks = listOf(toUi(res.data)) + it.recentLinks
+                    )
+                }
+                is ApiResult.Error -> _state.update { it.copy(isSending = false, error = res.message) }
             }
         }
     }
+
+    private fun toUi(p: PaymentLink): SentPaymentLink = SentPaymentLink(
+        id = p.id,
+        contactName = p.contactName,
+        amountInr = p.amount,
+        status = when (p.status.lowercase()) {
+            "captured" -> SentLinkStatus.PAID
+            "failed" -> SentLinkStatus.FAILED
+            "refunded" -> SentLinkStatus.EXPIRED
+            else -> SentLinkStatus.PENDING
+        },
+        sentAt = p.sentAt?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: Instant.now()
+    )
 }

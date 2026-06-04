@@ -11,7 +11,6 @@ import com.ardym.nitigrow.domain.repository.PushTokenRepository
 import com.ardym.nitigrow.domain.usecase.auth.LogoutUseCase
 import com.ardym.nitigrow.domain.usecase.profile.ObserveProfileUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
-import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,13 +48,7 @@ class SettingsHubViewModel @Inject constructor(
     private val pushRepo: PushTokenRepository
 ) : BaseViewModel() {
 
-    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-    private val _state = MutableStateFlow(
-        SettingsHubUiState(
-            profile = DummyData.profile(),
-            tenant  = DummyData.tenant()
-        )
-    )
+    private val _state = MutableStateFlow(SettingsHubUiState())
     val state: StateFlow<SettingsHubUiState> = _state.asStateFlow()
 
     private val _effects = Channel<SettingsHubEffect>(Channel.BUFFERED)

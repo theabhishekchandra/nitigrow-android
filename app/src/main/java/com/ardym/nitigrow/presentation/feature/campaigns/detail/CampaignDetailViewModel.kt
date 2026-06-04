@@ -7,7 +7,6 @@ import com.ardym.nitigrow.domain.model.Campaign
 import com.ardym.nitigrow.domain.usecase.campaigns.CancelCampaignUseCase
 import com.ardym.nitigrow.domain.usecase.campaigns.ObserveCampaignUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
-import com.ardym.nitigrow.presentation.dummy.DummyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,12 +32,7 @@ class CampaignDetailViewModel @Inject constructor(
 
     private val campaignId: String = savedState.get<String>("campaignId").orEmpty()
 
-    // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-    // Seed with the matching DummyData campaign so the detail screen has something to render until
-    // Room/API emits a real row. The observe flow below replaces it once a non-null entry arrives.
-    private val _state = MutableStateFlow(
-        CampaignDetailUiState(campaign = DummyData.campaigns().firstOrNull { it.id == campaignId })
-    )
+    private val _state = MutableStateFlow(CampaignDetailUiState())
     val state: StateFlow<CampaignDetailUiState> = _state.asStateFlow()
 
     init {

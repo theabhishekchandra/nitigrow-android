@@ -23,6 +23,7 @@ import com.ardym.nitigrow.presentation.feature.inbox.chat.ChatScreen
 import com.ardym.nitigrow.presentation.feature.leads.LeadsScreen
 import com.ardym.nitigrow.presentation.feature.leads.kanban.LeadsKanbanScreen
 import com.ardym.nitigrow.presentation.feature.onboarding.OnboardingScreen
+import com.ardym.nitigrow.presentation.feature.referrals.ReferralsScreen
 import com.ardym.nitigrow.presentation.feature.payments.PaymentLinkScreen
 import com.ardym.nitigrow.presentation.feature.settings.autoreply.AutoReplyScreen
 import com.ardym.nitigrow.presentation.feature.settings.business.BusinessProfileScreen
@@ -105,6 +106,9 @@ fun NitiGrowNavGraph(
         }
         composable(NavRoutes.TEAM) {
             TeamScreen(onBack = { navController.popBackStack() })
+        }
+        composable(NavRoutes.REFERRALS) {
+            ReferralsScreen(onBack = { navController.popBackStack() })
         }
 
         // ── Phase-3 round-out screens ──────────────────────────────────────────

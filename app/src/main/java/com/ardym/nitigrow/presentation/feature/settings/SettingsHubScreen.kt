@@ -79,6 +79,7 @@ fun SettingsHubScreen(
     onAutoReply: () -> Unit = {},
     onLeadsKanban: () -> Unit = {},
     onLeadsList: () -> Unit = {},
+    onReferrals: () -> Unit = {},
     onConflicts: () -> Unit = {},
     onLogout: () -> Unit,
     viewModel: SettingsHubViewModel = hiltViewModel()
@@ -130,6 +131,11 @@ fun SettingsHubScreen(
                 Row1(Icons.Filled.Payment, "Send payment link", "Razorpay/UPI link via WhatsApp", onPaymentLink)
                 Row1(Icons.Filled.ViewKanban, "Leads — Kanban", "Swipe between Hot / Warm / Cold", onLeadsKanban)
                 Row1(Icons.AutoMirrored.Filled.List, "Leads — List", "Flat list across all stages", onLeadsList)
+                HorizontalDivider()
+            }
+            item {
+                SectionHeader("Growth")
+                Row1(Icons.Filled.Campaign, "Referrals & Loyalty", "Reward referrals and repeat customers", onReferrals)
                 HorizontalDivider()
             }
             item {

@@ -27,6 +27,7 @@ data class PaymentLinkUiState(
     val selectedContactName: String? = null,
     val description: String = "",
     val recentLinks: List<SentPaymentLink> = emptyList(),
+    val contacts: List<com.ardym.nitigrow.domain.model.Contact> = emptyList(),
     val isSending: Boolean = false,
     val error: String? = null,
 ) {

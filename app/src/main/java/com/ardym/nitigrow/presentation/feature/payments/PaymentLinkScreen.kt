@@ -184,6 +184,7 @@ private fun PaymentLinkScreenContent(
 
     if (pickerOpen) {
         ContactPickerSheet(
+            contacts = state.contacts,
             onPick = { id, name -> onPickContact(id, name) },
             onDismiss = { pickerOpen = false },
         )
