@@ -8,17 +8,28 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,18 +37,28 @@ import com.ardym.nitigrow.presentation.components.ErrorBanner
 import com.ardym.nitigrow.presentation.components.PrimaryButton
 import kotlinx.coroutines.flow.collectLatest
 
+/**
+ * Email/password login screen.
+ *
+ * @param onLoginSuccess invoked once login succeeds and tokens are persisted.
+ * @param onForgotPassword navigate to password recovery.
+ * @param onOtpRequested retained for source compatibility with the existing nav
+ *   graph wiring; unused by the email/password flow.
+ */
 @Composable
 fun LoginScreen(
-    onOtpRequested: (String) -> Unit,
+    onLoginSuccess: () -> Unit = {},
     onForgotPassword: () -> Unit = {},
+    @Suppress("UNUSED_PARAMETER") onOtpRequested: (String) -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var passwordVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collectLatest { effect ->
             when (effect) {
-                is LoginEffect.NavigateToOtp -> onOtpRequested(effect.phone)
+                LoginEffect.NavigateToHome -> onLoginSuccess()
             }
         }
     }
@@ -57,18 +78,45 @@ fun LoginScreen(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "Enter your WhatsApp number to continue",
+                "Sign in with your email and password",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(32.dp))
             OutlinedTextField(
-                value = state.phone,
-                onValueChange = viewModel::onPhoneChange,
-                label = { Text("Phone number") },
-                placeholder = { Text("9876543210") },
+                value = state.email,
+                onValueChange = viewModel::onEmailChange,
+                label = { Text("Email") },
+                placeholder = { Text("you@business.com") },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                isError = state.error != null,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(16.dp))
+            OutlinedTextField(
+                value = state.password,
+                onValueChange = viewModel::onPasswordChange,
+                label = { Text("Password") },
+                singleLine = true,
+                visualTransformation = if (passwordVisible) VisualTransformation.None
+                else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Filled.VisibilityOff
+                            else Icons.Filled.Visibility,
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                        )
+                    }
+                },
                 isError = state.error != null,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -78,10 +126,10 @@ fun LoginScreen(
             }
             Spacer(Modifier.height(24.dp))
             PrimaryButton(
-                text = "Send OTP",
+                text = "Sign in",
                 onClick = viewModel::onSubmit,
                 loading = state.isLoading,
-                enabled = state.isPhoneValid
+                enabled = state.canSubmit
             )
             Spacer(Modifier.height(8.dp))
             TextButton(

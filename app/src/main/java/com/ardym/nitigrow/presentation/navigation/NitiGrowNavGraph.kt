@@ -146,7 +146,11 @@ private fun NavGraphBuilder.authGraph(nav: NavHostController) {
     navigation(startDestination = NavRoutes.LOGIN, route = NavRoutes.GRAPH_AUTH) {
         composable(NavRoutes.LOGIN) {
             LoginScreen(
-                onOtpRequested = { phone -> nav.navigate(NavRoutes.otp(phone)) },
+                onLoginSuccess = {
+                    nav.navigate(NavRoutes.GRAPH_MAIN) {
+                        popUpTo(NavRoutes.GRAPH_AUTH) { inclusive = true }
+                    }
+                },
                 onForgotPassword = { nav.navigate(NavRoutes.FORGOT_PASSWORD) }
             )
         }

@@ -112,15 +112,15 @@ class ChatRepositoryImpl @Inject constructor(
 
     private suspend fun performSend(clientId: String) {
         val pending = messageDao.getByClientId(clientId) ?: return
+        // conversationId IS the contactId. Backend has no reply-to support.
         val req = SendMessageRequest(
-            clientId = clientId,
-            conversationId = pending.conversationId,
+            contactId = pending.conversationId,
             text = pending.text,
-            replyToMessageId = pending.replyToMessageId
+            clientId = clientId
         )
         when (val res = safeApiCall(dispatchers.io) { chatApi.send(req) }) {
             is ApiResult.Success -> {
-                val dto = res.data
+                val dto = res.data.message
                 messageDao.confirmServerId(
                     clientId = clientId,
                     serverId = dto.id,

@@ -2,7 +2,6 @@ package com.ardym.nitigrow.di
 
 import com.ardym.nitigrow.BuildConfig
 import com.ardym.nitigrow.core.network.AuthInterceptor
-import com.ardym.nitigrow.core.network.RefreshTokenApi
 import com.ardym.nitigrow.core.network.TokenAuthenticator
 import com.ardym.nitigrow.core.util.Constants
 import com.ardym.nitigrow.data.remote.api.AuthApi
@@ -12,12 +11,14 @@ import com.ardym.nitigrow.data.remote.api.ContactsApi
 import com.ardym.nitigrow.data.remote.api.DashboardApi
 import com.ardym.nitigrow.data.remote.api.InboxApi
 import com.ardym.nitigrow.data.remote.api.LeadsApi
+import com.ardym.nitigrow.data.remote.api.PushApi
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -44,9 +45,25 @@ object NetworkModule {
             else HttpLoggingInterceptor.Level.NONE
         }
 
+    /**
+     * Stamps every outbound request with `x-client: mobile`. The backend uses
+     * this to take the native auth path (refresh token in the JSON body instead
+     * of an httpOnly cookie, and no CSRF requirement).
+     */
+    @Provides
+    @Singleton
+    @Named("clientHeader")
+    fun provideClientHeaderInterceptor(): Interceptor = Interceptor { chain ->
+        val request = chain.request().newBuilder()
+            .header("x-client", "mobile")
+            .build()
+        chain.proceed(request)
+    }
+
     @Provides
     @Singleton
     fun provideOkHttp(
+        @Named("clientHeader") clientHeaderInterceptor: Interceptor,
         authInterceptor: AuthInterceptor,
         authenticator: TokenAuthenticator,
         logging: HttpLoggingInterceptor
@@ -54,6 +71,7 @@ object NetworkModule {
         .connectTimeout(Constants.NETWORK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         .readTimeout(Constants.NETWORK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         .writeTimeout(Constants.NETWORK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .addInterceptor(clientHeaderInterceptor)
         .addInterceptor(authInterceptor)
         .addInterceptor(logging)
         .authenticator(authenticator)
@@ -68,11 +86,6 @@ object NetworkModule {
             .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
-
-    @Provides
-    @Singleton
-    fun provideRefreshTokenApi(retrofit: Retrofit): RefreshTokenApi =
-        retrofit.create(RefreshTokenApi::class.java)
 
     @Provides
     @Singleton
@@ -111,8 +124,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun providePushApi(retrofit: Retrofit): com.ardym.nitigrow.data.remote.api.PushApi =
-        retrofit.create(com.ardym.nitigrow.data.remote.api.PushApi::class.java)
+    fun providePushApi(retrofit: Retrofit): PushApi =
+        retrofit.create(PushApi::class.java)
 
     @Provides
     @Singleton

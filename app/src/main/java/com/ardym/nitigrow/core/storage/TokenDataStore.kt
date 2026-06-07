@@ -15,9 +15,20 @@ import javax.inject.Singleton
 
 private val Context.dataStore by preferencesDataStore(name = Constants.DATASTORE_NAME)
 
+/**
+ * Single source of truth for the session + user prefs.
+ *
+ * Sensitive values (access token, refresh token, userId, tenantId) are encrypted
+ * at rest with an Android Keystore AES/GCM key ([TokenCipher]) before being written
+ * to DataStore, and decrypted transparently on read. All public accessors keep the
+ * same plaintext String? contract, so consumers (interceptor, authenticator,
+ * realtime client, repositories) are unaffected. Non-sensitive prefs (notification
+ * toggles, language, onboarding flag) remain plaintext.
+ */
 @Singleton
 class TokenDataStore @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val cipher: TokenCipher
 ) {
     private val keyAccess = stringPreferencesKey("access_token")
     private val keyRefresh = stringPreferencesKey("refresh_token")
@@ -32,10 +43,10 @@ class TokenDataStore @Inject constructor(
     private val keyPreviewVisible = booleanPreferencesKey("preview_visible")
     private val keyLanguageTag = stringPreferencesKey("language_tag")
 
-    val accessToken: Flow<String?> = context.dataStore.data.map { it[keyAccess] }
-    val refreshToken: Flow<String?> = context.dataStore.data.map { it[keyRefresh] }
-    val userId: Flow<String?> = context.dataStore.data.map { it[keyUserId] }
-    val tenantId: Flow<String?> = context.dataStore.data.map { it[keyTenantId] }
+    val accessToken: Flow<String?> = context.dataStore.data.map { it[keyAccess]?.let(cipher::decrypt) }
+    val refreshToken: Flow<String?> = context.dataStore.data.map { it[keyRefresh]?.let(cipher::decrypt) }
+    val userId: Flow<String?> = context.dataStore.data.map { it[keyUserId]?.let(cipher::decrypt) }
+    val tenantId: Flow<String?> = context.dataStore.data.map { it[keyTenantId]?.let(cipher::decrypt) }
     val onboardingDone: Flow<Boolean> = context.dataStore.data.map { it[keyOnboardingDone] ?: false }
     val biometricEnabled: Flow<Boolean> = context.dataStore.data.map { it[keyBiometricEnabled] ?: false }
     val chatNotifEnabled: Flow<Boolean> = context.dataStore.data.map { it[keyChatNotif] ?: true }
@@ -46,6 +57,7 @@ class TokenDataStore @Inject constructor(
     val languageTag: Flow<String> = context.dataStore.data.map { it[keyLanguageTag] ?: "" }
 
     suspend fun accessTokenBlocking(): String? = accessToken.first()
+    suspend fun refreshTokenBlocking(): String? = refreshToken.first()
 
     suspend fun setOnboardingDone() {
         context.dataStore.edit { it[keyOnboardingDone] = true }
@@ -74,15 +86,24 @@ class TokenDataStore @Inject constructor(
 
     suspend fun saveSession(access: String, refresh: String, userId: String, tenantId: String) {
         context.dataStore.edit {
-            it[keyAccess] = access
-            it[keyRefresh] = refresh
-            it[keyUserId] = userId
-            it[keyTenantId] = tenantId
+            it[keyAccess] = cipher.encrypt(access)
+            it[keyRefresh] = cipher.encrypt(refresh)
+            it[keyUserId] = cipher.encrypt(userId)
+            it[keyTenantId] = cipher.encrypt(tenantId)
         }
     }
 
+    /** Persist a rotated access token only (refresh unchanged). */
     suspend fun updateAccessToken(access: String) {
-        context.dataStore.edit { it[keyAccess] = access }
+        context.dataStore.edit { it[keyAccess] = cipher.encrypt(access) }
+    }
+
+    /** Persist a rotated access + refresh pair after a successful token refresh. */
+    suspend fun updateTokens(access: String, refresh: String) {
+        context.dataStore.edit {
+            it[keyAccess] = cipher.encrypt(access)
+            it[keyRefresh] = cipher.encrypt(refresh)
+        }
     }
 
     suspend fun clear() {

@@ -1,14 +1,27 @@
 package com.ardym.nitigrow.presentation.feature.auth.login
 
 data class LoginUiState(
-    val phone: String = "",
+    val email: String = "",
+    val password: String = "",
     val isLoading: Boolean = false,
     val error: String? = null
 ) {
-    val isPhoneValid: Boolean
-        get() = phone.filter { it.isDigit() }.length in 10..13
+    val isEmailValid: Boolean
+        get() = EMAIL_REGEX.matches(email.trim())
+
+    val isPasswordValid: Boolean
+        get() = password.length >= MIN_PASSWORD_LENGTH
+
+    val canSubmit: Boolean
+        get() = isEmailValid && isPasswordValid && !isLoading
+
+    private companion object {
+        const val MIN_PASSWORD_LENGTH = 6
+        val EMAIL_REGEX = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
+    }
 }
 
 sealed interface LoginEffect {
-    data class NavigateToOtp(val phone: String) : LoginEffect
+    /** Login succeeded and tokens are persisted; navigate into the app. */
+    data object NavigateToHome : LoginEffect
 }

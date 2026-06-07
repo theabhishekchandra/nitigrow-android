@@ -1,8 +1,9 @@
 package com.ardym.nitigrow.presentation.feature.splash
 
 import androidx.lifecycle.viewModelScope
-import com.ardym.nitigrow.BuildConfig
+import com.ardym.nitigrow.core.network.ApiResult
 import com.ardym.nitigrow.core.storage.TokenDataStore
+import com.ardym.nitigrow.data.repository.AuthRepositoryImpl
 import com.ardym.nitigrow.presentation.base.BaseViewModel
 import com.ardym.nitigrow.presentation.navigation.NavRoutes
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +20,8 @@ sealed interface SplashEffect {
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    private val tokenStore: TokenDataStore
+    private val tokenStore: TokenDataStore,
+    private val authRepository: AuthRepositoryImpl
 ) : BaseViewModel() {
 
     private val _effects = Channel<SplashEffect>(Channel.BUFFERED)
@@ -31,18 +33,25 @@ class SplashViewModel @Inject constructor(
         viewModelScope.launch {
             delay(MIN_SHOW_MS) // brand reveal
             val onboarded = tokenStore.onboardingDone.first()
-            val token = tokenStore.accessTokenBlocking()
             val route = when {
-                // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-                // Debug builds skip the auth gate so the design-review screens (Dashboard, Inbox, Contacts,
-                // Campaigns, Leads, Billing, Settings) are reachable without a live login backend.
-                BuildConfig.DEBUG -> NavRoutes.GRAPH_MAIN
                 !onboarded -> NavRoutes.ONBOARDING
-                token.isNullOrBlank() -> NavRoutes.GRAPH_AUTH
-                else -> NavRoutes.GRAPH_MAIN
+                isSessionValid() -> NavRoutes.GRAPH_MAIN
+                else -> NavRoutes.GRAPH_AUTH
             }
             _effects.send(SplashEffect.NavigateTo(route))
         }
+    }
+
+    /**
+     * A non-blank token is not enough — it may be expired or revoked. Validate
+     * against GET auth/me. A 401 triggers a transparent refresh via the OkHttp
+     * authenticator; if the refresh also fails the session is cleared and this
+     * returns false, routing the user to the auth graph.
+     */
+    private suspend fun isSessionValid(): Boolean {
+        val token = tokenStore.accessTokenBlocking()
+        if (token.isNullOrBlank()) return false
+        return authRepository.getMe() is ApiResult.Success
     }
 
     companion object { private const val MIN_SHOW_MS = 600L }

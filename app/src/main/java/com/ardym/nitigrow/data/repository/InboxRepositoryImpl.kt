@@ -7,7 +7,6 @@ import com.ardym.nitigrow.data.local.dao.ConversationDao
 import com.ardym.nitigrow.data.mapper.toDomain
 import com.ardym.nitigrow.data.mapper.toEntity
 import com.ardym.nitigrow.data.remote.api.InboxApi
-import com.ardym.nitigrow.data.remote.dto.TogglePinRequest
 import com.ardym.nitigrow.domain.model.Conversation
 import com.ardym.nitigrow.domain.repository.InboxRepository
 import kotlinx.coroutines.flow.Flow
@@ -28,24 +27,25 @@ class InboxRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refresh(): ApiResult<Unit> =
+        // GET messages/conversations returns a bare array (no envelope).
         when (val res = safeApiCall(dispatchers.io) { api.list() }) {
             is ApiResult.Success -> {
-                dao.upsertAll(res.data.data.map { it.toEntity() })
+                dao.upsertAll(res.data.map { it.toEntity() })
                 ApiResult.Success(Unit)
             }
             is ApiResult.Error -> res
         }
 
     override suspend fun markRead(conversationId: String): ApiResult<Unit> {
-        // optimistic local update
+        // optimistic local update; conversationId IS the contactId.
         dao.clearUnread(conversationId)
         return safeApiCall(dispatchers.io) { api.markRead(conversationId); Unit }
     }
 
     override suspend fun togglePin(conversationId: String, pinned: Boolean): ApiResult<Unit> {
+        // No backend route for pin — keep the optimistic local state only so the
+        // UI behaves, but there is nothing to persist server-side.
         dao.setPinned(conversationId, pinned)
-        return safeApiCall(dispatchers.io) {
-            api.togglePin(conversationId, TogglePinRequest(pinned)); Unit
-        }
+        return ApiResult.Success(Unit)
     }
 }

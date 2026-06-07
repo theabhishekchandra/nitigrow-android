@@ -1,29 +1,25 @@
 package com.ardym.nitigrow.data.remote.api
 
-import com.ardym.nitigrow.data.remote.dto.ConversationListResponse
+import com.ardym.nitigrow.data.remote.dto.ConversationDto
 import com.ardym.nitigrow.data.remote.dto.GenericMessageDto
-import com.ardym.nitigrow.data.remote.dto.TogglePinRequest
-import retrofit2.http.Body
-import retrofit2.http.PATCH
 import retrofit2.http.GET
-import retrofit2.http.POST
+import retrofit2.http.PATCH
 import retrofit2.http.Path
-import retrofit2.http.Query
 
+/**
+ * Inbox conversation list. BASE_URL already ends in /api/.
+ *
+ * GET messages/conversations returns a BARE JSON ARRAY of conversations
+ * (no { data } envelope). Conversations are keyed by contactId.
+ *
+ * Pin/mute have no backend route and were dropped.
+ */
 interface InboxApi {
 
-    @GET("conversations")
-    suspend fun list(
-        @Query("cursor") cursor: String? = null,
-        @Query("limit") limit: Int = 50
-    ): ConversationListResponse
+    @GET("messages/conversations")
+    suspend fun list(): List<ConversationDto>
 
-    @POST("conversations/{id}/read")
-    suspend fun markRead(@Path("id") id: String): GenericMessageDto
-
-    @PATCH("conversations/{id}/pin")
-    suspend fun togglePin(
-        @Path("id") id: String,
-        @Body body: TogglePinRequest
-    ): GenericMessageDto
+    /** PATCH messages/{contactId}/read — clears the inbound unread count. */
+    @PATCH("messages/{contactId}/read")
+    suspend fun markRead(@Path("contactId") contactId: String): GenericMessageDto
 }
