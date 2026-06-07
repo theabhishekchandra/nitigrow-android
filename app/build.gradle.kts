@@ -58,7 +58,9 @@ android {
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            buildConfigField("String", "BASE_URL", "\"https://staging.api.nitigrow.in/\"")
+            // No staging host deployed yet — point debug at the live API so dev/QA
+            // exercises real data. TODO: switch to staging once it exists.
+            buildConfigField("String", "BASE_URL", "\"https://api.nitigrow.in/api/\"")
             buildConfigField("boolean", "ENABLE_LOGGING", "true")
             configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
                 mappingFileUploadEnabled = false
@@ -71,7 +73,7 @@ android {
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
             matchingFallbacks += listOf("release")
-            buildConfigField("String", "BASE_URL", "\"https://staging.api.nitigrow.in/\"")
+            buildConfigField("String", "BASE_URL", "\"https://staging.api.nitigrow.in/api/\"")
             buildConfigField("boolean", "ENABLE_LOGGING", "true")
             signingConfig = signingConfigs.getByName("debug")
         }
@@ -82,7 +84,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "BASE_URL", "\"https://api.nitigrow.in/\"")
+            buildConfigField("String", "BASE_URL", "\"https://api.nitigrow.in/api/\"")
             buildConfigField("boolean", "ENABLE_LOGGING", "false")
             if (signingConfigs.getByName("release").storeFile != null) {
                 signingConfig = signingConfigs.getByName("release")
