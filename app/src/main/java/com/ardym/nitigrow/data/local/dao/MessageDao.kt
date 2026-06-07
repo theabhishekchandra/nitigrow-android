@@ -44,6 +44,10 @@ interface MessageDao {
     @Query("DELETE FROM messages WHERE conversationId = :conversationId")
     suspend fun clearForConversation(conversationId: String)
 
+    /** Wipes the entire local message cache (logout / tenant switch). */
+    @Query("DELETE FROM messages")
+    suspend fun clear()
+
     @Query("SELECT * FROM messages WHERE outbound = 1 AND status = 'PENDING'")
     suspend fun pendingOutbound(): List<MessageEntity>
 }

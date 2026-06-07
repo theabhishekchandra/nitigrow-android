@@ -34,6 +34,12 @@ import com.ardym.nitigrow.data.local.entity.TenantEntity
 
 /**
  * Add entities and DAOs as features land. Bump `version` + provide Migration on schema change.
+ *
+ * v2: added `tenantId` to ConversationEntity + MessageEntity for multi-tenant
+ * scoping. No hand-written Migration is supplied because the database is built
+ * with `fallbackToDestructiveMigration()` (see DatabaseModule) — acceptable
+ * pre-launch, where the local cache is disposable and re-synced from the API.
+ * Replace with an explicit Migration before the first production release.
  */
 @Database(
     entities = [
@@ -52,7 +58,7 @@ import com.ardym.nitigrow.data.local.entity.TenantEntity
         TenantEntity::class,
         TeamMemberEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

@@ -30,9 +30,8 @@ class BusinessProfileViewModel @Inject constructor(
     private fun load() {
         viewModelScope.launch {
             when (val r = settings.get()) {
+                // businessName is editable + persisted; email is read-only.
                 is ApiResult.Success -> _state.update {
-                    // name + email come from the backend; address/website/GSTIN/logo
-                    // have no tenant field yet, so they stay locally editable.
                     it.copy(name = r.data.businessName, email = r.data.email)
                 }
                 is ApiResult.Error -> _state.update { it.copy(error = r.message) }
@@ -41,16 +40,6 @@ class BusinessProfileViewModel @Inject constructor(
     }
 
     fun onName(v: String) = _state.update { it.copy(name = v, error = null) }
-    fun onAddress(v: String) = _state.update { it.copy(address = v, error = null) }
-    fun onWebsite(v: String) = _state.update { it.copy(website = v, error = null) }
-    fun onEmail(v: String) = _state.update { it.copy(email = v, error = null) }
-    fun onGstin(v: String) = _state.update { it.copy(gstin = v.uppercase(), error = null) }
-
-    fun onLogoTap() {
-        viewModelScope.launch {
-            _effects.send(BusinessProfileEffect.Toast("Change logo coming soon"))
-        }
-    }
 
     fun save() {
         val name = _state.value.name.trim()

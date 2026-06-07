@@ -9,6 +9,7 @@ import com.ardym.nitigrow.core.network.ApiResult
 import com.ardym.nitigrow.core.network.safeApiCall
 import com.ardym.nitigrow.core.realtime.RealtimeClient
 import com.ardym.nitigrow.core.realtime.RealtimeEvent
+import com.ardym.nitigrow.core.storage.TokenDataStore
 import com.ardym.nitigrow.core.util.DispatcherProvider
 import com.ardym.nitigrow.data.local.NitiGrowDatabase
 import com.ardym.nitigrow.data.local.dao.ConversationDao
@@ -27,7 +28,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,6 +47,7 @@ class ChatRepositoryImpl @Inject constructor(
     private val messageDao: MessageDao,
     private val conversationDao: ConversationDao,
     private val realtime: RealtimeClient,
+    private val tokenStore: TokenDataStore,
     private val dispatchers: DispatcherProvider
 ) : ChatRepository {
 
@@ -89,8 +91,12 @@ class ChatRepositoryImpl @Inject constructor(
     ): String {
         val clientId = "local-" + UUID.randomUUID().toString()
         val now = Instant.now().toEpochMilli()
+        // Stamp the active tenant so the locally-composed row is scoped like
+        // synced rows; the cache is also wiped on logout/tenant switch.
+        val tenantId = tokenStore.tenantId.first().orEmpty()
         val entity = MessageEntity(
             localId = clientId,
+            tenantId = tenantId,
             serverId = null,
             clientId = clientId,
             conversationId = conversationId,
@@ -155,7 +161,6 @@ class ChatRepositoryImpl @Inject constructor(
     override fun observeTyping(conversationId: String): Flow<Boolean> =
         typingPerConversation.asStateFlow()
             .map { it[conversationId] ?: false }
-            .filter { true }
 
     override suspend fun connectRealtime() = realtime.connect()
     override suspend fun disconnectRealtime() = realtime.disconnect()

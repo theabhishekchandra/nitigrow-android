@@ -14,7 +14,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -41,14 +40,12 @@ import kotlinx.coroutines.flow.collectLatest
  * Email/password login screen.
  *
  * @param onLoginSuccess invoked once login succeeds and tokens are persisted.
- * @param onForgotPassword navigate to password recovery.
  * @param onOtpRequested retained for source compatibility with the existing nav
  *   graph wiring; unused by the email/password flow.
  */
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit = {},
-    onForgotPassword: () -> Unit = {},
     @Suppress("UNUSED_PARAMETER") onOtpRequested: (String) -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
@@ -131,11 +128,6 @@ fun LoginScreen(
                 loading = state.isLoading,
                 enabled = state.canSubmit
             )
-            Spacer(Modifier.height(8.dp))
-            TextButton(
-                onClick = onForgotPassword,
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Forgot password?") }
         }
     }
 }

@@ -43,8 +43,8 @@ import kotlinx.coroutines.launch
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ContactPickerSheet — bottom sheet that lets the user pick a contact to send
-// a payment link to. Backed by DummyData.contacts() for now; will be replaced
-// with the live ContactRepository observable once that's wired.
+// a payment link to. The [contacts] list is supplied by the caller from the
+// live ContactRepository (GET /api/contacts) — see PaymentLinkViewModel.
 //
 //   ┌──────────────────────────────────────┐
 //   │ Send to                              │

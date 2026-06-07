@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "conversations",
     indices = [
+        Index("tenantId"),
         Index("lastMessageAtEpochMs"),
         Index("isPinned"),
         Index("contactName")
@@ -14,6 +15,10 @@ import androidx.room.PrimaryKey
 )
 data class ConversationEntity(
     @PrimaryKey val id: String,
+    // Multi-tenant scope. Defaults to "" so existing mapper call sites that
+    // predate tenant-scoping still compile; the local cache is wiped on
+    // logout / tenant switch (see LogoutUseCase) to prevent cross-tenant bleed.
+    val tenantId: String = "",
     val contactId: String,
     val contactName: String,
     val contactPhone: String,

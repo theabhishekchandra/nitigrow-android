@@ -55,12 +55,12 @@ class SettingsHubViewModel @Inject constructor(
     val effects = _effects.receiveAsFlow()
 
     init {
+        // Profile + tenant are sourced from the real ProfileRepository (backed by
+        // the account/settings endpoints); refresh() re-fetches from the network.
         observeProfile()
-            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
             .onEach { p -> if (p != null) _state.update { it.copy(profile = p) } }
             .launchIn(viewModelScope)
         repo.observeTenant()
-            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
             .onEach { t -> if (t != null) _state.update { it.copy(tenant = t) } }
             .launchIn(viewModelScope)
         repo.observeNotificationPreferences()

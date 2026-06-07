@@ -12,7 +12,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.ardym.nitigrow.presentation.feature.analytics.AnalyticsScreen
-import com.ardym.nitigrow.presentation.feature.auth.forgot.ForgotPasswordScreen
 import com.ardym.nitigrow.presentation.feature.auth.login.LoginScreen
 import com.ardym.nitigrow.presentation.feature.auth.otp.OtpScreen
 import com.ardym.nitigrow.presentation.feature.billing.BillingScreen
@@ -21,6 +20,7 @@ import com.ardym.nitigrow.presentation.feature.campaigns.detail.CampaignDetailSc
 import com.ardym.nitigrow.presentation.feature.conflicts.ConflictsScreen
 import com.ardym.nitigrow.presentation.feature.inbox.chat.ChatScreen
 import com.ardym.nitigrow.presentation.feature.leads.LeadsScreen
+import com.ardym.nitigrow.presentation.feature.leads.detail.LeadDetailScreen
 import com.ardym.nitigrow.presentation.feature.leads.kanban.LeadsKanbanScreen
 import com.ardym.nitigrow.presentation.feature.onboarding.OnboardingScreen
 import com.ardym.nitigrow.presentation.feature.referrals.ReferralsScreen
@@ -33,6 +33,13 @@ import com.ardym.nitigrow.presentation.feature.settings.waba.WabaNumberScreen
 import com.ardym.nitigrow.presentation.feature.splash.SplashScreen
 import com.ardym.nitigrow.presentation.feature.templates.CreateTemplateScreen
 import com.ardym.nitigrow.presentation.feature.templates.TemplatesScreen
+
+// Lead-detail route. Declared here (not in NavRoutes) so the leadId arg lives
+// next to the only graph that consumes it; NavRoutes stays the source of truth
+// for cross-feature routes.
+private const val LEAD_DETAIL_ROUTE = "leads/detail/{leadId}"
+
+private fun leadDetailRoute(leadId: String) = "leads/detail/$leadId"
 
 @Composable
 fun NitiGrowNavGraph(
@@ -82,9 +89,15 @@ fun NitiGrowNavGraph(
         }
         composable(NavRoutes.LEADS_KANBAN) {
             LeadsKanbanScreen(
-                onLeadClick = { _ -> /* TODO: lead detail route when wired */ },
+                onLeadClick = { leadId -> navController.navigate(leadDetailRoute(leadId)) },
                 onBack = { navController.popBackStack() }
             )
+        }
+        composable(
+            route = LEAD_DETAIL_ROUTE,
+            arguments = listOf(navArgument("leadId") { type = NavType.StringType })
+        ) {
+            LeadDetailScreen(onBack = { navController.popBackStack() })
         }
         composable(NavRoutes.CAMPAIGN_CREATE) {
             CreateCampaignScreen(
@@ -150,8 +163,7 @@ private fun NavGraphBuilder.authGraph(nav: NavHostController) {
                     nav.navigate(NavRoutes.GRAPH_MAIN) {
                         popUpTo(NavRoutes.GRAPH_AUTH) { inclusive = true }
                     }
-                },
-                onForgotPassword = { nav.navigate(NavRoutes.FORGOT_PASSWORD) }
+                }
             )
         }
         composable(
@@ -163,16 +175,6 @@ private fun NavGraphBuilder.authGraph(nav: NavHostController) {
                     popUpTo(NavRoutes.GRAPH_AUTH) { inclusive = true }
                 }
             })
-        }
-        composable(NavRoutes.FORGOT_PASSWORD) {
-            ForgotPasswordScreen(
-                onBack = { nav.popBackStack() },
-                onComplete = {
-                    nav.navigate(NavRoutes.LOGIN) {
-                        popUpTo(NavRoutes.LOGIN) { inclusive = true }
-                    }
-                }
-            )
         }
     }
 }

@@ -1,6 +1,5 @@
 package com.ardym.nitigrow.presentation.feature.settings.business
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -82,12 +81,7 @@ fun BusinessProfileScreen(
     ) { padding ->
         BusinessProfileForm(
             state = state,
-            onLogoTap = viewModel::onLogoTap,
             onName = viewModel::onName,
-            onAddress = viewModel::onAddress,
-            onWebsite = viewModel::onWebsite,
-            onEmail = viewModel::onEmail,
-            onGstin = viewModel::onGstin,
             onSave = viewModel::save,
             modifier = Modifier
                 .fillMaxSize()
@@ -99,12 +93,7 @@ fun BusinessProfileScreen(
 @Composable
 private fun BusinessProfileForm(
     state: BusinessProfileUiState,
-    onLogoTap: () -> Unit,
     onName: (String) -> Unit,
-    onAddress: (String) -> Unit,
-    onWebsite: (String) -> Unit,
-    onEmail: (String) -> Unit,
-    onGstin: (String) -> Unit,
     onSave: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -114,13 +103,7 @@ private fun BusinessProfileForm(
             .padding(horizontal = FormGutter, vertical = FormGutter),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        LogoPlaceholder(onClick = onLogoTap)
-        Text(
-            "Tap to change logo",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 8.dp)
-        )
+        BusinessLogo()
         Spacer(Modifier.height(FormGutter))
 
         OutlinedTextField(
@@ -133,39 +116,13 @@ private fun BusinessProfileForm(
         Spacer(Modifier.height(FieldSpacing))
 
         OutlinedTextField(
-            value = state.address,
-            onValueChange = onAddress,
-            label = { Text("Address") },
-            minLines = 3,
-            maxLines = 5,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(FieldSpacing))
-
-        OutlinedTextField(
-            value = state.website,
-            onValueChange = onWebsite,
-            label = { Text("Website") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(FieldSpacing))
-
-        OutlinedTextField(
             value = state.email,
-            onValueChange = onEmail,
+            onValueChange = {},
             label = { Text("Email") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(FieldSpacing))
-
-        OutlinedTextField(
-            value = state.gstin,
-            onValueChange = onGstin,
-            label = { Text("GSTIN") },
-            supportingText = { Text("Format: 22AAAAA0000A1Z5") },
-            singleLine = true,
+            readOnly = true,
+            enabled = false,
+            supportingText = { Text("Managed by your account") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -196,17 +153,14 @@ private fun BusinessProfileForm(
 }
 
 @Composable
-private fun LogoPlaceholder(onClick: () -> Unit) {
+private fun BusinessLogo() {
     Card(
-        onClick = onClick,
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = Theme.colors.brandSoft),
         modifier = Modifier.size(LogoSize)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(onClick = onClick),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -229,17 +183,9 @@ private fun PreviewBusinessProfileForm() {
             BusinessProfileForm(
                 state = BusinessProfileUiState(
                     name = "Aarav Traders",
-                    address = "MG Road, Pune, MH",
-                    website = "aaravtraders.in",
-                    email = "owner@aaravtraders.in",
-                    gstin = "27AAACA1234A1Z5"
+                    email = "owner@aaravtraders.in"
                 ),
-                onLogoTap = {},
                 onName = {},
-                onAddress = {},
-                onWebsite = {},
-                onEmail = {},
-                onGstin = {},
                 onSave = {}
             )
         }

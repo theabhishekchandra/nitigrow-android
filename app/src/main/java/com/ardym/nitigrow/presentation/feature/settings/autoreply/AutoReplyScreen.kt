@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.WavingHand
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -31,11 +32,16 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -236,14 +242,14 @@ private fun AwayCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(FieldSpacing)
             ) {
-                TimePickerStub(
+                TimePickerField(
                     label = "Start",
                     time = start,
                     enabled = enabled,
                     onChange = onStart,
                     modifier = Modifier.weight(1f)
                 )
-                TimePickerStub(
+                TimePickerField(
                     label = "End",
                     time = end,
                     enabled = enabled,
@@ -268,18 +274,21 @@ private fun AwayCard(
 private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
 /**
- * Placeholder for a real Material 3 TimePickerDialog. Renders the current time
- * with a "Change" button that, for now, just rolls the time forward by 30
- * minutes so the screen feels live in previews and dev builds.
+ * Time field backed by a real Material 3 [TimePicker] hosted in a dialog. Tapping
+ * "Change" opens the clock/dial picker seeded with the current value; confirming
+ * propagates the chosen [LocalTime] back through [onChange].
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TimePickerStub(
+private fun TimePickerField(
     label: String,
     time: LocalTime,
     enabled: Boolean,
     onChange: (LocalTime) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showPicker by remember { mutableStateOf(false) }
+
     Column(modifier = modifier) {
         Text(
             label,
@@ -295,10 +304,41 @@ private fun TimePickerStub(
             )
             Spacer(Modifier.weight(1f))
             OutlinedButton(
-                onClick = { onChange(time.plusMinutes(30)) },
+                onClick = { showPicker = true },
                 enabled = enabled
             ) { Text("Change") }
         }
+    }
+
+    if (showPicker) {
+        val pickerState = rememberTimePickerState(
+            initialHour = time.hour,
+            initialMinute = time.minute,
+            is24Hour = true
+        )
+        AlertDialog(
+            onDismissRequest = { showPicker = false },
+            title = { Text("$label time") },
+            text = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    TimePicker(state = pickerState)
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onChange(LocalTime.of(pickerState.hour, pickerState.minute))
+                        showPicker = false
+                    }
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPicker = false }) { Text("Cancel") }
+            }
+        )
     }
 }
 
