@@ -17,8 +17,10 @@ android {
         applicationId = "com.ardym.nitigrow"
         minSdk = 26              // Android 8.0 — covers 95%+ of Indian devices
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        // Driven from CI so every uploaded build has a unique, monotonic code
+        // (Play rejects a reused versionCode). Falls back to 1 for local builds.
+        versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 1
+        versionName = System.getenv("ANDROID_VERSION_NAME") ?: "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -86,9 +88,7 @@ android {
             )
             buildConfigField("String", "BASE_URL", "\"https://api.nitigrow.in/api/\"")
             buildConfigField("boolean", "ENABLE_LOGGING", "false")
-            if (signingConfigs.getByName("release").storeFile != null) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -110,6 +110,22 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+// Fail loudly if a release artifact is requested without a signing keystore,
+// instead of silently emitting an unsigned APK/AAB that Play Store rejects.
+gradle.taskGraph.whenReady {
+    val buildingReleaseArtifact = allTasks.any { task ->
+        (task.name.startsWith("assemble") || task.name.startsWith("bundle")) &&
+            task.name.contains("Release") && !task.name.contains("Staging")
+    }
+    if (buildingReleaseArtifact && android.signingConfigs.getByName("release").storeFile == null) {
+        throw GradleException(
+            "Release build requested but no signing keystore is configured. " +
+                "Set NITIGROW_STORE_FILE, NITIGROW_STORE_PASSWORD, NITIGROW_KEY_ALIAS and " +
+                "NITIGROW_KEY_PASSWORD (gradle properties or env) before building a release."
+        )
     }
 }
 

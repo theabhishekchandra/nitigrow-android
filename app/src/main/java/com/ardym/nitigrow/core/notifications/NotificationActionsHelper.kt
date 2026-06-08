@@ -43,7 +43,7 @@ object NotificationActionsHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
         return NotificationCompat.Action.Builder(
-            R.drawable.ic_launcher_foreground,
+            R.drawable.ic_stat_nitigrow,
             "Reply",
             replyPending
         )
@@ -67,7 +67,7 @@ object NotificationActionsHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Action.Builder(
-            R.drawable.ic_launcher_foreground,
+            R.drawable.ic_stat_nitigrow,
             "Mark as read",
             pending
         )

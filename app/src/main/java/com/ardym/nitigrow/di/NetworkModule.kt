@@ -41,8 +41,12 @@ object NetworkModule {
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor =
         HttpLoggingInterceptor().apply {
-            level = if (BuildConfig.ENABLE_LOGGING) HttpLoggingInterceptor.Level.BODY
+            // Never log bodies: they carry auth/refresh tokens and customer chat
+            // payloads, and debug builds point at the production API. Cap at
+            // HEADERS with the Authorization header redacted.
+            level = if (BuildConfig.ENABLE_LOGGING) HttpLoggingInterceptor.Level.HEADERS
             else HttpLoggingInterceptor.Level.NONE
+            redactHeader("Authorization")
         }
 
     /**

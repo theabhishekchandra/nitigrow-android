@@ -36,7 +36,7 @@ class NotificationPresenter @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notif = NotificationCompat.Builder(context, NotificationChannels.CHAT)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_nitigrow)
             .setContentTitle(contactName)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
@@ -59,7 +59,7 @@ class NotificationPresenter @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notif = NotificationCompat.Builder(context, NotificationChannels.CAMPAIGN)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_nitigrow)
             .setContentTitle(title)
             .setContentText(body)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -71,7 +71,7 @@ class NotificationPresenter @Inject constructor(
 
     fun showSystem(id: Int, title: String, body: String) {
         val notif = NotificationCompat.Builder(context, NotificationChannels.SYSTEM)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_nitigrow)
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)

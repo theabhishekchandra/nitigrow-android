@@ -2,6 +2,8 @@ package com.ardym.nitigrow.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ardym.nitigrow.core.util.Constants
 import com.ardym.nitigrow.data.local.NitiGrowDatabase
 import com.ardym.nitigrow.data.local.dao.CampaignDao
@@ -28,11 +30,24 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
+    // v1 → v2 added `tenantId` to the conversations and messages cache tables.
+    // Add the column (with an empty default for any pre-existing cached rows,
+    // which get re-synced from the server) instead of dropping the whole DB.
+    private val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `conversations` ADD COLUMN `tenantId` TEXT NOT NULL DEFAULT ''")
+            db.execSQL("ALTER TABLE `messages` ADD COLUMN `tenantId` TEXT NOT NULL DEFAULT ''")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): NitiGrowDatabase =
         Room.databaseBuilder(context, NitiGrowDatabase::class.java, Constants.DATABASE_NAME)
-            .fallbackToDestructiveMigration()
+            .addMigrations(MIGRATION_1_2)
+            // Destructive only on downgrade (dev rollbacks) — never silently wipe
+            // user data on a forward upgrade.
+            .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
     @Provides

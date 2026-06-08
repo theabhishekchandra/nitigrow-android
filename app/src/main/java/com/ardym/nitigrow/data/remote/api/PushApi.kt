@@ -7,12 +7,9 @@ import retrofit2.http.HTTP
 import retrofit2.http.POST
 import retrofit2.http.Query
 
-// FCM device-token registration.
-//
-// NOTE: the backend does not yet expose a device-registration route (the
-// notifications router is in-app CRUD only). These calls target
-// `notifications/devices`; until the backend adds it, registration fails
-// gracefully via safeApiCall. Wire the real route in Phase 3.
+// FCM device-token registration. Targets the backend device registry at
+// POST/DELETE `notifications/devices` (added in commit d9886dd). Calls fail
+// gracefully via safeApiCall if the network is unavailable.
 interface PushApi {
 
     @POST("notifications/devices")
