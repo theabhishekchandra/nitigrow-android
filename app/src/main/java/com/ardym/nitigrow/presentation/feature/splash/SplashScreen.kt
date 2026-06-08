@@ -42,7 +42,7 @@ fun SplashScreen(
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "by ARDYM",
+            text = "by Websbaba Technologies",
             color = colors.paper.copy(alpha = 0.7f),
             style = MaterialTheme.typography.bodyMedium
         )
