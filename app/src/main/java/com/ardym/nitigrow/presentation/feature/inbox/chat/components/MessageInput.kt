@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -45,7 +47,7 @@ fun MessageInput(
     val canSend = text.isNotBlank()
     val pillShape = RoundedCornerShape(999.dp)
 
-    Column(modifier = modifier.fillMaxWidth().background(Theme.colors.paper)) {
+    Column(modifier = modifier.fillMaxWidth().background(Theme.colors.paper).navigationBarsPadding().imePadding()) {
         HorizontalDivider(thickness = 1.dp, color = Theme.colors.border)
         Row(
             verticalAlignment = Alignment.CenterVertically,

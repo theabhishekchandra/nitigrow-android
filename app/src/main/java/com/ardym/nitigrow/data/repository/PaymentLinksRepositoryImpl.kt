@@ -28,7 +28,7 @@ class PaymentLinksRepositoryImpl @Inject constructor(
 
     override suspend fun list(): ApiResult<List<PaymentLink>> =
         when (val r = safeApiCall(dispatchers.io) { api.list() }) {
-            is ApiResult.Success -> ApiResult.Success(r.data.data.map { it.toDomain() })
+            is ApiResult.Success -> ApiResult.Success((r.data.data ?: emptyList()).map { it.toDomain() })
             is ApiResult.Error -> r
         }
 }

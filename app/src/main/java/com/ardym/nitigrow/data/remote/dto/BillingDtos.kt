@@ -12,7 +12,7 @@ data class PlanDto(
 )
 
 data class PlanListResponse(
-    @SerializedName("data") val data: List<PlanDto>
+    @SerializedName("data") val data: List<PlanDto>? = null
 )
 
 data class SubscriptionDto(
@@ -34,7 +34,7 @@ data class PaymentDto(
 )
 
 data class PaymentListResponse(
-    @SerializedName("data") val data: List<PaymentDto>
+    @SerializedName("data") val data: List<PaymentDto>? = null
 )
 
 data class CreateOrderRequest(

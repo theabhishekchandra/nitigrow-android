@@ -12,7 +12,7 @@ data class MessagesPerDayDto(
 )
 
 data class TopAgentsResponseDto(
-    val data: List<AgentDto> = emptyList()
+    val data: List<AgentDto>? = null
 )
 
 data class AgentDto(

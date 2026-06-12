@@ -74,7 +74,7 @@ class ProfileRepositoryImpl @Inject constructor(
     override suspend fun refreshTenant(): ApiResult<Unit> =
         when (val res = safeApiCall(dispatchers.io) { api.tenant() }) {
             is ApiResult.Success -> {
-                tenantDao.upsert(res.data.toEntity())
+                res.data.tenant?.let { tenantDao.upsert(it.toEntity()) }
                 ApiResult.Success(Unit)
             }
             is ApiResult.Error -> res
@@ -83,7 +83,7 @@ class ProfileRepositoryImpl @Inject constructor(
     override suspend fun refreshTeam(): ApiResult<Unit> =
         when (val res = safeApiCall(dispatchers.io) { api.team() }) {
             is ApiResult.Success -> {
-                teamDao.upsertAll(res.data.data.map { it.toEntity() })
+                teamDao.upsertAll((res.data.data ?: emptyList()).map { it.toEntity() })
                 ApiResult.Success(Unit)
             }
             is ApiResult.Error -> res
