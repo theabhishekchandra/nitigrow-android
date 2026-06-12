@@ -1,8 +1,10 @@
 package com.ardym.nitigrow.presentation.feature.settings.business
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,24 +12,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,16 +33,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ardym.nitigrow.presentation.components.ErrorBanner
+import com.ardym.nitigrow.presentation.feature.settings.components.FieldLabel
+import com.ardym.nitigrow.presentation.feature.settings.components.NgTextField
+import com.ardym.nitigrow.presentation.feature.settings.components.PrimaryCta
+import com.ardym.nitigrow.presentation.feature.settings.components.SubScreenHeader
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
 import com.ardym.nitigrow.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 
-private val FormGutter = 20.dp
-private val FieldSpacing = 12.dp
-private val LogoSize = 96.dp
+// ─────────────────────────────────────────────────────────────────────────────
+// BusinessProfileScreen — Settings ▸ Business profile.
+//
+// Only the fields the backend actually persists are shown: business name
+// (editable) and account email (read-only). Category / address / website /
+// GSTIN from the prototype have no backing fields, so they are intentionally
+// absent (see BusinessProfileUiState docs).
+// ─────────────────────────────────────────────────────────────────────────────
+
+private val FieldSpacing = 14.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +63,7 @@ fun BusinessProfileScreen(
     viewModel: BusinessProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val colors = Theme.colors
     val snackbar = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -67,22 +76,26 @@ fun BusinessProfileScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Business profile", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
+        containerColor = colors.paper,
+        topBar = { SubScreenHeader(title = "Business profile", onBack = onBack) },
+        bottomBar = {
+            Column {
+                HorizontalDivider(color = colors.border2)
+                Box(modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 16.dp)) {
+                    PrimaryCta(
+                        text = "Save changes",
+                        onClick = viewModel::save,
+                        enabled = state.name.isNotBlank(),
+                        loading = state.isSaving
+                    )
                 }
-            )
+            }
         },
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
         BusinessProfileForm(
             state = state,
             onName = viewModel::onName,
-            onSave = viewModel::save,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -94,81 +107,65 @@ fun BusinessProfileScreen(
 private fun BusinessProfileForm(
     state: BusinessProfileUiState,
     onName: (String) -> Unit,
-    onSave: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = Theme.colors
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = FormGutter, vertical = FormGutter),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 16.dp)
     ) {
-        BusinessLogo()
-        Spacer(Modifier.height(FormGutter))
-
-        OutlinedTextField(
-            value = state.name,
-            onValueChange = onName,
-            label = { Text("Business name") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
+        LogoBlock()
         Spacer(Modifier.height(FieldSpacing))
 
-        OutlinedTextField(
-            value = state.email,
-            onValueChange = {},
-            label = { Text("Email") },
-            singleLine = true,
-            readOnly = true,
-            enabled = false,
-            supportingText = { Text("Managed by your account") },
-            modifier = Modifier.fillMaxWidth()
+        FieldLabel("Business name")
+        NgTextField(value = state.name, onValueChange = onName)
+        Spacer(Modifier.height(FieldSpacing))
+
+        FieldLabel("Email")
+        NgTextField(value = state.email, onValueChange = {}, enabled = false)
+        Text(
+            "Managed by your account",
+            fontSize = 11.5.sp,
+            color = colors.muted,
+            modifier = Modifier.padding(top = 6.dp)
         )
 
         state.error?.let {
             Spacer(Modifier.height(FieldSpacing))
             ErrorBanner(message = it)
         }
-
-        Spacer(Modifier.height(FormGutter))
-
-        FilledTonalButton(
-            onClick = onSave,
-            enabled = !state.isSaving && state.name.isNotBlank(),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (state.isSaving) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            } else {
-                Text("Save")
-            }
-        }
-        Spacer(Modifier.height(FormGutter))
     }
 }
 
 @Composable
-private fun BusinessLogo() {
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = Theme.colors.brandSoft),
-        modifier = Modifier.size(LogoSize)
+private fun LogoBlock() {
+    val colors = Theme.colors
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(64.dp)
+                .background(colors.card, RoundedCornerShape(18.dp))
+                .border(1.dp, colors.border, RoundedCornerShape(18.dp))
         ) {
             Icon(
                 Icons.Filled.Storefront,
                 contentDescription = "Business logo",
-                tint = Theme.colors.brand
+                tint = colors.brand,
+                modifier = Modifier.size(30.dp)
             )
         }
+        Spacer(Modifier.size(14.dp))
+        Text(
+            "Business logo",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.ink
+        )
     }
 }
 
@@ -176,18 +173,13 @@ private fun BusinessLogo() {
 @Composable
 private fun PreviewBusinessProfileForm() {
     NitiGrowTheme {
-        Column(
-            verticalArrangement = Arrangement.Top,
+        BusinessProfileForm(
+            state = BusinessProfileUiState(
+                name = "Sharma Sweets & Caterers",
+                email = "anita@sharmasweets.in"
+            ),
+            onName = {},
             modifier = Modifier.fillMaxWidth()
-        ) {
-            BusinessProfileForm(
-                state = BusinessProfileUiState(
-                    name = "Aarav Traders",
-                    email = "owner@aaravtraders.in"
-                ),
-                onName = {},
-                onSave = {}
-            )
-        }
+        )
     }
 }

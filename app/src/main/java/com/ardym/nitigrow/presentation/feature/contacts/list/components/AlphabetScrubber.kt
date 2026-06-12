@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.ardym.nitigrow.ui.theme.Theme
 
 @Composable
 fun AlphabetScrubber(
@@ -43,8 +45,11 @@ fun AlphabetScrubber(
         letters.forEach { ch ->
             Text(
                 text = ch.toString(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.sp,
+                    letterSpacing = 0.sp
+                ),
+                color = Theme.colors.muted,
                 modifier = Modifier.padding(vertical = 1.dp)
             )
         }

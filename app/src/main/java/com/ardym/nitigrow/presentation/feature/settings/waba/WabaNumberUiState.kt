@@ -13,5 +13,9 @@ data class WabaNumberUiState(
         com.ardym.nitigrow.domain.model.WabaStatus.NOT_LINKED,
     val qualityRating: String = "GREEN",
     val verifiedAt: java.time.Instant? = null,
-    val messagingLimit: String = "1K/24h"
+    val messagingLimit: String = "1K/24h",
+    /** Business-initiated messages sent today (tier usage numerator). */
+    val dailyUsed: Int = 0,
+    /** Daily business-initiated cap for the current tier; 0 = unknown. */
+    val dailyLimit: Int = 0
 )

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Segment chip: brand #0F7F5E pill (used once real segment counts land). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FF0F7F5E" />
+    <corners android:radius="999dp" />
+</shape>

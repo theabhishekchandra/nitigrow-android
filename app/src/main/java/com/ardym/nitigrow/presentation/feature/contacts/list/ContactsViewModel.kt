@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -61,7 +62,9 @@ class ContactsViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true, error = null) }
             when (val res = refresh.invoke()) {
-                is ApiResult.Success -> _state.update { it.copy(isRefreshing = false) }
+                is ApiResult.Success -> _state.update {
+                    it.copy(isRefreshing = false, lastSyncedAt = Instant.now())
+                }
                 is ApiResult.Error -> _state.update {
                     it.copy(isRefreshing = false, error = res.message)
                 }

@@ -2,6 +2,7 @@ package com.ardym.nitigrow.presentation.feature.inbox.chat.components
 
 import android.text.format.Formatter
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import com.ardym.nitigrow.domain.model.Message
 import com.ardym.nitigrow.domain.model.MessageStatus
 import com.ardym.nitigrow.domain.model.MessageType
-import com.ardym.nitigrow.presentation.feature.inbox.list.components.StatusTicks
 import com.ardym.nitigrow.ui.theme.BubbleInShape
 import com.ardym.nitigrow.ui.theme.BubbleOutShape
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
@@ -60,6 +60,7 @@ fun DocumentMessageBubble(
     val shape = if (isOutbound) BubbleOutShape else BubbleInShape
     val bg = if (isOutbound) Theme.colors.bubbleOut else Theme.colors.bubbleIn
     val ink = if (isOutbound) Theme.colors.bubbleOutInk else Theme.colors.bubbleInInk
+    val metaColor = bubbleMetaColor(isOutbound = isOutbound)
     val align = if (isOutbound) Alignment.End else Alignment.Start
 
     val mime = message.mediaMimeType.orEmpty()
@@ -81,6 +82,7 @@ fun DocumentMessageBubble(
                 .widthIn(max = BubbleMaxWidth)
                 .clip(shape)
                 .background(bg)
+                .border(1.dp, if (isOutbound) bg else Theme.colors.bubbleInBorder, shape)
                 .clickable { onOpenDoc() }
                 .padding(horizontal = HorizontalPadding, vertical = VerticalPadding),
             verticalAlignment = Alignment.CenterVertically,
@@ -116,18 +118,18 @@ fun DocumentMessageBubble(
                 ) {
                     Text(
                         text = sizeLabel ?: mime.ifBlank { "Document" },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = ink.copy(alpha = 0.7f),
+                        style = bubbleTimeStyle(),
+                        color = metaColor,
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = DocTimeFmt.format(message.sentAt),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ink.copy(alpha = 0.7f),
+                            style = bubbleTimeStyle(),
+                            color = metaColor,
                         )
                         if (isOutbound) {
                             Spacer(Modifier.size(4.dp))
-                            StatusTicks(status = message.status)
+                            BubbleStatusTicks(status = message.status)
                         }
                     }
                 }

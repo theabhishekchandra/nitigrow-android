@@ -15,7 +15,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
+import com.ardym.nitigrow.ui.theme.Theme
 
+/**
+ * Circular initials avatar. Colour pair comes from the warm 7-way rotation in
+ * Theme.colors.avatars, picked by a stable hash of the name so a contact keeps
+ * the same colour everywhere.
+ */
 @Composable
 fun Avatar(
     name: String,
@@ -30,13 +36,16 @@ fun Avatar(
             .joinToString("")
             .ifBlank { "?" }
     }
-    val color = remember(name) { colorForName(name) }
+    val palette = Theme.colors.avatars
+    val (bg, fg) = remember(name, palette) {
+        palette[(name.hashCode().toLong() and 0x7fffffff).rem(palette.size).toInt()]
+    }
 
     Box(
         modifier = modifier
             .size(sizeDp.dp)
             .clip(CircleShape)
-            .background(color),
+            .background(bg),
         contentAlignment = Alignment.Center
     ) {
         if (!url.isNullOrBlank()) {
@@ -44,32 +53,21 @@ fun Avatar(
                 model = url,
                 contentDescription = name,
                 modifier = Modifier.size(sizeDp.dp).clip(CircleShape),
-                error = { Initials(initials) },
-                loading = { Initials(initials) }
+                error = { Initials(initials, fg) },
+                loading = { Initials(initials, fg) }
             )
         } else {
-            Initials(initials)
+            Initials(initials, fg)
         }
     }
 }
 
 @Composable
-private fun Initials(text: String) {
+private fun Initials(text: String, color: Color) {
     Text(
         text = text,
-        color = Color.White,
+        color = color,
         style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold
+        fontWeight = FontWeight.Bold
     )
-}
-
-private val palette = listOf(
-    Color(0xFF1F8A70), Color(0xFF2E7CB7), Color(0xFFB8651D),
-    Color(0xFF8E44AD), Color(0xFFC0392B), Color(0xFF16A085),
-    Color(0xFF2C3E50), Color(0xFFD35400)
-)
-
-private fun colorForName(name: String): Color {
-    val idx = (name.hashCode().toLong() and 0x7fffffff).rem(palette.size).toInt()
-    return palette[idx]
 }

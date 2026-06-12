@@ -97,12 +97,21 @@ fun NitiGrowNavGraph(
             route = LEAD_DETAIL_ROUTE,
             arguments = listOf(navArgument("leadId") { type = NavType.StringType })
         ) {
-            LeadDetailScreen(onBack = { navController.popBackStack() })
+            LeadDetailScreen(
+                onBack = { navController.popBackStack() },
+                // Backend keys conversations by contactId (contactId == conversationId).
+                onOpenChat = { contactId -> navController.navigate(NavRoutes.chat(contactId)) }
+            )
         }
         composable(NavRoutes.CAMPAIGN_CREATE) {
             CreateCampaignScreen(
                 onBack = { navController.popBackStack() },
-                onCreated = { navController.popBackStack() }
+                onCreated = { navController.popBackStack() },
+                onViewReport = { id ->
+                    navController.navigate(NavRoutes.campaignDetail(id)) {
+                        popUpTo(NavRoutes.CAMPAIGN_CREATE) { inclusive = true }
+                    }
+                }
             )
         }
         composable(
@@ -163,7 +172,8 @@ private fun NavGraphBuilder.authGraph(nav: NavHostController) {
                     nav.navigate(NavRoutes.GRAPH_MAIN) {
                         popUpTo(NavRoutes.GRAPH_AUTH) { inclusive = true }
                     }
-                }
+                },
+                onOtpRequested = { phone -> nav.navigate(NavRoutes.otp(phone)) }
             )
         }
         composable(

@@ -2,52 +2,55 @@ package com.ardym.nitigrow.presentation.feature.templates
 
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ardym.nitigrow.ui.theme.BubbleInShape
@@ -55,12 +58,17 @@ import com.ardym.nitigrow.ui.theme.NitiGrowTheme
 import com.ardym.nitigrow.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 
-private val ScreenPadding: Dp = 16.dp
+private val ScreenPadding: Dp = 18.dp
 private val SectionGap: Dp = 16.dp
 private val FieldGap: Dp = 12.dp
 private val PreviewBubblePadding: Dp = 14.dp
+private val InputRadius: Dp = 12.dp
+private val CtaRadius: Dp = 14.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val InputShape = RoundedCornerShape(InputRadius)
+private val CtaShape = RoundedCornerShape(CtaRadius)
+private val PillShape = RoundedCornerShape(999.dp)
+
 @Composable
 fun CreateTemplateScreen(
     onBack: () -> Unit,
@@ -90,7 +98,6 @@ fun CreateTemplateScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CreateTemplateScreenContent(
     state: CreateTemplateUiState,
@@ -103,29 +110,14 @@ private fun CreateTemplateScreenContent(
     onSubmit: () -> Unit,
     onClose: () -> Unit,
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("New template", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onClose) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Theme.colors.brand,
-                    titleContentColor = Theme.colors.paper,
-                    navigationIconContentColor = Theme.colors.paper,
-                ),
-            )
-        },
-        containerColor = Theme.colors.paper,
-    ) { padding ->
+    Scaffold(containerColor = Theme.colors.paper) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
         ) {
+            CreateTemplateHeader(onClose = onClose)
+
             StepProgress(step = state.step)
 
             Box(modifier = Modifier.weight(1f)) {
@@ -155,25 +147,66 @@ private fun CreateTemplateScreenContent(
 }
 
 @Composable
+private fun CreateTemplateHeader(onClose: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 6.dp, end = 14.dp, top = 12.dp, bottom = 4.dp),
+    ) {
+        IconButton(onClick = onClose) {
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Theme.colors.ink,
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "New template",
+                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 21.sp,
+                color = Theme.colors.ink,
+            )
+            Text(
+                text = "Goes to Meta for review — usually under 24 hours.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Theme.colors.muted,
+            )
+        }
+    }
+}
+
+@Composable
 private fun StepProgress(step: CreateStep) {
     val fraction = when (step) {
         CreateStep.DETAILS -> 1f / 3f
         CreateStep.BODY -> 2f / 3f
         CreateStep.PREVIEW -> 1f
     }
-    Column(modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 12.dp)) {
+    Column(modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 10.dp)) {
         Text(
-            text = "Step ${stepIndex(step)} of 3 — ${stepLabel(step)}",
-            style = MaterialTheme.typography.labelMedium,
+            text = "STEP ${stepIndex(step)} OF 3 — ${stepLabel(step).uppercase()}",
+            style = MaterialTheme.typography.labelSmall,
             color = Theme.colors.muted,
         )
         Spacer(Modifier.height(6.dp))
-        LinearProgressIndicator(
-            progress = { fraction },
-            modifier = Modifier.fillMaxWidth().height(6.dp),
-            color = Theme.colors.brand,
-            trackColor = Theme.colors.paper3,
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(Theme.colors.paper2),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(fraction)
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Theme.colors.brand),
+            )
+        }
     }
 }
 
@@ -189,7 +222,6 @@ private fun stepLabel(step: CreateStep): String = when (step) {
     CreateStep.PREVIEW -> "Preview"
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DetailsStep(
     state: CreateTemplateUiState,
@@ -205,39 +237,30 @@ private fun DetailsStep(
             .padding(ScreenPadding),
         verticalArrangement = Arrangement.spacedBy(FieldGap),
     ) {
-        OutlinedTextField(
+        DesignTextField(
+            label = "Template name",
             value = state.name,
             onValueChange = onName,
-            label = { Text("Template name") },
-            supportingText = { Text("snake_case, 3-50 chars, no spaces") },
+            helper = "snake_case, 3-50 chars, no spaces",
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            monospace = true,
         )
 
-        LanguageDropdown(value = state.language, onChange = onLanguage)
+        LanguagePicker(value = state.language, onChange = onLanguage)
 
         Column {
-            Text(
-                "Category",
-                style = MaterialTheme.typography.labelMedium,
-                color = Theme.colors.ink2,
-            )
-            Spacer(Modifier.height(6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FieldLabel("Category")
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 val items = listOf(
                     TemplateCategory.MARKETING to "Marketing",
                     TemplateCategory.UTILITY to "Utility",
                     TemplateCategory.AUTHENTICATION to "Authentication",
                 )
                 items.forEach { (cat, label) ->
-                    FilterChip(
+                    SelectorPill(
+                        label = label,
                         selected = state.category == cat,
                         onClick = { onCategory(cat) },
-                        label = { Text(label) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Theme.colors.brandSoft,
-                            selectedLabelColor = Theme.colors.brand,
-                        ),
                     )
                 }
             }
@@ -245,33 +268,50 @@ private fun DetailsStep(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LanguageDropdown(
+private fun LanguagePicker(
     value: TemplateLanguage,
     onChange: (TemplateLanguage) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        OutlinedTextField(
-            value = "${value.label} — ${displayName(value)}",
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Language") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true),
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            TemplateLanguage.values().forEach { lang ->
-                DropdownMenuItem(
-                    text = { Text("${lang.label} — ${displayName(lang)}") },
-                    onClick = {
-                        onChange(lang)
-                        expanded = false
-                    },
+    Column {
+        FieldLabel("Language")
+        Box {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(InputShape)
+                    .background(Theme.colors.card)
+                    .border(1.dp, Theme.colors.border, InputShape)
+                    .clickable { expanded = true }
+                    .padding(horizontal = 14.dp, vertical = 13.dp),
+            ) {
+                Text(
+                    text = "${value.label} — ${displayName(value)}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Theme.colors.ink,
+                    modifier = Modifier.weight(1f),
                 )
+                Icon(
+                    Icons.Filled.ArrowDropDown,
+                    contentDescription = "Choose language",
+                    tint = Theme.colors.muted,
+                )
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                TemplateLanguage.values().forEach { lang ->
+                    DropdownMenuItem(
+                        text = { Text("${lang.label} — ${displayName(lang)}") },
+                        onClick = {
+                            onChange(lang)
+                            expanded = false
+                        },
+                    )
+                }
             }
         }
     }
@@ -299,13 +339,11 @@ private fun BodyStep(
             style = MaterialTheme.typography.bodySmall,
             color = Theme.colors.muted,
         )
-        OutlinedTextField(
+        DesignTextField(
+            label = "Body",
             value = state.body,
             onValueChange = onBody,
-            label = { Text("Body") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp),
+            minHeight = 180.dp,
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -314,6 +352,7 @@ private fun BodyStep(
             Text(
                 "${state.body.length} / $TEMPLATE_BODY_MAX_LENGTH",
                 style = MaterialTheme.typography.labelSmall,
+                letterSpacing = 0.2.sp,
                 color = if (state.body.length >= TEMPLATE_BODY_MAX_LENGTH) Theme.colors.danger else Theme.colors.muted,
             )
         }
@@ -328,7 +367,11 @@ private fun PreviewStep(state: CreateTemplateUiState) {
             .padding(ScreenPadding),
         verticalArrangement = Arrangement.spacedBy(SectionGap),
     ) {
-        Text("Preview", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(
+            "Preview",
+            style = MaterialTheme.typography.headlineSmall,
+            color = Theme.colors.ink,
+        )
         TemplatePreviewBubble(body = state.body.ifBlank { "Your template body will appear here." })
         Text(
             "Name: ${state.name.ifBlank { "(unnamed)" }}  ·  ${state.language.label}  ·  ${state.category.name.lowercase().replaceFirstChar { it.uppercase() }}",
@@ -349,7 +392,7 @@ private fun TemplatePreviewBubble(body: String) {
     ) {
         Column(modifier = Modifier.padding(PreviewBubblePadding)) {
             Text(
-                "WhatsApp message",
+                "WHATSAPP MESSAGE",
                 style = MaterialTheme.typography.labelSmall,
                 color = Theme.colors.muted,
             )
@@ -374,29 +417,142 @@ private fun StepButtons(
         modifier = Modifier
             .fillMaxWidth()
             .padding(ScreenPadding),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (state.step != CreateStep.DETAILS) {
-            TextButton(onClick = onBackStep) { Text("Back") }
+            OutlinedButton(
+                onClick = onBackStep,
+                shape = CtaShape,
+                border = BorderStroke(1.dp, Theme.colors.border),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Theme.colors.card,
+                    contentColor = Theme.colors.ink,
+                ),
+                contentPadding = PaddingValues(vertical = 14.dp),
+                modifier = Modifier.weight(1f),
+            ) {
+                Text("Back", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            }
         }
-        if (state.step != CreateStep.PREVIEW) {
-            val enabled = when (state.step) {
-                CreateStep.DETAILS -> state.canAdvanceFromDetails
-                CreateStep.BODY -> state.canAdvanceFromBody
-                CreateStep.PREVIEW -> false
-            }
-            FilledTonalButton(onClick = onNext, enabled = enabled) {
-                Text("Next")
-                Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
-            }
-        } else {
-            // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
-            FilledTonalButton(onClick = onSubmit, enabled = state.canSubmit) {
-                Text(if (state.isSubmitting) "Submitting…" else "Submit for approval")
-            }
+
+        val isPreview = state.step == CreateStep.PREVIEW
+        val enabled = when (state.step) {
+            CreateStep.DETAILS -> state.canAdvanceFromDetails
+            CreateStep.BODY -> state.canAdvanceFromBody
+            CreateStep.PREVIEW -> state.canSubmit
+        }
+        Button(
+            onClick = if (isPreview) onSubmit else onNext,
+            enabled = enabled,
+            shape = CtaShape,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Theme.colors.brand,
+                contentColor = Theme.colors.paper,
+                disabledContainerColor = Theme.colors.paper3,
+                disabledContentColor = Theme.colors.muted,
+            ),
+            contentPadding = PaddingValues(vertical = 14.dp),
+            modifier = Modifier.weight(2f),
+        ) {
+            Text(
+                text = when {
+                    !isPreview -> "Next"
+                    state.isSubmitting -> "Submitting…"
+                    else -> "Submit for review"
+                },
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
+}
+
+// ─── Design-language form primitives ─────────────────────────────────────────
+
+@Composable
+private fun FieldLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = Theme.colors.ink3,
+        modifier = Modifier.padding(bottom = 6.dp),
+    )
+}
+
+/**
+ * Input styled to the design language: 12sp w600 ink3 label above a card-surface
+ * field with 1dp border and 12dp radius. `monospace` is used for the template
+ * name so authors see the exact snake_case Meta will receive.
+ */
+@Composable
+private fun DesignTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    helper: String? = null,
+    singleLine: Boolean = false,
+    monospace: Boolean = false,
+    minHeight: Dp = Dp.Unspecified,
+) {
+    Column(modifier = modifier) {
+        FieldLabel(label)
+        val textStyle = MaterialTheme.typography.bodyLarge.copy(
+            color = Theme.colors.ink,
+            fontFamily = if (monospace) FontFamily.Monospace else MaterialTheme.typography.bodyLarge.fontFamily,
+        )
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = singleLine,
+            textStyle = textStyle,
+            cursorBrush = SolidColor(Theme.colors.brand),
+            decorationBox = { innerTextField ->
+                Box(
+                    contentAlignment = Alignment.TopStart,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = minHeight)
+                        .clip(InputShape)
+                        .background(Theme.colors.card)
+                        .border(1.dp, Theme.colors.border, InputShape)
+                        .padding(horizontal = 14.dp, vertical = 13.dp),
+                ) {
+                    innerTextField()
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        helper?.let {
+            Spacer(Modifier.height(5.dp))
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                fontSize = 11.5.sp,
+                color = Theme.colors.muted,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SelectorPill(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = if (selected) Theme.colors.paper else Theme.colors.ink3,
+        modifier = Modifier
+            .clip(PillShape)
+            .background(if (selected) Theme.colors.brand else Theme.colors.paper2)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 7.dp),
+    )
 }
 
 @Preview(showBackground = true)

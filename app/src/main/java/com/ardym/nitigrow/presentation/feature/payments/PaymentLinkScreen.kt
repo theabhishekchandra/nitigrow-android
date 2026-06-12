@@ -1,6 +1,7 @@
 package com.ardym.nitigrow.presentation.feature.payments
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,75 +15,81 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ardym.nitigrow.presentation.components.ErrorBanner
+import com.ardym.nitigrow.presentation.feature.inbox.list.components.Avatar
 import com.ardym.nitigrow.presentation.feature.payments.components.ContactPickerSheet
 import com.ardym.nitigrow.presentation.feature.payments.components.PaymentLinkRow
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
 import com.ardym.nitigrow.ui.theme.Theme
+import kotlinx.coroutines.launch
+import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PaymentLinkScreen — "Send a payment link" feature root.
+// PaymentLinkScreen — "Payment links" feature root (design: Payments screen).
 //
-// Layout (spec: docs/phase-3-mobile.md §1.3 "Payments Screen"):
-//   ┌── TopAppBar "Send payment link" ◀ ─────────────────────┐
-//   │                                                         │
-//   │ ┌─────────────── Send link card ───────────────────┐    │
-//   │ │  Amount                                          │    │
-//   │ │  ┌──────────────────────────────────────────────┐│    │
-//   │ │  │ ₹  [           5000                       ] ││    │
-//   │ │  └──────────────────────────────────────────────┘│    │
-//   │ │  To                                              │    │
-//   │ │  [+ Pick a contact ▾]    or  [⬤ Priya Sharma ✕] │    │
-//   │ │  Description (optional)                          │    │
-//   │ │  [                                              ] │    │
-//   │ │  ┌──────────── Send link ───────────────────────┐│    │
-//   │ │  └──────────────────────────────────────────────┘│    │
-//   │ └──────────────────────────────────────────────────┘    │
-//   │                                                         │
-//   │ Recent payment links                                    │
-//   │ ┌─ Priya Sharma · ₹12,000 · PAID · 18 min ago ────────┐ │
-//   │ ┌─ Rahul Verma  · ₹48,500 · PENDING · 2 h ago ────────┐ │
-//   └─────────────────────────────────────────────────────────┘
+//   ◀  Payment links                       ← Fraunces 21sp
+//      ₹48,250 collected in June           ← only when something was collected
+//   ┌─ [₹]  ₹6,800 · Rajesh · Today ──(Pending)──[⧉]─┐
+//   ┌─ [₹]  ₹2,450 · Kavita · Tue ───(Paid)─────[⧉]─┐
+//                                        [+ New link] ← extended FAB
+//
+// "+ New link" opens the new-link bottom sheet (amount → contact → note →
+// create CTA); "Change" inside it opens the contact picker sheet. Both sheets
+// drive the same ViewModel form state as before — no data-layer changes.
 // ─────────────────────────────────────────────────────────────────────────────
 
-private const val AMOUNT_MAX_LENGTH = 7
-private val SectionGap = 16.dp
-private val CardInnerPad = 16.dp
+private val InrFormat: NumberFormat = NumberFormat.getInstance(Locale("en", "IN"))
+private val MonthFmt = DateTimeFormatter.ofPattern("MMMM", Locale.ENGLISH)
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** Which bottom sheet is showing. Presentation-only state. */
+private enum class PaySheet { NONE, NEW_LINK, PICK_CONTACT }
+
 @Composable
 fun PaymentLinkScreen(
     onBack: () -> Unit,
@@ -94,7 +101,6 @@ fun PaymentLinkScreen(
         onBack = onBack,
         onAmountChange = viewModel::onAmountChange,
         onPickContact = viewModel::onPickContact,
-        onClearContact = { viewModel.onPickContact("", "") },
         onDescriptionChange = viewModel::onDescriptionChange,
         onSend = viewModel::send,
     )
@@ -107,156 +113,230 @@ private fun PaymentLinkScreenContent(
     onBack: () -> Unit,
     onAmountChange: (String) -> Unit,
     onPickContact: (String, String) -> Unit,
-    onClearContact: () -> Unit,
     onDescriptionChange: (String) -> Unit,
     onSend: () -> Unit,
 ) {
     val colors = Theme.colors
-    var pickerOpen by remember { mutableStateOf(false) }
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboardManager.current
+    var sheet by remember { mutableStateOf(PaySheet.NONE) }
+
+    // Close the new-link sheet only when the ViewModel reports a real success
+    // (isSending flips off with no error — the form is cleared by then).
+    var wasSending by remember { mutableStateOf(false) }
+    LaunchedEffect(state.isSending) {
+        if (wasSending && !state.isSending && state.error == null) {
+            sheet = PaySheet.NONE
+            snackbar.showSnackbar("Payment link sent")
+        }
+        wasSending = state.isSending
+    }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Send payment link", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
+        containerColor = colors.paper,
+        snackbarHost = { SnackbarHost(snackbar) },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { sheet = PaySheet.NEW_LINK },
+                shape = RoundedCornerShape(16.dp),
+                containerColor = colors.brand,
+                contentColor = if (colors.isLight) colors.paper else colors.brandInk,
+                icon = {
+                    Icon(
+                        Icons.Filled.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.paper,
-                    titleContentColor = colors.ink,
-                    navigationIconContentColor = colors.ink,
-                )
+                text = {
+                    Text(
+                        "New link",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                },
             )
         },
-        containerColor = colors.paper,
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(SectionGap),
         ) {
-            item {
-                SendLinkCard(
-                    state = state,
-                    onAmountChange = onAmountChange,
-                    onOpenPicker = { pickerOpen = true },
-                    onClearContact = onClearContact,
-                    onDescriptionChange = onDescriptionChange,
-                    onSend = onSend,
-                )
-            }
-
-            state.error?.let { err ->
-                item { ErrorBanner(message = err) }
-            }
-
-            item {
-                Text(
-                    text = "Recent payment links",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.ink,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-
-            if (state.recentLinks.isEmpty()) {
-                item {
-                    Text(
-                        text = "Links you send will appear here.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.muted,
-                    )
-                }
-            } else {
-                items(state.recentLinks, key = { it.id }) { link ->
-                    PaymentLinkRow(link = link)
+            PaymentsHeader(state = state, onBack = onBack)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 120.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (state.recentLinks.isEmpty()) {
+                    item {
+                        Text(
+                            text = "Links you send will appear here.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.muted,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                        )
+                    }
+                } else {
+                    items(state.recentLinks, key = { it.id }) { link ->
+                        PaymentLinkRow(
+                            link = link,
+                            onCopyLink = { url ->
+                                clipboard.setText(AnnotatedString(url))
+                                scope.launch { snackbar.showSnackbar("Link copied") }
+                            },
+                        )
+                    }
                 }
             }
         }
     }
 
-    if (pickerOpen) {
+    if (sheet == PaySheet.NEW_LINK) {
+        NewLinkSheet(
+            state = state,
+            onAmountChange = onAmountChange,
+            onDescriptionChange = onDescriptionChange,
+            onChangeContact = { sheet = PaySheet.PICK_CONTACT },
+            onSend = onSend,
+            onDismiss = { sheet = PaySheet.NONE },
+        )
+    }
+
+    if (sheet == PaySheet.PICK_CONTACT) {
         ContactPickerSheet(
             contacts = state.contacts,
-            onPick = { id, name -> onPickContact(id, name) },
-            onDismiss = { pickerOpen = false },
+            onPick = { id, name ->
+                onPickContact(id, name)
+                sheet = PaySheet.NEW_LINK
+            },
+            onDismiss = { sheet = PaySheet.NEW_LINK },
         )
     }
 }
 
+// ── Header ──────────────────────────────────────────────────────────────────
+
 @Composable
-private fun SendLinkCard(
+private fun PaymentsHeader(state: PaymentLinkUiState, onBack: () -> Unit) {
+    val colors = Theme.colors
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 6.dp, end = 14.dp, top = 12.dp, bottom = 8.dp),
+    ) {
+        IconButton(onClick = onBack) {
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = colors.ink,
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Payment links",
+                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 21.sp,
+                color = colors.ink,
+            )
+            val collected = state.collectedThisMonthInr
+            if (collected > 0L) {
+                Text(
+                    text = "₹${InrFormat.format(collected)} collected in ${MonthFmt.format(LocalDate.now())}",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 11.5.sp,
+                    color = colors.muted,
+                )
+            }
+        }
+    }
+}
+
+// ── New-link sheet ──────────────────────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NewLinkSheet(
     state: PaymentLinkUiState,
     onAmountChange: (String) -> Unit,
-    onOpenPicker: () -> Unit,
-    onClearContact: () -> Unit,
     onDescriptionChange: (String) -> Unit,
+    onChangeContact: () -> Unit,
     onSend: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
     val colors = Theme.colors
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.card),
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = colors.paper,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        dragHandle = { SheetDragHandle() },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(CardInnerPad),
+                .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            OutlinedTextField(
-                value = state.amountInr,
-                onValueChange = onAmountChange,
-                label = { Text("Amount") },
-                prefix = { Text("₹ ", style = MaterialTheme.typography.titleLarge) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                textStyle = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.fillMaxWidth(),
+            Text(
+                text = "New payment link",
+                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 19.sp,
+                color = colors.ink,
+                modifier = Modifier.padding(bottom = 2.dp),
             )
 
-            ContactPickerField(
-                contactName = state.selectedContactName,
-                onOpenPicker = onOpenPicker,
-                onClearContact = onClearContact,
-            )
+            Column {
+                FieldLabel("Amount")
+                AmountField(value = state.amountInr, onValueChange = onAmountChange)
+            }
 
-            OutlinedTextField(
-                value = state.description,
-                onValueChange = onDescriptionChange,
-                label = { Text("Description (optional)") },
-                placeholder = { Text("e.g. Invoice #4821, advance payment") },
-                singleLine = false,
-                maxLines = 3,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            Column {
+                FieldLabel("Send to")
+                ContactSelectorRow(state = state, onClick = onChangeContact)
+            }
 
-            FilledTonalButton(
+            Column {
+                FieldLabel("Note (shows on the link)")
+                NoteField(value = state.description, onValueChange = onDescriptionChange)
+            }
+
+            state.error?.let { SheetErrorBanner(message = it) }
+
+            Button(
                 onClick = onSend,
                 enabled = state.isReadyToSend && !state.isSending,
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.brand,
+                    contentColor = if (colors.isLight) colors.paper else colors.brandInk,
+                    disabledContainerColor = colors.brand.copy(alpha = 0.4f),
+                    disabledContentColor = if (colors.isLight) colors.paper else colors.brandInk,
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp),
+                    .padding(top = 2.dp)
+                    .height(50.dp),
             ) {
                 if (state.isSending) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
-                        color = colors.brand,
+                        color = if (colors.isLight) colors.paper else colors.brandInk,
                     )
                 } else {
                     Text(
-                        "Send link",
-                        style = MaterialTheme.typography.labelLarge,
+                        "Create & send on WhatsApp",
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
@@ -266,152 +346,220 @@ private fun SendLinkCard(
 }
 
 @Composable
-private fun ContactPickerField(
-    contactName: String?,
-    onOpenPicker: () -> Unit,
-    onClearContact: () -> Unit,
-) {
+private fun SheetDragHandle() {
+    Box(
+        modifier = Modifier
+            .padding(top = 12.dp, bottom = 4.dp)
+            .size(width = 38.dp, height = 4.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(Theme.colors.muted3)
+    )
+}
+
+@Composable
+private fun FieldLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        fontWeight = FontWeight.SemiBold,
+        color = Theme.colors.ink3,
+        modifier = Modifier.padding(bottom = 6.dp),
+    )
+}
+
+@Composable
+private fun AmountField(value: String, onValueChange: (String) -> Unit) {
     val colors = Theme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
-            text = "To",
-            style = MaterialTheme.typography.labelMedium,
-            color = colors.ink3,
+            text = "₹",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.muted,
         )
-        if (contactName.isNullOrBlank()) {
-            Row(
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                color = colors.ink,
+            ),
+            cursorBrush = SolidColor(colors.brand),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp, top = 13.dp, bottom = 13.dp),
+            decorationBox = { inner ->
+                Box {
+                    if (value.isEmpty()) {
+                        Text(
+                            text = "0",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.muted2,
+                        )
+                    }
+                    inner()
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun ContactSelectorRow(state: PaymentLinkUiState, onClick: () -> Unit) {
+    val colors = Theme.colors
+    val name = state.selectedContactName
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(11.dp),
+    ) {
+        if (name.isNullOrBlank()) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(colors.paper2)
-                    .clickable(onClick = onOpenPicker)
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(colors.paper2),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Filled.Person,
                     contentDescription = null,
-                    tint = colors.ink3,
-                )
-                Text(
-                    text = "Pick a contact",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colors.ink3,
+                    tint = colors.muted,
+                    modifier = Modifier.size(18.dp),
                 )
             }
+            Text(
+                text = "Pick a contact",
+                style = MaterialTheme.typography.bodyLarge,
+                color = colors.muted,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = "Choose",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.brand,
+            )
         } else {
-            SelectedContactChip(
-                name = contactName,
-                onClear = onClearContact,
-                onTap = onOpenPicker,
+            val avatarUrl = state.contacts.firstOrNull { it.id == state.selectedContactId }?.avatarUrl
+            Avatar(name = name, url = avatarUrl, sizeDp = 36)
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.ink,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = "Change",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.brand,
             )
         }
     }
 }
 
 @Composable
-private fun SelectedContactChip(
-    name: String,
-    onClear: () -> Unit,
-    onTap: () -> Unit,
-) {
+private fun NoteField(value: String, onValueChange: (String) -> Unit) {
     val colors = Theme.colors
-    Row(
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.ink),
+        cursorBrush = SolidColor(colors.brand),
+        modifier = Modifier.fillMaxWidth(),
+        decorationBox = { inner ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(colors.card)
+                    .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 14.dp, vertical = 13.dp),
+            ) {
+                if (value.isEmpty()) {
+                    Text(
+                        text = "e.g. Invoice #4821, advance payment",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = colors.muted2,
+                    )
+                }
+                inner()
+            }
+        },
+    )
+}
+
+@Composable
+private fun SheetErrorBanner(message: String) {
+    val colors = Theme.colors
+    Text(
+        text = message,
+        style = MaterialTheme.typography.bodySmall,
+        color = colors.danger,
         modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(colors.brandSoft)
-            .clickable(onClick = onTap)
-            .padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Text(
-            text = name,
-            style = MaterialTheme.typography.labelLarge,
-            color = colors.brand,
-            fontWeight = FontWeight.Medium,
-        )
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .clickable(onClick = onClear),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Filled.Close,
-                contentDescription = "Clear contact",
-                tint = colors.brand,
-                modifier = Modifier.size(16.dp),
-            )
-        }
-    }
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.danger.copy(alpha = 0.12f))
+            .padding(12.dp),
+    )
 }
 
 // ── Previews ────────────────────────────────────────────────────────────────
 
 // Inline sample data for @Preview only.
 private val previewPaymentLinks = listOf(
-    SentPaymentLink("p1", "Priya Sharma", 5000, SentLinkStatus.PAID, java.time.Instant.now()),
-    SentPaymentLink("p2", "Rahul Verma", 1200, SentLinkStatus.PENDING, java.time.Instant.now()),
-    SentPaymentLink("p3", "Anita Desai", 800, SentLinkStatus.EXPIRED, java.time.Instant.now())
+    SentPaymentLink("p1", "Priya Sharma", 5000, SentLinkStatus.PAID, java.time.Instant.now(), "https://nitigrow.in/pay/p1"),
+    SentPaymentLink("p2", "Rahul Verma", 1200, SentLinkStatus.PENDING, java.time.Instant.now(), "https://nitigrow.in/pay/p2"),
+    SentPaymentLink("p3", "Anita Desai", 800, SentLinkStatus.EXPIRED, java.time.Instant.now(), null)
 )
 
-@Preview(showBackground = true, name = "PaymentLinkScreen — empty")
+@Preview(showBackground = true, name = "PaymentLinkScreen — list")
 @Composable
-private fun PreviewPaymentLinkScreenEmpty() {
+private fun PreviewPaymentLinkScreenList() {
     NitiGrowTheme {
         PaymentLinkScreenContent(
             state = PaymentLinkUiState(recentLinks = previewPaymentLinks),
             onBack = {},
             onAmountChange = {},
             onPickContact = { _, _ -> },
-            onClearContact = {},
             onDescriptionChange = {},
             onSend = {},
         )
     }
 }
 
-@Preview(showBackground = true, name = "PaymentLinkScreen — ready to send")
+@Preview(showBackground = true, name = "PaymentLinkScreen — empty")
 @Composable
-private fun PreviewPaymentLinkScreenReady() {
+private fun PreviewPaymentLinkScreenEmpty() {
     NitiGrowTheme {
         PaymentLinkScreenContent(
-            state = PaymentLinkUiState(
-                amountInr = "5000",
-                selectedContactId = "k-001",
-                selectedContactName = "Priya Sharma",
-                description = "Advance for saffron order",
-                recentLinks = previewPaymentLinks,
-            ),
+            state = PaymentLinkUiState(),
             onBack = {},
             onAmountChange = {},
             onPickContact = { _, _ -> },
-            onClearContact = {},
-            onDescriptionChange = {},
-            onSend = {},
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "PaymentLinkScreen — sending")
-@Composable
-private fun PreviewPaymentLinkScreenSending() {
-    NitiGrowTheme {
-        PaymentLinkScreenContent(
-            state = PaymentLinkUiState(
-                amountInr = "12000",
-                selectedContactId = "k-002",
-                selectedContactName = "Rahul Verma",
-                isSending = true,
-                recentLinks = previewPaymentLinks,
-            ),
-            onBack = {},
-            onAmountChange = {},
-            onPickContact = { _, _ -> },
-            onClearContact = {},
             onDescriptionChange = {},
             onSend = {},
         )

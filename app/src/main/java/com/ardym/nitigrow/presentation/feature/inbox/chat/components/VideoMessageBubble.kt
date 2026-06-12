@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,7 +36,6 @@ import coil.compose.AsyncImage
 import com.ardym.nitigrow.domain.model.Message
 import com.ardym.nitigrow.domain.model.MessageStatus
 import com.ardym.nitigrow.domain.model.MessageType
-import com.ardym.nitigrow.presentation.feature.inbox.list.components.StatusTicks
 import com.ardym.nitigrow.ui.theme.BubbleInShape
 import com.ardym.nitigrow.ui.theme.BubbleOutShape
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
@@ -64,6 +64,7 @@ fun VideoMessageBubble(
     val shape = if (isOutbound) BubbleOutShape else BubbleInShape
     val bg = if (isOutbound) Theme.colors.bubbleOut else Theme.colors.bubbleIn
     val ink = if (isOutbound) Theme.colors.bubbleOutInk else Theme.colors.bubbleInInk
+    val metaColor = bubbleMetaColor(isOutbound = isOutbound)
     val align = if (isOutbound) Alignment.End else Alignment.Start
 
     val context = LocalContext.current
@@ -81,6 +82,7 @@ fun VideoMessageBubble(
                 .widthIn(max = BubbleMaxWidth)
                 .clip(shape)
                 .background(bg)
+                .border(1.dp, if (isOutbound) bg else Theme.colors.bubbleInBorder, shape)
                 .padding(InnerPadding),
         ) {
             Box(
@@ -160,12 +162,12 @@ fun VideoMessageBubble(
             ) {
                 Text(
                     text = VideoTimeFmt.format(message.sentAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = ink.copy(alpha = 0.7f),
+                    style = bubbleTimeStyle(),
+                    color = metaColor,
                 )
                 if (isOutbound) {
                     Spacer(Modifier.padding(start = MetaSpacing))
-                    StatusTicks(status = message.status)
+                    BubbleStatusTicks(status = message.status)
                 }
             }
         }

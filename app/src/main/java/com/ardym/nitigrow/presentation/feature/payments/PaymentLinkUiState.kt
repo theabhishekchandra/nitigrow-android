@@ -1,6 +1,8 @@
 package com.ardym.nitigrow.presentation.feature.payments
 
 import java.time.Instant
+import java.time.YearMonth
+import java.time.ZoneId
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PaymentLinkUiState — "Send a payment link" form + recent activity list.
@@ -34,6 +36,22 @@ data class PaymentLinkUiState(
     /** Submit-button gate — at least ₹1 and a contact selected. */
     val isReadyToSend: Boolean
         get() = (amountInr.toLongOrNull() ?: 0L) > 0L && selectedContactId != null
+
+    /**
+     * Sum of links PAID in the current calendar month — drives the
+     * "₹N collected in {month}" header subtitle. 0 when nothing was
+     * collected this month (the subtitle is omitted in that case).
+     */
+    val collectedThisMonthInr: Long
+        get() {
+            val now = YearMonth.now()
+            return recentLinks
+                .filter {
+                    it.status == SentLinkStatus.PAID &&
+                        YearMonth.from(it.sentAt.atZone(ZoneId.systemDefault())) == now
+                }
+                .sumOf { it.amountInr }
+        }
 }
 
 // TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
@@ -43,6 +61,8 @@ data class SentPaymentLink(
     val amountInr: Long,
     val status: SentLinkStatus,
     val sentAt: Instant,
+    /** Shareable payment URL — null until the backend returns one; the copy button hides then. */
+    val linkUrl: String? = null,
 )
 
 enum class SentLinkStatus { PENDING, PAID, EXPIRED, FAILED }

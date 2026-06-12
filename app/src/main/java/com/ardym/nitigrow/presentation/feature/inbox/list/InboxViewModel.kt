@@ -65,5 +65,21 @@ class InboxViewModel @Inject constructor(
         viewModelScope.launch { togglePin(conversationId, !currentlyPinned) }
     }
 
+    fun onFilterChange(filter: InboxFilter) {
+        _state.update { it.copy(filter = filter) }
+    }
+
+    fun onFilterSheetVisibleChange(visible: Boolean) {
+        _state.update { it.copy(isFilterSheetVisible = visible) }
+    }
+
+    fun onAssigneeFilterChange(value: String) {
+        _state.update { it.copy(assigneeFilter = value) }
+    }
+
+    fun onLabelFilterChange(value: String) {
+        _state.update { it.copy(labelFilter = value) }
+    }
+
     companion object { private const val SEARCH_DEBOUNCE_MS = 300L }
 }

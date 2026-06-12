@@ -2,8 +2,8 @@ package com.ardym.nitigrow.presentation.feature.analytics
 
 import java.time.LocalDate
 
-/** Date-range chip choices. */
-enum class DateRange { TODAY, WEEK, MONTH, CUSTOM }
+/** Date-range choices. The header pills map 7D/30D/90D onto WEEK/MONTH/QUARTER. */
+enum class DateRange { TODAY, WEEK, MONTH, QUARTER, CUSTOM }
 
 /** One bar in the daily-sent line chart. */
 data class DailyPoint(

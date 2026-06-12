@@ -26,6 +26,7 @@ data class NitiGrowColors(
     val accentSoft: Color,
     val turmeric: Color,
     val turmericSoft: Color,
+    val turmericInk: Color,
 
     // Surfaces — warm cream paper
     val paper: Color,
@@ -93,6 +94,8 @@ private object Hex {
     val Turmeric         = Color(0xFFE8A94A)
     val TurmericSoftLight = Color(0xFFFCF1D9)
     val TurmericSoftDark  = Color(0x24E8A94A) // rgba(232,169,74,0.14)
+    val TurmericInkLight  = Color(0xFFB07818) // text on turmericSoft (pills, banners)
+    val TurmericInkDark   = Color(0xFFF5D78C)
 
     val PaperLight       = Color(0xFFFBF8F3)
     val Paper2Light      = Color(0xFFF5F0E6)
@@ -161,6 +164,7 @@ val NitiGrowLightColors = NitiGrowColors(
     accentSoft     = Hex.AccentSoftLight,
     turmeric       = Hex.Turmeric,
     turmericSoft   = Hex.TurmericSoftLight,
+    turmericInk    = Hex.TurmericInkLight,
 
     paper          = Hex.PaperLight,
     paper2         = Hex.Paper2Light,
@@ -210,6 +214,7 @@ val NitiGrowDarkColors = NitiGrowColors(
     accentSoft     = Hex.AccentSoftDark,
     turmeric       = Hex.Turmeric,
     turmericSoft   = Hex.TurmericSoftDark,
+    turmericInk    = Hex.TurmericInkDark,
 
     paper          = Hex.PaperDark,
     paper2         = Hex.Paper2Dark,
