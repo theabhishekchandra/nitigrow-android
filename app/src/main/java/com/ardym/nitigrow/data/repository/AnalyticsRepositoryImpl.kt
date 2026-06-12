@@ -26,7 +26,7 @@ class AnalyticsRepositoryImpl @Inject constructor(
 
     override suspend fun topAgents(): ApiResult<List<AgentMetric>> =
         when (val r = safeApiCall(dispatchers.io) { api.topAgents() }) {
-            is ApiResult.Success -> ApiResult.Success(r.data.data.map { AgentMetric(it.name, it.replies) })
+            is ApiResult.Success -> ApiResult.Success((r.data.data ?: emptyList()).map { AgentMetric(it.name, it.replies) })
             is ApiResult.Error -> r
         }
 }

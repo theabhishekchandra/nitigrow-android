@@ -16,7 +16,7 @@ data class ContactDto(
 )
 
 data class ContactListResponse(
-    @SerializedName("data") val data: List<ContactDto>,
+    @SerializedName("data") val data: List<ContactDto>? = null,
     @SerializedName("nextCursor") val nextCursor: String?
 )
 

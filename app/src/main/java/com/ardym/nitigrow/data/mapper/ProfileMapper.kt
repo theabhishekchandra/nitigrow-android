@@ -24,7 +24,7 @@ fun UserDto.toProfileEntity(avatarUrl: String? = null) = ProfileEntity(
     tenantId = tenantId,
     name = name,
     email = email,
-    phone = phone,
+    phone = phone ?: "",
     role = role,
     avatarUrl = avatarUrl
 )
@@ -41,11 +41,11 @@ fun ProfileEntity.toDomainUser(): User = User(
 fun TenantDto.toEntity() = TenantEntity(
     id = 0,
     tenantId = id,
-    name = name,
+    name = name ?: "",
     wabaPhone = wabaPhone,
-    wabaStatus = wabaStatus.uppercase(),
+    wabaStatus = if (wabaId != null) "ACTIVE" else "NOT_LINKED",
     planName = planName,
-    createdAtEpochMs = parseInstant(createdAt)
+    createdAtEpochMs = createdAt?.let { parseInstant(it) } ?: System.currentTimeMillis()
 )
 
 fun TenantEntity.toDomain(): Tenant = Tenant(

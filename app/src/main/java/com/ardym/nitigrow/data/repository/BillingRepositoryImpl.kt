@@ -43,7 +43,7 @@ class BillingRepositoryImpl @Inject constructor(
     override suspend fun refreshPlans(): ApiResult<Unit> =
         when (val res = safeApiCall(dispatchers.io) { api.listPlans() }) {
             is ApiResult.Success -> {
-                planDao.upsertAll(res.data.data.map { it.toEntity() })
+                planDao.upsertAll((res.data.data ?: emptyList()).map { it.toEntity() })
                 ApiResult.Success(Unit)
             }
             is ApiResult.Error -> res
@@ -61,7 +61,7 @@ class BillingRepositoryImpl @Inject constructor(
     override suspend fun refreshPayments(): ApiResult<Unit> =
         when (val res = safeApiCall(dispatchers.io) { api.listPayments() }) {
             is ApiResult.Success -> {
-                payDao.upsertAll(res.data.data.map { it.toEntity() })
+                payDao.upsertAll((res.data.data ?: emptyList()).map { it.toEntity() })
                 ApiResult.Success(Unit)
             }
             is ApiResult.Error -> res

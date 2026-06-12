@@ -30,7 +30,7 @@ class LeadRepositoryImpl @Inject constructor(
     override suspend fun refresh(): ApiResult<Unit> =
         when (val res = safeApiCall(dispatchers.io) { api.list() }) {
             is ApiResult.Success -> {
-                dao.upsertAll(res.data.data.map { it.toEntity() })
+                dao.upsertAll((res.data.data ?: emptyList()).map { it.toEntity() })
                 ApiResult.Success(Unit)
             }
             is ApiResult.Error -> res

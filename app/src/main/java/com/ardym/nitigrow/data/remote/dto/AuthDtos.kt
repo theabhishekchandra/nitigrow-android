@@ -61,7 +61,7 @@ data class UserDto(
     @SerializedName("tenantId") val tenantId: String,
     @SerializedName("name") val name: String,
     @SerializedName("email") val email: String,
-    @SerializedName("phone") val phone: String = "",
+    @SerializedName("phone") val phone: String? = null,
     @SerializedName("role") val role: String
 )
 

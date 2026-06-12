@@ -10,7 +10,7 @@ data class PaymentLinkDto(
 )
 
 data class PaymentLinkListDto(
-    val data: List<PaymentLinkDto> = emptyList()
+    val data: List<PaymentLinkDto>? = null
 )
 
 data class CreatePaymentLinkRequest(

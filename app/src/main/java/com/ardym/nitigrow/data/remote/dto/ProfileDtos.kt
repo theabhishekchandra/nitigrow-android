@@ -4,11 +4,11 @@ import com.google.gson.annotations.SerializedName
 
 data class TenantDto(
     @SerializedName("_id") val id: String,
-    @SerializedName("name") val name: String,
-    @SerializedName("wabaPhone") val wabaPhone: String?,
-    @SerializedName("wabaStatus") val wabaStatus: String,
-    @SerializedName("planName") val planName: String?,
-    @SerializedName("createdAt") val createdAt: String
+    @SerializedName("businessName") val name: String?,
+    @SerializedName("displayPhoneNumber") val wabaPhone: String?,
+    @SerializedName("wabaId") val wabaId: String?,
+    @SerializedName("plan") val planName: String?,
+    @SerializedName("createdAt") val createdAt: String?
 )
 
 data class TeamMemberDto(
@@ -21,7 +21,7 @@ data class TeamMemberDto(
 )
 
 data class TeamListResponse(
-    @SerializedName("data") val data: List<TeamMemberDto>
+    @SerializedName("data") val data: List<TeamMemberDto>? = null
 )
 
 data class UpdateProfileRequest(

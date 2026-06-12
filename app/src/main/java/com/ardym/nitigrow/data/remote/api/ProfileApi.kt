@@ -4,6 +4,7 @@ import com.ardym.nitigrow.data.remote.dto.AvatarUploadResponse
 import com.ardym.nitigrow.data.remote.dto.DeleteAccountRequest
 import com.ardym.nitigrow.data.remote.dto.GenericMessageDto
 import com.ardym.nitigrow.data.remote.dto.InviteMemberRequest
+import com.ardym.nitigrow.data.remote.dto.MeResponseDto
 import com.ardym.nitigrow.data.remote.dto.NotificationPrefsRequest
 import com.ardym.nitigrow.data.remote.dto.TeamListResponse
 import com.ardym.nitigrow.data.remote.dto.TeamMemberDto
@@ -33,8 +34,8 @@ interface ProfileApi {
     @POST("me/avatar")
     suspend fun uploadAvatar(@Part file: MultipartBody.Part): AvatarUploadResponse
 
-    @GET("tenant")
-    suspend fun tenant(): TenantDto
+    @GET("auth/me")
+    suspend fun tenant(): MeResponseDto
 
     @GET("team")
     suspend fun team(): TeamListResponse

@@ -119,8 +119,9 @@ class RealtimeClient @Inject constructor(
         pendingToken = runBlocking { tokenStore.accessTokenBlocking() }.orEmpty()
         namespaceJoined = false
         // No ?token= query param — auth happens via the join_tenant event.
-        val url = BuildConfig.BASE_URL.replace("http", "ws").trimEnd('/') +
-            "/socket.io/?EIO=4&transport=websocket"
+        val url = BuildConfig.BASE_URL.replace("http", "ws")
+            .replace("/api/", "/")
+            .trimEnd('/') + "/socket.io/?EIO=4&transport=websocket"
         val req = Request.Builder().url(url).build()
         socket = httpClient.newWebSocket(req, listener)
     }

@@ -14,6 +14,7 @@ interface Telemetry {
 object Events {
     const val LOGIN_OTP_REQUESTED = "login_otp_requested"
     const val LOGIN_OTP_VERIFIED = "login_otp_verified"
+    const val LOGIN_EMAIL_VERIFIED = "login_email_verified"
     const val MESSAGE_SENT = "message_sent"
     const val CAMPAIGN_CREATED = "campaign_created"
     const val CHECKOUT_STARTED = "checkout_started"

@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
  * UseCases depend on this — never on Retrofit/Room directly.
  */
 interface AuthRepository {
+    suspend fun login(email: String, password: String): ApiResult<User>
     suspend fun requestOtp(phone: String): ApiResult<Unit>
     suspend fun verifyOtp(phone: String, code: String): ApiResult<User>
     suspend fun logout(): ApiResult<Unit>
