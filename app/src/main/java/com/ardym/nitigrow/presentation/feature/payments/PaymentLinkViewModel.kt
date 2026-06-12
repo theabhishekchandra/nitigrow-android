@@ -96,6 +96,7 @@ class PaymentLinkViewModel @Inject constructor(
             "refunded" -> SentLinkStatus.EXPIRED
             else -> SentLinkStatus.PENDING
         },
-        sentAt = p.sentAt?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: Instant.now()
+        sentAt = p.sentAt?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: Instant.now(),
+        linkUrl = p.linkUrl
     )
 }

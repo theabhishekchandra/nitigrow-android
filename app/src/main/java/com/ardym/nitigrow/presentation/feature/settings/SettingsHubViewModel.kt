@@ -8,6 +8,7 @@ import com.ardym.nitigrow.domain.model.Tenant
 import com.ardym.nitigrow.domain.model.User
 import com.ardym.nitigrow.domain.repository.ProfileRepository
 import com.ardym.nitigrow.domain.repository.PushTokenRepository
+import com.ardym.nitigrow.domain.repository.ReferralsRepository
 import com.ardym.nitigrow.domain.usecase.auth.LogoutUseCase
 import com.ardym.nitigrow.domain.usecase.profile.ObserveProfileUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
@@ -26,6 +27,8 @@ import javax.inject.Inject
 data class SettingsHubUiState(
     val profile: User? = null,
     val tenant: Tenant? = null,
+    val teamCount: Int? = null,
+    val referralCreditPaise: Long? = null,
     val notificationPrefs: NotificationPreferences = NotificationPreferences(),
     val languageTag: String = "",
     val isExporting: Boolean = false,
@@ -44,6 +47,7 @@ sealed interface SettingsHubEffect {
 class SettingsHubViewModel @Inject constructor(
     observeProfile: ObserveProfileUseCase,
     private val repo: ProfileRepository,
+    private val referrals: ReferralsRepository,
     private val logout: LogoutUseCase,
     private val pushRepo: PushTokenRepository
 ) : BaseViewModel() {
@@ -63,6 +67,11 @@ class SettingsHubViewModel @Inject constructor(
         repo.observeTenant()
             .onEach { t -> if (t != null) _state.update { it.copy(tenant = t) } }
             .launchIn(viewModelScope)
+        repo.observeTeam()
+            .onEach { members ->
+                _state.update { it.copy(teamCount = members.size.takeIf { _ -> members.isNotEmpty() }) }
+            }
+            .launchIn(viewModelScope)
         repo.observeNotificationPreferences()
             .onEach { n -> _state.update { it.copy(notificationPrefs = n) } }
             .launchIn(viewModelScope)
@@ -77,6 +86,13 @@ class SettingsHubViewModel @Inject constructor(
         viewModelScope.launch {
             repo.refreshProfile()
             repo.refreshTenant()
+            repo.refreshTeam()
+            // Referral earnings drive the "₹N EARNED" pill; failures simply hide it.
+            when (val res = referrals.getSaas()) {
+                is ApiResult.Success ->
+                    _state.update { it.copy(referralCreditPaise = res.data.creditPaise) }
+                is ApiResult.Error -> Unit
+            }
         }
     }
 

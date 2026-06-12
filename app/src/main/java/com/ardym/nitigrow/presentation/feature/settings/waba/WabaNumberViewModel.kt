@@ -43,7 +43,9 @@ class WabaNumberViewModel @Inject constructor(
                             displayName = s.businessName,
                             status = if (s.whatsappConnected) WabaStatus.ACTIVE else WabaStatus.NOT_LINKED,
                             qualityRating = s.qualityRating,
-                            messagingLimit = messagingLimitLabel(s.messagingTier)
+                            messagingLimit = messagingLimitLabel(s.messagingTier),
+                            dailyUsed = s.dailyMsgCount,
+                            dailyLimit = s.dailyLimit
                         )
                     }
                 }

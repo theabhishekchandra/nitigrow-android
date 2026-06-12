@@ -46,11 +46,13 @@ class CreateCampaignViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
 
-        // Derive available tags from cached contacts
+        // Derive available tags (and per-tag contact counts) from cached contacts
         contactRepo.observeContacts()
             .onEach { contacts ->
-                val tags = contacts.flatMap { it.tags }.distinct().sorted()
-                _state.update { it.copy(availableTags = tags) }
+                val counts = contacts.flatMap { it.tags }.groupingBy { tag -> tag }.eachCount()
+                _state.update {
+                    it.copy(availableTags = counts.keys.sorted(), tagCounts = counts)
+                }
             }
             .launchIn(viewModelScope)
 
@@ -115,7 +117,9 @@ class CreateCampaignViewModel @Inject constructor(
             )
             _state.update { it.copy(isSubmitting = false) }
             when (res) {
-                is ApiResult.Success -> _effects.send(CreateCampaignEffect.Created)
+                is ApiResult.Success -> _state.update {
+                    it.copy(queued = true, createdCampaignId = res.data.id)
+                }
                 is ApiResult.Error -> {
                     _state.update { it.copy(error = res.message) }
                     _effects.send(CreateCampaignEffect.ShowError(res.message))

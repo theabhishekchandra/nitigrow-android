@@ -67,6 +67,7 @@ class AnalyticsViewModel @Inject constructor(
         DateRange.TODAY -> LocalDate.now()
         DateRange.WEEK -> LocalDate.now().minusDays(6)
         DateRange.MONTH -> LocalDate.now().minusDays(29)
+        DateRange.QUARTER -> LocalDate.now().minusDays(89)
         DateRange.CUSTOM -> LocalDate.now().minusDays(29)
     }
 }

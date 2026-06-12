@@ -16,8 +16,8 @@ import javax.inject.Inject
  * so this service always runs and we control display + suppression.
  *
  * Expected `data` keys:
- *   type: chat | campaign | system
- *   conversationId / campaignId
+ *   type: chat | payment | campaign | system
+ *   conversationId / paymentId / campaignId
  *   title, body
  */
 @AndroidEntryPoint
@@ -41,6 +41,13 @@ class NitiGrowMessagingService : FirebaseMessagingService() {
                 val name = data["title"] ?: "New message"
                 val body = data["body"] ?: ""
                 presenter.showChat(convId, name, body)
+            }
+            "payment" -> {
+                presenter.showPayment(
+                    paymentId = data["paymentId"] ?: message.messageId ?: System.currentTimeMillis().toString(),
+                    title = data["title"] ?: "Payment received",
+                    body = data["body"] ?: ""
+                )
             }
             "campaign" -> {
                 val campId = data["campaignId"] ?: return

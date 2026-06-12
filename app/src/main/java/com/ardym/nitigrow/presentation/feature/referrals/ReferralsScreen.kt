@@ -1,47 +1,73 @@
 package com.ardym.nitigrow.presentation.feature.referrals
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ardym.nitigrow.domain.model.LoyaltyProgram
 import com.ardym.nitigrow.domain.model.ReferralFunnel
 import com.ardym.nitigrow.domain.model.ReferralLeader
+import com.ardym.nitigrow.domain.model.ReferralProgram
 import com.ardym.nitigrow.domain.model.SaasReferral
+import com.ardym.nitigrow.presentation.components.ErrorBanner
+import com.ardym.nitigrow.presentation.feature.inbox.list.components.Avatar
+import com.ardym.nitigrow.presentation.feature.settings.components.NgToggle
+import com.ardym.nitigrow.presentation.feature.settings.components.SubScreenHeader
+import com.ardym.nitigrow.ui.theme.Theme
+import kotlinx.coroutines.launch
+import java.text.NumberFormat
+import java.util.Locale
 
-private fun rupees(paise: Long): String = "₹" + (paise / 100)
+// ─────────────────────────────────────────────────────────────────────────────
+// ReferralsScreen — Settings ▸ Refer & earn.
+//
+//   ‹ Refer & earn
+//   ┌ espresso: YOUR CODE · ANITA50 · [Copy code][Share on WhatsApp] ┐
+//   ┌ 3 BUSINESSES JOINED ┐ ┌ ₹1,500 CREDIT EARNED ┐
+//   ┌ Customer referral program [toggle] ┐  (existing functionality)
+//   ┌ REFERRAL FUNNEL ┐ ┌ LOYALTY ┐ ┌ TOP REFERRERS rows ┐
+// ─────────────────────────────────────────────────────────────────────────────
+
+private fun rupees(paise: Long): String =
+    "₹" + NumberFormat.getIntegerInstance(Locale.ENGLISH).format(paise / 100)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,131 +76,281 @@ fun ReferralsScreen(
     viewModel: ReferralsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val colors = Theme.colors
     val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Referrals & Loyalty", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
+        containerColor = colors.paper,
+        topBar = { SubScreenHeader(title = "Refer & earn", onBack = onBack) },
+        snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
         if (state.isLoading && state.program == null) {
-            Column(
+            Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) { CircularProgressIndicator() }
+                contentAlignment = Alignment.Center
+            ) { CircularProgressIndicator(color = colors.brand) }
             return@Scaffold
         }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+            contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             state.error?.let { err ->
+                item { ErrorBanner(message = err) }
+            }
+
+            state.saas?.let { s ->
                 item {
-                    Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-
-            // Referral program toggle
-            item {
-                SectionCard {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Customer referral program", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text(
-                                "Customers share a code; both earn a reward.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                    CodeCard(
+                        saas = s,
+                        onCopy = {
+                            clipboard.setText(AnnotatedString(s.code))
+                            scope.launch { snackbar.showSnackbar("Code ${s.code} copied") }
+                        },
+                        onShare = {
+                            val msg =
+                                "Join NitiGrow with my code ${s.code} and we both get credit: ${s.signupLink}"
+                            val send = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, msg)
+                            }
+                            try {
+                                context.startActivity(
+                                    Intent(send).setPackage("com.whatsapp")
+                                )
+                            } catch (_: ActivityNotFoundException) {
+                                context.startActivity(
+                                    Intent.createChooser(send, "Share invite")
+                                )
+                            }
                         }
-                        Switch(
-                            checked = state.program?.enabled == true,
-                            onCheckedChange = { viewModel.setEnabled(it) },
-                            enabled = !state.isToggling && state.program != null
-                        )
-                    }
-                    state.program?.let { p ->
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "Reward: ${p.referrerReward} to referrer / ${p.refereeReward} to referee · qualifies on ${p.qualifyOn.replace('_', ' ')}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    )
                 }
+                item { SaasStatsRow(s) }
             }
 
-            // Funnel
+            // Customer-gets-customer program (existing functionality, restyled).
+            item {
+                ProgramCard(
+                    program = state.program,
+                    isToggling = state.isToggling,
+                    onToggle = viewModel::setEnabled
+                )
+            }
+
             state.funnel?.let { f ->
                 item { FunnelCard(f) }
             }
 
-            // Loyalty
             state.loyalty?.let { l ->
-                item {
-                    SectionCard {
-                        Text("Loyalty program", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            if (l.enabled)
-                                "On · ${l.pointsPerRupee} pt/₹ · ${l.minRedeemPoints} pts to redeem"
-                            else "Off",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                item { LoyaltyCard(l) }
             }
 
-            // Leaderboard
             if (state.leaders.isNotEmpty()) {
-                item {
-                    Text("Top referrers", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                }
-                items(state.leaders) { leader -> LeaderRow(leader) }
+                item { LeadersCard(state.leaders) }
             }
+        }
+    }
+}
 
-            // SaaS referral
-            state.saas?.let { s ->
-                item {
-                    SaasCard(s) {
-                        val msg = "Join NitiGrow with my link and we both get credit: ${s.signupLink}"
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, msg)
-                        }
-                        context.startActivity(Intent.createChooser(intent, "Share invite"))
-                    }
-                }
+// ── espresso code card ───────────────────────────────────────────────────────
+
+@Composable
+private fun CodeCard(saas: SaasReferral, onCopy: () -> Unit, onShare: () -> Unit) {
+    val colors = Theme.colors
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(colors.sidebarBg)
+            .padding(horizontal = 18.dp, vertical = 22.dp)
+    ) {
+        Text(
+            "YOUR CODE",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 1.6.sp,
+            color = colors.sidebarInk.copy(alpha = 0.55f)
+        )
+        Text(
+            saas.code.uppercase(Locale.ROOT),
+            style = MaterialTheme.typography.displayLarge.copy(
+                fontSize = 38.sp,
+                lineHeight = 44.sp,
+                letterSpacing = 3.sp
+            ),
+            color = colors.sidebarTextActive,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+        Text(
+            "You get ${rupees(saas.creditPerReferralPaise)} credit for every business that subscribes with your code.",
+            fontSize = 12.5.sp,
+            lineHeight = 19.sp,
+            color = colors.sidebarInk.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 10.dp)
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(9.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 18.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, colors.sidebarInk.copy(alpha = 0.14f), RoundedCornerShape(12.dp))
+                    .clickable(role = Role.Button, onClick = onCopy)
+                    .padding(vertical = 12.dp)
+            ) {
+                Text(
+                    "Copy code",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.sidebarInk
+                )
+            }
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(colors.brand)
+                    .clickable(role = Role.Button, onClick = onShare)
+                    .padding(vertical = 12.dp)
+            ) {
+                Text(
+                    "Share on WhatsApp",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (colors.isLight) colors.paper else colors.brandInk
+                )
             }
         }
     }
 }
 
 @Composable
-private fun SectionCard(content: @Composable ColumnScope.() -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+private fun SaasStatsRow(saas: SaasReferral) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+        StatCard(
+            value = "${saas.signedUp}",
+            label = "BUSINESSES JOINED",
+            modifier = Modifier.weight(1f)
+        )
+        StatCard(
+            value = rupees(saas.creditPaise),
+            label = "CREDIT EARNED",
+            valueColor = Theme.colors.brand,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun StatCard(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier,
+    valueColor: androidx.compose.ui.graphics.Color = Theme.colors.ink
+) {
+    val colors = Theme.colors
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .padding(14.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), content = content)
+        Text(value, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = valueColor)
+        Text(
+            label,
+            fontSize = 10.5.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 0.8.sp,
+            color = colors.muted,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 2.dp)
+        )
+    }
+}
+
+// ── customer referral program / funnel / loyalty (existing data) ────────────
+
+@Composable
+private fun ReferralCard(content: @Composable () -> Unit) {
+    val colors = Theme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .padding(16.dp)
+    ) { content() }
+}
+
+@Composable
+private fun ProgramCard(
+    program: ReferralProgram?,
+    isToggling: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    val colors = Theme.colors
+    ReferralCard {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Customer referral program",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.ink
+                )
+                Text(
+                    "Customers share a code; both earn a reward",
+                    fontSize = 11.5.sp,
+                    color = colors.muted,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+            NgToggle(
+                checked = program?.enabled == true,
+                enabled = !isToggling && program != null,
+                onCheckedChange = onToggle
+            )
+        }
+        program?.let { p ->
+            Text(
+                "Reward: ${p.referrerReward} to referrer / ${p.refereeReward} to referee · qualifies on ${p.qualifyOn.replace('_', ' ')}",
+                fontSize = 11.5.sp,
+                color = colors.muted,
+                modifier = Modifier.padding(top = 10.dp)
+            )
+        }
     }
 }
 
 @Composable
 private fun FunnelCard(f: ReferralFunnel) {
-    SectionCard {
-        Text("Referral funnel", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(10.dp))
+    val colors = Theme.colors
+    ReferralCard {
+        Text(
+            "REFERRAL FUNNEL",
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.muted,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -189,67 +365,80 @@ private fun FunnelCard(f: ReferralFunnel) {
 
 @Composable
 private fun FunnelStat(label: String, value: Int) {
+    val colors = Theme.colors
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("$value", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("$value", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = colors.ink)
+        Text(label, fontSize = 10.5.sp, color = colors.muted, modifier = Modifier.padding(top = 2.dp))
     }
 }
 
 @Composable
-private fun LeaderRow(leader: ReferralLeader) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(leader.name ?: "—", style = MaterialTheme.typography.bodyLarge)
-                leader.phone?.let {
-                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            Text("${leader.rewarded}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-private fun SaasCard(s: SaasReferral, onShare: () -> Unit) {
-    SectionCard {
-        Text("Refer a business to NitiGrow", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(4.dp))
+private fun LoyaltyCard(l: LoyaltyProgram) {
+    val colors = Theme.colors
+    ReferralCard {
         Text(
-            "Earn ${rupees(s.creditPerReferralPaise)} credit per business that subscribes.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            "Loyalty program",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.ink
         )
-        Spacer(Modifier.height(10.dp))
-        Text("Your code: ${s.code}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(6.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(6.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                Text("${s.signedUp}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Signed up", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            if (l.enabled)
+                "On · ${l.pointsPerRupee} pt/₹ · ${l.minRedeemPoints} pts to redeem"
+            else "Off",
+            fontSize = 11.5.sp,
+            color = colors.muted,
+            modifier = Modifier.padding(top = 2.dp)
+        )
+    }
+}
+
+// ── top referrers ────────────────────────────────────────────────────────────
+
+@Composable
+private fun LeadersCard(leaders: List<ReferralLeader>) {
+    val colors = Theme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+    ) {
+        Text(
+            "TOP REFERRERS",
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.muted,
+            modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
+        )
+        leaders.forEachIndexed { i, leader ->
+            if (i > 0) HorizontalDivider(color = colors.border2)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+            ) {
+                Avatar(name = leader.name ?: "?", url = null, sizeDp = 36)
+                Spacer(Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        leader.name ?: "—",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.ink,
+                        maxLines = 1
+                    )
+                    leader.phone?.let {
+                        Text(it, fontSize = 11.sp, color = colors.muted, maxLines = 1)
+                    }
+                }
+                Text(
+                    "${leader.rewarded} rewarded",
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.brand
+                )
             }
-            Column {
-                Text("${s.converted}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Converted", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Column {
-                Text(rupees(s.creditPaise), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Credit", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        Button(onClick = onShare, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Filled.Share, contentDescription = null)
-            Spacer(Modifier.height(0.dp))
-            Text("  Share invite link")
         }
     }
 }

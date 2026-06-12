@@ -111,8 +111,8 @@ fun CarouselMessageBubble(
         ) {
             Text(
                 text = CarouselTimeFmt.format(message.sentAt),
-                style = MaterialTheme.typography.labelSmall,
-                color = Theme.colors.muted,
+                style = bubbleTimeStyle(),
+                color = Theme.colors.muted2,
             )
             if (isOutbound) {
                 Spacer(Modifier.width(4.dp))

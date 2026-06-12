@@ -5,12 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,92 +20,92 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ardym.nitigrow.domain.model.LeadStage
 import com.ardym.nitigrow.ui.theme.NitiGrowColors
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
 import com.ardym.nitigrow.ui.theme.Theme
 
 // ─────────────────────────────────────────────────────────────────────────────
-// StageHeader — reusable Kanban column header chip.
-// Renders the stage label (uppercase, labelLarge) + a circular count badge.
-// Colour-coded per stage per phase-3-mobile.md Section 1.3 "Leads Screen".
+// StageHeader — Kanban column header: 8dp colour dot, ALL-CAPS stage name,
+// lead count, and the right-aligned ₹ pipeline sum for the column.
 //
-// Accessibility: header announces itself as one logical group via semantics
-// (e.g., "Qualified — 7 leads") so TalkBack reads it in a single chunk rather
-// than label and number separately.
+// Accessibility: announces itself as one logical group via semantics
+// (e.g., "Qualified stage, 7 leads, ₹1.4L total") so TalkBack reads it in a
+// single chunk rather than label and numbers separately.
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val HeaderShape = RoundedCornerShape(12.dp)
-private val BadgeSize = 26.dp
-private val HeaderHPad = 12.dp
-private val HeaderVPad = 8.dp
-private val GroupSpacing = 8.dp
+private val DotSize = 8.dp
+private val GroupSpacing = 7.dp
 
 @Composable
 fun StageHeader(
     stage: LeadStage,
     count: Int,
+    sum: String,
     modifier: Modifier = Modifier,
 ) {
-    val palette = stageColor(stage, Theme.colors)
-    val a11yText = "${stage.label} stage, $count leads"
+    val style = stageStyle(stage, Theme.colors)
+    val a11yText = "${stage.label} stage, $count leads, $sum total"
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(GroupSpacing),
         modifier = modifier
-            .clip(HeaderShape)
-            .background(palette.surface)
-            .padding(horizontal = HeaderHPad, vertical = HeaderVPad)
+            .padding(horizontal = 2.dp)
             .semantics(mergeDescendants = true) { contentDescription = a11yText },
     ) {
+        Box(
+            modifier = Modifier
+                .size(DotSize)
+                .clip(CircleShape)
+                .background(style.dot),
+        )
         Text(
             text = stage.label.uppercase(),
-            style = MaterialTheme.typography.labelLarge,
-            color = palette.ink,
-            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.4.sp,
+            color = style.title,
         )
-        CountBadge(count = count, background = palette.ink, foreground = palette.surface)
-    }
-}
-
-@Composable
-private fun CountBadge(count: Int, background: Color, foreground: Color) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .defaultMinSize(minWidth = BadgeSize, minHeight = BadgeSize)
-            .size(BadgeSize)
-            .clip(CircleShape)
-            .background(background),
-    ) {
         Text(
             text = count.toString(),
-            style = MaterialTheme.typography.labelMedium,
-            color = foreground,
-            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = style.meta,
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = sum,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = style.meta,
         )
     }
 }
 
 /**
- * Resolves the colour pair for a [LeadStage]. Centralised so [LeadKanbanColumn]
- * and the kanban LeadCard use the same palette as the header.
- *
- * Per phase-3 spec:
- *   NEW = info, CONTACTED = brand, QUALIFIED = success,
- *   PROPOSAL = warning, WON = success, LOST = muted.
+ * Per-stage kanban styling: header dot, column surface, card border and
+ * header text colours. The design specifies the four core stages
+ * (NEW = info, CONTACTED = turmeric, QUALIFIED = accent, WON = brand with a
+ * brandSoft column); PROPOSAL and LOST exist only in the domain model, so they
+ * extend the same language with brandHover (almost-won green) and muted.
  */
-internal data class StagePalette(val surface: Color, val ink: Color)
+internal data class StageStyle(
+    val dot: Color,
+    val columnBg: Color,
+    val cardBorder: Color,
+    val title: Color,
+    val meta: Color,
+)
 
-@Composable
-internal fun stageColor(stage: LeadStage, c: NitiGrowColors): StagePalette = when (stage) {
-    LeadStage.NEW       -> StagePalette(surface = c.brandSoft,    ink = c.info)
-    LeadStage.CONTACTED -> StagePalette(surface = c.brandSoft,    ink = c.brand)
-    LeadStage.QUALIFIED -> StagePalette(surface = c.brandSoft,    ink = c.success)
-    LeadStage.PROPOSAL  -> StagePalette(surface = c.turmericSoft, ink = c.warning)
-    LeadStage.WON       -> StagePalette(surface = c.brandSoft,    ink = c.success)
-    LeadStage.LOST      -> StagePalette(surface = c.paper3,       ink = c.muted)
+internal fun stageStyle(stage: LeadStage, c: NitiGrowColors): StageStyle = when (stage) {
+    LeadStage.NEW       -> StageStyle(dot = c.info,       columnBg = c.paper2,    cardBorder = c.border,                   title = c.ink,      meta = c.muted)
+    LeadStage.CONTACTED -> StageStyle(dot = c.turmeric,   columnBg = c.paper2,    cardBorder = c.border,                   title = c.ink,      meta = c.muted)
+    LeadStage.QUALIFIED -> StageStyle(dot = c.accent,     columnBg = c.paper2,    cardBorder = c.border,                   title = c.ink,      meta = c.muted)
+    LeadStage.PROPOSAL  -> StageStyle(dot = c.brandHover, columnBg = c.paper2,    cardBorder = c.border,                   title = c.ink,      meta = c.muted)
+    LeadStage.WON       -> StageStyle(dot = c.brand,      columnBg = c.brandSoft, cardBorder = c.brand.copy(alpha = .25f), title = c.brandInk, meta = c.brand)
+    LeadStage.LOST      -> StageStyle(dot = c.muted2,     columnBg = c.paper2,    cardBorder = c.border,                   title = c.ink,      meta = c.muted)
 }
 
 // ─── Previews ──────────────────────────────────────────────────────────────
@@ -117,11 +115,11 @@ internal fun stageColor(stage: LeadStage, c: NitiGrowColors): StagePalette = whe
 private fun StageHeaderPreview() {
     NitiGrowTheme {
         Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.padding(16.dp),
         ) {
             LeadStage.entries.forEach { stage ->
-                StageHeader(stage = stage, count = (stage.ordinal + 1) * 3)
+                StageHeader(stage = stage, count = (stage.ordinal + 1) * 2, sum = "₹1.4L")
             }
         }
     }

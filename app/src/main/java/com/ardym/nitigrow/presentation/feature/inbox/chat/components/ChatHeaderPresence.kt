@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
 import com.ardym.nitigrow.ui.theme.Theme
 import java.time.Instant
@@ -50,10 +51,12 @@ import java.util.Locale
 fun ChatHeaderPresence(
     typing: Boolean,
     lastSeen: Instant?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fallback: String = ""
 ) {
     val colors = Theme.colors
     val locale = LocalConfiguration.current.locales.get(0) ?: Locale.getDefault()
+    val subtextStyle = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -65,7 +68,7 @@ fun ChatHeaderPresence(
                 Spacer(Modifier.size(6.dp))
                 Text(
                     text = "Typing…",
-                    style = MaterialTheme.typography.labelMedium,
+                    style = subtextStyle,
                     color = colors.brand,
                     fontWeight = FontWeight.Medium
                 )
@@ -73,8 +76,8 @@ fun ChatHeaderPresence(
             lastSeen != null -> {
                 Text(
                     text = formatLastSeen(lastSeen, locale),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.ink3,
+                    style = subtextStyle,
+                    color = colors.muted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -83,6 +86,15 @@ fun ChatHeaderPresence(
             // last 2 minutes, the caller should pass `lastSeen = Instant.now()`
             // (or close to it). We render an explicit "Online" pill when the
             // gap is under that threshold.
+            fallback.isNotBlank() -> {
+                Text(
+                    text = fallback,
+                    style = subtextStyle,
+                    color = colors.muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

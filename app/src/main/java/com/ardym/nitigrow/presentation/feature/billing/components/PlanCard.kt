@@ -1,16 +1,16 @@
 package com.ardym.nitigrow.presentation.feature.billing.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,66 +18,142 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ardym.nitigrow.domain.model.Plan
-import com.ardym.nitigrow.presentation.components.PrimaryButton
+import com.ardym.nitigrow.ui.theme.NitiGrowTheme
+import com.ardym.nitigrow.ui.theme.Theme
 import java.text.NumberFormat
 import java.util.Locale
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PlanCard — one plan option inside the "Choose a plan" bottom sheet.
+//
+//   ┌──────────────────────────────────────┐         ┌──────────(CURRENT)┐
+//   │ Starter                    ₹999/mo   │         │ Growth   ₹1,499/mo│ ← 2dp brand
+//   │ 1,000 conversations · 2 seats        │         │ 2,500 conv · 5 …  │   border +
+//   └──────────────────────────────────────┘         └───────────────────┘   brandSoft bg
+//
+// The CURRENT plan gets a floating mini-pill straddling the top-right border.
+// ─────────────────────────────────────────────────────────────────────────────
 
 private val nf = NumberFormat.getInstance(Locale("en", "IN"))
 
 @Composable
 fun PlanCard(
     plan: Plan,
-    onBuy: () -> Unit,
     isCurrent: Boolean,
-    busy: Boolean,
-    modifier: Modifier = Modifier
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth().padding(vertical = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (plan.isPopular) MaterialTheme.colorScheme.primaryContainer
-                             else MaterialTheme.colorScheme.surfaceContainer
-        )
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    val colors = Theme.colors
+    val shape = RoundedCornerShape(15.dp)
+    Box(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 9.dp) // leaves room for the floating CURRENT pill
+                .clip(shape)
+                .background(if (isCurrent) colors.brandSoft else colors.card)
+                .border(
+                    width = if (isCurrent) 2.dp else 1.dp,
+                    color = if (isCurrent) colors.brand else colors.border,
+                    shape = shape,
+                )
+                .clickable(enabled = enabled && !isCurrent, onClick = onClick)
+                .padding(14.dp),
+        ) {
             Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(plan.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                if (plan.isPopular) {
+                Text(
+                    text = plan.name,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.ink,
+                    modifier = Modifier.weight(1f),
+                )
+                Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        "Most popular",
-                        style = MaterialTheme.typography.labelSmall,
+                        text = "₹${nf.format(plan.priceInr)}",
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.primary)
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                        color = colors.ink,
+                    )
+                    Text(
+                        text = periodLabel(plan.periodDays),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = colors.muted,
+                        modifier = Modifier.padding(bottom = 1.dp),
                     )
                 }
             }
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "₹${nf.format(plan.priceInr)} / ${plan.periodDays} days",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(8.dp))
-            plan.features.forEach { f ->
-                Text("• $f", style = MaterialTheme.typography.bodyMedium)
+            if (plan.features.isNotEmpty()) {
+                Spacer(Modifier.padding(top = 4.dp))
+                Text(
+                    text = plan.features.joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isCurrent) colors.ink2 else colors.muted,
+                )
             }
-            Spacer(Modifier.height(12.dp))
-            PrimaryButton(
-                text = if (isCurrent) "Current plan" else "Subscribe",
-                onClick = onBuy,
-                loading = busy,
-                enabled = !isCurrent && !busy
+        }
+        if (isCurrent) {
+            Text(
+                text = "CURRENT",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.6.sp,
+                color = if (colors.isLight) colors.paper else colors.brandInk,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 14.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(colors.brand)
+                    .padding(horizontal = 10.dp, vertical = 3.dp),
             )
         }
+    }
+}
+
+private fun periodLabel(periodDays: Int): String =
+    if (periodDays in 28..31) "/mo" else "/${periodDays}d"
+
+// ── Previews ────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true, name = "PlanCard — current")
+@Composable
+private fun PreviewPlanCardCurrent() {
+    NitiGrowTheme {
+        PlanCard(
+            plan = Plan(
+                id = "growth", name = "Growth", priceInr = 1_499, periodDays = 30,
+                features = listOf("2,500 conversations", "5 seats", "leads + analytics"),
+                isPopular = true,
+            ),
+            isCurrent = true,
+            enabled = true,
+            onClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "PlanCard — other")
+@Composable
+private fun PreviewPlanCardOther() {
+    NitiGrowTheme {
+        PlanCard(
+            plan = Plan(
+                id = "starter", name = "Starter", priceInr = 999, periodDays = 30,
+                features = listOf("1,000 conversations", "2 seats"),
+                isPopular = false,
+            ),
+            isCurrent = false,
+            enabled = true,
+            onClick = {},
+        )
     }
 }

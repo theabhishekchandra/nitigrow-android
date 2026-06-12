@@ -1,6 +1,8 @@
 package com.ardym.nitigrow.presentation.feature.settings.waba
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,27 +19,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Whatsapp
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,19 +46,29 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ardym.nitigrow.domain.model.WabaStatus
+import com.ardym.nitigrow.presentation.feature.settings.components.StatusPill
+import com.ardym.nitigrow.presentation.feature.settings.components.SubScreenHeader
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
 import com.ardym.nitigrow.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
+import java.text.NumberFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private val PageGutter = 16.dp
-private val CardGutter = 16.dp
-private val SectionSpacing = 12.dp
-private val PillCornerRadius = 999.dp
-private val QualityDotSize = 12.dp
+// ─────────────────────────────────────────────────────────────────────────────
+// WabaNumberScreen — Settings ▸ WhatsApp account.
+//
+//   ‹ WhatsApp account                                  ⟳
+//   ┌ ◯wa  +91 98765 43210  Display name: …   [VERIFIED] ┐
+//   │ Quality rating              ● GREEN                │
+//   │ Messaging limit             Tier · 1K/24h          │
+//   ┌ TIER USAGE TODAY  Business-initiated  412 / 1,000  ┐
+//   [Re-link WhatsApp account]
+// ─────────────────────────────────────────────────────────────────────────────
+
+private val SectionSpacing = 14.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +77,7 @@ fun WabaNumberScreen(
     viewModel: WabaNumberViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val colors = Theme.colors
     val snackbar = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -78,26 +90,19 @@ fun WabaNumberScreen(
     }
 
     Scaffold(
+        containerColor = colors.paper,
         topBar = {
-            TopAppBar(
-                title = { Text("WhatsApp number", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = viewModel::refresh) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
-                    }
+            SubScreenHeader(title = "WhatsApp account", onBack = onBack) {
+                IconButton(onClick = viewModel::refresh) {
+                    Icon(Icons.Filled.Refresh, contentDescription = "Refresh", tint = colors.ink3)
                 }
-            )
+            }
         },
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
         WabaNumberBody(
             state = state,
-            onReverify = viewModel::reverify,
+            onRelink = viewModel::reverify,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -108,166 +113,207 @@ fun WabaNumberScreen(
 @Composable
 private fun WabaNumberBody(
     state: WabaNumberUiState,
-    onReverify: () -> Unit,
+    onRelink: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = Theme.colors
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(PageGutter),
+            .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(SectionSpacing)
     ) {
-        PrimaryNumberCard(state = state)
-        QualityRatingCard(rating = state.qualityRating)
-        MessagingLimitCard(limit = state.messagingLimit, verifiedAt = state.verifiedAt)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(SectionSpacing)
-        ) {
-            OutlinedButton(
-                onClick = onReverify,
-                modifier = Modifier.weight(1f)
-            ) { Text("Re-verify") }
+        AccountCard(state)
+        if (state.dailyLimit > 0) {
+            TierUsageCard(used = state.dailyUsed, limit = state.dailyLimit)
         }
-    }
-}
-
-@Composable
-private fun PrimaryNumberCard(state: WabaNumberUiState) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Theme.colors.card),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(CardGutter)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Filled.Verified,
-                    contentDescription = null,
-                    tint = Theme.colors.brand
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    state.displayName.ifBlank { "Not linked" },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.weight(1f))
-                StatusPill(state.status)
-            }
-            Spacer(Modifier.height(8.dp))
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(colors.card)
+                .border(1.dp, colors.border, RoundedCornerShape(14.dp))
+                .clickable(role = Role.Button, onClick = onRelink)
+                .padding(vertical = 13.dp)
+        ) {
             Text(
-                state.phone.ifBlank { "—" },
-                style = MaterialTheme.typography.headlineSmall,
-                color = Theme.colors.ink
+                "Re-link WhatsApp account",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.ink
             )
         }
     }
 }
 
 @Composable
-private fun StatusPill(status: WabaStatus) {
-    val (bg, fg, label) = when (status) {
-        WabaStatus.ACTIVE -> Triple(Theme.colors.success.copy(alpha = 0.16f), Theme.colors.success, "ACTIVE")
-        WabaStatus.PENDING -> Triple(Theme.colors.warning.copy(alpha = 0.16f), Theme.colors.warning, "PENDING")
-        WabaStatus.SUSPENDED -> Triple(Theme.colors.danger.copy(alpha = 0.16f), Theme.colors.danger, "SUSPENDED")
-        WabaStatus.FAILED -> Triple(Theme.colors.danger.copy(alpha = 0.16f), Theme.colors.danger, "FAILED")
-        WabaStatus.NOT_LINKED -> Triple(Theme.colors.muted.copy(alpha = 0.16f), Theme.colors.muted, "NOT LINKED")
-    }
-    Box(
+private fun AccountCard(state: WabaNumberUiState) {
+    val colors = Theme.colors
+    Column(
         modifier = Modifier
-            .background(bg, shape = RoundedCornerShape(PillCornerRadius))
-            .padding(horizontal = 10.dp, vertical = 4.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(18.dp))
+            .padding(18.dp)
     ) {
-        Text(
-            label,
-            color = fg,
-            fontWeight = FontWeight.Bold,
-            fontSize = 11.sp
-        )
-    }
-}
-
-@Composable
-private fun QualityRatingCard(rating: String) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Theme.colors.card),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(CardGutter),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            QualityDot(rating)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(46.dp)
+                    .background(colors.brandSoft, CircleShape)
+            ) {
+                Icon(
+                    Icons.Filled.Whatsapp,
+                    contentDescription = null,
+                    tint = colors.brand,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Quality rating",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    state.phone.ifBlank { "Not linked" },
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.ink
+                )
+                if (state.displayName.isNotBlank()) {
+                    Text(
+                        "Display name: ${state.displayName}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.muted,
+                        modifier = Modifier.padding(top = 1.dp)
+                    )
+                }
+            }
+            StatusPillFor(state.status)
+        }
+        HorizontalDivider(color = colors.border2, modifier = Modifier.padding(vertical = 14.dp))
+        KeyValueRow(label = "Quality rating") {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(9.dp)
+                        .background(qualityColor(state.qualityRating), CircleShape)
                 )
                 Text(
-                    rating.uppercase(Locale.ROOT),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    state.qualityRating.uppercase(Locale.ROOT),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = qualityColor(state.qualityRating)
                 )
             }
+        }
+        KeyValueRow(label = "Messaging limit") {
             Text(
-                qualityHint(rating),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                state.messagingLimit,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.ink
             )
+        }
+        state.verifiedAt?.let { at ->
+            KeyValueRow(label = "Verified") {
+                Text(
+                    formatVerifiedAt(at),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.ink
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun QualityDot(rating: String) {
-    val color = when (rating.uppercase(Locale.ROOT)) {
-        "GREEN" -> Theme.colors.success
-        "YELLOW" -> Theme.colors.warning
-        "RED" -> Theme.colors.danger
-        else -> Theme.colors.muted
-    }
-    Box(
+private fun KeyValueRow(label: String, value: @Composable () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .size(QualityDotSize)
-            .background(color, CircleShape)
-    )
-}
-
-private fun qualityHint(rating: String): String = when (rating.uppercase(Locale.ROOT)) {
-    "GREEN" -> "Healthy"
-    "YELLOW" -> "Watch"
-    "RED" -> "Action needed"
-    else -> ""
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Theme.colors.muted,
+            modifier = Modifier.weight(1f)
+        )
+        value()
+    }
 }
 
 @Composable
-private fun MessagingLimitCard(limit: String, verifiedAt: Instant?) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Theme.colors.card),
-        modifier = Modifier.fillMaxWidth()
+private fun StatusPillFor(status: WabaStatus) {
+    val colors = Theme.colors
+    val (bg, fg, label) = when (status) {
+        WabaStatus.ACTIVE -> Triple(colors.brandSoft, colors.brand, "VERIFIED")
+        WabaStatus.PENDING -> Triple(colors.turmericSoft, colors.turmericInk, "PENDING")
+        WabaStatus.SUSPENDED -> Triple(colors.danger.copy(alpha = 0.12f), colors.danger, "SUSPENDED")
+        WabaStatus.FAILED -> Triple(colors.danger.copy(alpha = 0.12f), colors.danger, "FAILED")
+        WabaStatus.NOT_LINKED -> Triple(colors.paper2, colors.ink3, "NOT LINKED")
+    }
+    StatusPill(label, bg = bg, fg = fg)
+}
+
+@Composable
+private fun qualityColor(rating: String): Color = when (rating.uppercase(Locale.ROOT)) {
+    "GREEN" -> Theme.colors.brand
+    "YELLOW" -> Theme.colors.warning
+    "RED" -> Theme.colors.danger
+    else -> Theme.colors.muted
+}
+
+@Composable
+private fun TierUsageCard(used: Int, limit: Int) {
+    val colors = Theme.colors
+    val nf = remember { NumberFormat.getIntegerInstance(Locale.ENGLISH) }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .padding(16.dp)
     ) {
-        Column(modifier = Modifier.padding(CardGutter)) {
+        Text(
+            "TIER USAGE TODAY",
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.muted,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
+        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
             Text(
-                "Messaging limit",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                "Business-initiated",
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.ink,
+                modifier = Modifier.weight(1f)
             )
-            Spacer(Modifier.height(4.dp))
             Text(
-                limit,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                "${nf.format(used)} / ${nf.format(limit)}",
+                fontSize = 12.5.sp,
+                color = colors.muted
             )
-            if (verifiedAt != null) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Verified ${formatVerifiedAt(verifiedAt)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .background(colors.paper2, RoundedCornerShape(4.dp))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(fraction = (used.toFloat() / limit).coerceIn(0f, 1f))
+                    .height(8.dp)
+                    .background(colors.brand, RoundedCornerShape(4.dp))
+            )
         }
     }
 }
@@ -285,12 +331,14 @@ private fun PreviewWabaNumberBody() {
         WabaNumberBody(
             state = WabaNumberUiState(
                 phone = "+91 98765 43210",
-                displayName = "Aarav Traders",
-                status = com.ardym.nitigrow.domain.model.WabaStatus.ACTIVE,
+                displayName = "Sharma Sweets",
+                status = WabaStatus.ACTIVE,
                 qualityRating = "GREEN",
-                messagingLimit = "1K/24h"
+                messagingLimit = "1K/24h",
+                dailyUsed = 412,
+                dailyLimit = 1000
             ),
-            onReverify = {}
+            onRelink = {}
         )
     }
 }

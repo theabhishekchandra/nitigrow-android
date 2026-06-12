@@ -12,6 +12,7 @@ import com.ardym.nitigrow.domain.usecase.chat.ObserveTypingUseCase
 import com.ardym.nitigrow.domain.usecase.chat.PagedMessagesUseCase
 import com.ardym.nitigrow.domain.usecase.chat.RetryMessageUseCase
 import com.ardym.nitigrow.domain.usecase.chat.SendMessageUseCase
+import com.ardym.nitigrow.domain.usecase.inbox.ObserveConversationsUseCase
 import com.ardym.nitigrow.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Duration
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
@@ -36,6 +38,7 @@ class ChatViewModel @Inject constructor(
     savedState: SavedStateHandle,
     pagedMessages: PagedMessagesUseCase,
     observeTyping: ObserveTypingUseCase,
+    observeConversations: ObserveConversationsUseCase,
     private val sendMessage: SendMessageUseCase,
     private val retryMessage: RetryMessageUseCase,
     private val markRead: MarkConversationReadUseCase,
@@ -59,6 +62,24 @@ class ChatViewModel @Inject constructor(
     init {
         observeTyping(conversationId)
             .onEach { typing -> _state.update { it.copy(typing = typing) } }
+            .launchIn(viewModelScope)
+
+        // Header binding: contact identity + 24h-window pill, observed from the
+        // cached conversation list. The window is only derivable while the last
+        // message is inbound (each inbound message restarts the 24h clock).
+        observeConversations("")
+            .onEach { conversations ->
+                val conv = conversations.find { it.id == conversationId } ?: return@onEach
+                _state.update {
+                    it.copy(
+                        contactName = conv.contactName,
+                        contactPhone = conv.contactPhone,
+                        avatarUrl = conv.avatarUrl,
+                        windowExpiresAt = if (conv.lastMessageOutbound) null
+                        else conv.lastMessageAt.plus(SERVICE_WINDOW)
+                    )
+                }
+            }
             .launchIn(viewModelScope)
 
         // Throttle typing emit on user keystrokes
@@ -96,5 +117,10 @@ class ChatViewModel @Inject constructor(
 
     fun onRetry(clientId: String) {
         viewModelScope.launch { retryMessage(clientId) }
+    }
+
+    companion object {
+        /** WhatsApp's 24h customer-service window after the last inbound message. */
+        private val SERVICE_WINDOW: Duration = Duration.ofHours(24)
     }
 }

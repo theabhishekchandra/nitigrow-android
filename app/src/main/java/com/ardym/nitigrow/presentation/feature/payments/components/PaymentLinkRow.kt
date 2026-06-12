@@ -1,6 +1,8 @@
 package com.ardym.nitigrow.presentation.feature.payments.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,171 +10,177 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ardym.nitigrow.presentation.feature.payments.SentLinkStatus
 import com.ardym.nitigrow.presentation.feature.payments.SentPaymentLink
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
 import com.ardym.nitigrow.ui.theme.Theme
 import java.text.NumberFormat
-import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PaymentLinkRow — single row in the "Recent payment links" list.
+// PaymentLinkRow — one payment link in the list (design: Payments screen).
 //
-//   ┌────────────────────────────────────────────────────────────┐
-//   │ ⬤  Priya Sharma                       ₹12,000 │  18 min ago│
-//   │ P                                       [PAID]              │
-//   └────────────────────────────────────────────────────────────┘
+//   ┌─────────────────────────────────────────────────────────────┐
+//   │ ┌────┐  ₹6,800                          (Pending)   [⧉]    │
+//   │ │ ₹  │  Rajesh Verma · Today, 9:20 AM                       │
+//   │ └────┘                                                      │
+//   └─────────────────────────────────────────────────────────────┘
 //
-// Status pill colour follows the brand semantic palette via Theme.colors:
-//   PAID    → success (green)
-//   PENDING → warning (amber)
-//   EXPIRED → muted   (grey)
-//   FAILED  → danger  (red)
-//
-// Avatar background is picked deterministically from Theme.colors.avatars so a
-// given contact always lands on the same warm tone across the app.
+// • 42dp turmericSoft square (radius 13) with a Fraunces ₹ glyph.
+// • Status pill: Paid → brandSoft/brand · Pending → turmericSoft/turmericInk
+//   · Expired → paper2/muted · Failed → danger soft/danger.
+// • 32dp bordered copy button, shown only when the link has a real URL.
 // ─────────────────────────────────────────────────────────────────────────────
 
 private val InrFormat: NumberFormat = NumberFormat.getInstance(Locale("en", "IN"))
 
-private const val SECONDS_PER_MINUTE = 60L
-private const val MINUTES_PER_HOUR = 60L
-private const val HOURS_PER_DAY = 24L
+private val TimeFmt = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
+private val DayFmt = DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)
+private val DateFmt = DateTimeFormatter.ofPattern("d MMM", Locale.ENGLISH)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaymentLinkRow(
     link: SentPaymentLink,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
+    onCopyLink: (String) -> Unit = {},
 ) {
     val colors = Theme.colors
-    Card(
-        onClick = onClick,
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.card),
-        shape = RoundedCornerShape(12.dp),
+            .clip(RoundedCornerShape(15.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(15.dp))
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            AvatarInitial(name = link.contactName)
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(
-                    text = link.contactName,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = colors.ink,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = relativeTime(link.sentAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.muted,
-                )
-            }
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = "₹${InrFormat.format(link.amountInr)}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = colors.ink,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                StatusChip(status = link.status)
-            }
+        RupeeGlyph()
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "₹${InrFormat.format(link.amountInr)}",
+                style = MaterialTheme.typography.bodyLarge,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = colors.ink,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "${link.contactName} · ${linkWhen(link.sentAt)}",
+                style = MaterialTheme.typography.bodySmall,
+                fontSize = 11.5.sp,
+                color = colors.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 1.dp),
+            )
+        }
+        StatusPill(status = link.status)
+        link.linkUrl?.let { url ->
+            CopyButton(onClick = { onCopyLink(url) })
         }
     }
 }
 
 @Composable
-private fun AvatarInitial(name: String) {
+private fun RupeeGlyph() {
     val colors = Theme.colors
-    val initial = name.firstOrNull { it.isLetter() }?.uppercaseChar() ?: '#'
-    val (bg, fg) = colors.avatars[Math.floorMod(name.hashCode(), colors.avatars.size)]
     Box(
         modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(bg),
+            .size(42.dp)
+            .clip(RoundedCornerShape(13.dp))
+            .background(colors.turmericSoft),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = initial.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            color = fg,
-            fontWeight = FontWeight.SemiBold,
+            text = "₹",
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontSize = 19.sp,
+                fontWeight = FontWeight.SemiBold,
+            ),
+            color = colors.turmericInk,
         )
     }
 }
 
 @Composable
-private fun StatusChip(status: SentLinkStatus) {
+private fun StatusPill(status: SentLinkStatus) {
     val colors = Theme.colors
-    val tint: Color = when (status) {
-        SentLinkStatus.PAID -> colors.success
-        SentLinkStatus.PENDING -> colors.warning
-        SentLinkStatus.EXPIRED -> colors.muted
-        SentLinkStatus.FAILED -> colors.danger
+    val (bg, fg, label) = when (status) {
+        SentLinkStatus.PAID -> Triple(colors.brandSoft, colors.brand, "Paid")
+        SentLinkStatus.PENDING -> Triple(colors.turmericSoft, colors.turmericInk, "Pending")
+        SentLinkStatus.EXPIRED -> Triple(colors.paper2, colors.muted, "Expired")
+        SentLinkStatus.FAILED -> Triple(colors.danger.copy(alpha = 0.12f), colors.danger, "Failed")
     }
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(tint.copy(alpha = 0.14f))
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .clip(RoundedCornerShape(999.dp))
+            .background(bg)
+            .padding(horizontal = 11.dp, vertical = 4.dp),
     ) {
         Text(
-            text = status.name,
-            style = MaterialTheme.typography.labelSmall,
-            color = tint,
-            fontWeight = FontWeight.SemiBold,
+            text = label,
+            fontSize = 10.5.sp,
+            fontWeight = FontWeight.Bold,
+            color = fg,
         )
     }
 }
 
-private fun relativeTime(instant: Instant): String {
-    val seconds = Duration.between(instant, Instant.now()).seconds.coerceAtLeast(0)
+@Composable
+private fun CopyButton(onClick: () -> Unit) {
+    val colors = Theme.colors
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            Icons.Filled.ContentCopy,
+            contentDescription = "Copy payment link",
+            tint = colors.muted,
+            modifier = Modifier.size(14.dp),
+        )
+    }
+}
+
+/**
+ * "Today, 9:20 AM" → same day · "Tue, 4:12 PM" → last 7 days · "28 May" → older.
+ * Mirrors the prototype's `when` strings.
+ */
+private fun linkWhen(sentAt: Instant): String {
+    val zone = ZoneId.systemDefault()
+    val dateTime = sentAt.atZone(zone)
+    val date = dateTime.toLocalDate()
+    val today = LocalDate.now(zone)
     return when {
-        seconds < SECONDS_PER_MINUTE -> "just now"
-        seconds < SECONDS_PER_MINUTE * MINUTES_PER_HOUR -> "${seconds / SECONDS_PER_MINUTE} min ago"
-        seconds < SECONDS_PER_MINUTE * MINUTES_PER_HOUR * HOURS_PER_DAY -> {
-            val hours = seconds / (SECONDS_PER_MINUTE * MINUTES_PER_HOUR)
-            "$hours h ago"
-        }
-        else -> {
-            val days = seconds / (SECONDS_PER_MINUTE * MINUTES_PER_HOUR * HOURS_PER_DAY)
-            "$days d ago"
-        }
+        date == today -> "Today, ${TimeFmt.format(dateTime)}"
+        date.isAfter(today.minusDays(7)) -> "${DayFmt.format(dateTime)}, ${TimeFmt.format(dateTime)}"
+        else -> DateFmt.format(date)
     }
 }
 
@@ -183,10 +191,11 @@ private fun relativeTime(instant: Instant): String {
 private fun PreviewPaymentLinkRowPaid() {
     val sample = SentPaymentLink(
         id = "pl-001",
-        contactName = "Priya Sharma",
-        amountInr = 12_000,
+        contactName = "Kavita Reddy",
+        amountInr = 2_450,
         status = SentLinkStatus.PAID,
-        sentAt = Instant.now().minusSeconds(SECONDS_PER_MINUTE * 18),
+        sentAt = Instant.now().minusSeconds(60L * 60 * 26),
+        linkUrl = "https://nitigrow.in/pay/pl-001",
     )
     NitiGrowTheme { PaymentLinkRow(link = sample) }
 }
@@ -196,23 +205,25 @@ private fun PreviewPaymentLinkRowPaid() {
 private fun PreviewPaymentLinkRowPending() {
     val sample = SentPaymentLink(
         id = "pl-002",
-        contactName = "Rahul Verma",
-        amountInr = 48_500,
+        contactName = "Rajesh Verma",
+        amountInr = 6_800,
         status = SentLinkStatus.PENDING,
-        sentAt = Instant.now().minusSeconds(SECONDS_PER_MINUTE * MINUTES_PER_HOUR * 2),
+        sentAt = Instant.now().minusSeconds(60L * 18),
+        linkUrl = "https://nitigrow.in/pay/pl-002",
     )
     NitiGrowTheme { PaymentLinkRow(link = sample) }
 }
 
-@Preview(showBackground = true, name = "PaymentLinkRow — FAILED")
+@Preview(showBackground = true, name = "PaymentLinkRow — EXPIRED, no URL")
 @Composable
-private fun PreviewPaymentLinkRowFailed() {
+private fun PreviewPaymentLinkRowExpired() {
     val sample = SentPaymentLink(
         id = "pl-003",
-        contactName = "Vikram Singh",
-        amountInr = 750,
-        status = SentLinkStatus.FAILED,
-        sentAt = Instant.now().minusSeconds(SECONDS_PER_MINUTE * MINUTES_PER_HOUR * 9),
+        contactName = "Deepak Joshi",
+        amountInr = 3_200,
+        status = SentLinkStatus.EXPIRED,
+        sentAt = Instant.now().minusSeconds(60L * 60 * 24 * 30),
+        linkUrl = null,
     )
     NitiGrowTheme { PaymentLinkRow(link = sample) }
 }

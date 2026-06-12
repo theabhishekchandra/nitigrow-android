@@ -2,6 +2,7 @@ package com.ardym.nitigrow.presentation.feature.inbox.chat.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import com.ardym.nitigrow.domain.model.Message
 import com.ardym.nitigrow.domain.model.MessageStatus
 import com.ardym.nitigrow.domain.model.MessageType
-import com.ardym.nitigrow.presentation.feature.inbox.list.components.StatusTicks
 import com.ardym.nitigrow.ui.theme.BubbleInShape
 import com.ardym.nitigrow.ui.theme.BubbleOutShape
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
@@ -103,6 +102,7 @@ fun AudioMessageBubble(
                 .widthIn(max = BubbleMaxWidth)
                 .clip(shape)
                 .background(bg)
+                .border(1.dp, if (isOutbound) bg else Theme.colors.bubbleInBorder, shape)
                 .padding(horizontal = InnerHorizontal, vertical = InnerVertical),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -154,18 +154,18 @@ fun AudioMessageBubble(
                 ) {
                     Text(
                         text = durationLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = ink.copy(alpha = 0.7f),
+                        style = bubbleTimeStyle(),
+                        color = bubbleMetaColor(isOutbound = isOutbound),
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = AudioTimeFmt.format(message.sentAt),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ink.copy(alpha = 0.7f),
+                            style = bubbleTimeStyle(),
+                            color = bubbleMetaColor(isOutbound = isOutbound),
                         )
                         if (isOutbound) {
                             Spacer(Modifier.size(4.dp))
-                            StatusTicks(status = message.status)
+                            BubbleStatusTicks(status = message.status)
                         }
                     }
                 }

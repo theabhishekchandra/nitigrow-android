@@ -1,6 +1,7 @@
 package com.ardym.nitigrow.presentation.feature.inbox.chat.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +34,6 @@ import coil.compose.AsyncImage
 import com.ardym.nitigrow.domain.model.Message
 import com.ardym.nitigrow.domain.model.MessageStatus
 import com.ardym.nitigrow.domain.model.MessageType
-import com.ardym.nitigrow.presentation.feature.inbox.list.components.StatusTicks
 import com.ardym.nitigrow.ui.theme.BubbleInShape
 import com.ardym.nitigrow.ui.theme.BubbleOutShape
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
@@ -76,6 +76,7 @@ fun ImageMessageBubble(
                 .widthIn(max = BubbleMaxWidth)
                 .clip(shape)
                 .background(bg)
+                .border(1.dp, if (isOutbound) bg else Theme.colors.bubbleInBorder, shape)
                 .padding(InnerPadding),
         ) {
             AsyncImage(
@@ -111,12 +112,12 @@ fun ImageMessageBubble(
             ) {
                 Text(
                     text = ImageTimeFmt.format(message.sentAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = ink.copy(alpha = 0.7f),
+                    style = bubbleTimeStyle(),
+                    color = bubbleMetaColor(isOutbound = isOutbound),
                 )
                 if (isOutbound) {
                     Spacer(Modifier.padding(start = MetaSpacing))
-                    StatusTicks(status = message.status)
+                    BubbleStatusTicks(status = message.status)
                 }
             }
         }

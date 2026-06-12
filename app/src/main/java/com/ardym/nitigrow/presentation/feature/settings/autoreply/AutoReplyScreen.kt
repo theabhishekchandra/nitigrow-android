@@ -1,6 +1,10 @@
 package com.ardym.nitigrow.presentation.feature.settings.autoreply
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,33 +12,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.NightsStay
-import androidx.compose.material.icons.filled.WavingHand
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,22 +34,40 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ardym.nitigrow.presentation.feature.settings.components.NgToggle
+import com.ardym.nitigrow.presentation.feature.settings.components.PrimaryCta
+import com.ardym.nitigrow.presentation.feature.settings.components.SubScreenHeader
 import com.ardym.nitigrow.ui.theme.NitiGrowTheme
 import com.ardym.nitigrow.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-private val PageGutter = 16.dp
-private val CardGutter = 16.dp
-private val FieldSpacing = 12.dp
-private const val WELCOME_MAX_LINES = 6
-private const val AWAY_MAX_LINES = 6
+// ─────────────────────────────────────────────────────────────────────────────
+// AutoReplyScreen — Settings ▸ Auto-replies.
+//
+//   ‹ Auto-replies
+//   ┌ Welcome message · subtitle              [toggle] ┐
+//   │ ┌ editable message block (paper2) ┐              │
+//   ┌ Away message · subtitle                 [toggle] ┐
+//   │ ┌ editable message block ┐  [FROM 9:30 PM][TO …] │
+//   [Save changes]
+//
+// The prototype shows a separate "Quiet hours" rule; the backend only stores
+// welcome + away (enabled/message), so the FROM/TO window lives on the Away
+// card and keeps its existing UI-only time-picker behaviour.
+// ─────────────────────────────────────────────────────────────────────────────
+
+private val CardSpacing = 12.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +76,7 @@ fun AutoReplyScreen(
     viewModel: AutoReplyViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val colors = Theme.colors
     val snackbar = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -79,16 +88,8 @@ fun AutoReplyScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Auto-reply", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        },
+        containerColor = colors.paper,
+        topBar = { SubScreenHeader(title = "Auto-replies", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
         AutoReplyBody(
@@ -122,203 +123,187 @@ private fun AutoReplyBody(
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(PageGutter),
-        verticalArrangement = Arrangement.spacedBy(FieldSpacing)
+            .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(CardSpacing)
     ) {
-        WelcomeCard(
+        RuleCard(
+            title = "Welcome message",
+            subtitle = "Sent on a customer's first message",
             enabled = state.welcomeEnabled,
-            message = state.welcomeMessage,
-            onEnabled = onWelcomeEnabled,
-            onMessage = onWelcomeMessage
-        )
-        AwayCard(
-            enabled = state.awayEnabled,
-            message = state.awayMessage,
-            start = state.awayStart,
-            end = state.awayEnd,
-            onEnabled = onAwayEnabled,
-            onMessage = onAwayMessage,
-            onStart = onAwayStart,
-            onEnd = onAwayEnd
-        )
-        Spacer(Modifier.height(4.dp))
-        FilledTonalButton(
-            onClick = onSave,
-            enabled = !state.isSaving,
-            modifier = Modifier.fillMaxWidth()
+            onEnabled = onWelcomeEnabled
         ) {
-            if (state.isSaving) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            } else {
-                Text("Save")
-            }
-        }
-        Spacer(Modifier.height(PageGutter))
-    }
-}
-
-@Composable
-private fun WelcomeCard(
-    enabled: Boolean,
-    message: String,
-    onEnabled: (Boolean) -> Unit,
-    onMessage: (String) -> Unit
-) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Theme.colors.card),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(CardGutter)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.WavingHand, contentDescription = null, tint = Theme.colors.brand)
-                Spacer(Modifier.width(8.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "Welcome message",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        "Sent automatically when a new customer first messages you.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Switch(checked = enabled, onCheckedChange = onEnabled)
-            }
-            Spacer(Modifier.height(FieldSpacing))
-            OutlinedTextField(
-                value = message,
-                onValueChange = onMessage,
-                label = { Text("Message") },
-                enabled = enabled,
-                minLines = 3,
-                maxLines = WELCOME_MAX_LINES,
-                modifier = Modifier.fillMaxWidth()
+            MessageBlock(
+                value = state.welcomeMessage,
+                onValueChange = onWelcomeMessage,
+                enabled = state.welcomeEnabled
             )
         }
-    }
-}
-
-@Composable
-private fun AwayCard(
-    enabled: Boolean,
-    message: String,
-    start: LocalTime,
-    end: LocalTime,
-    onEnabled: (Boolean) -> Unit,
-    onMessage: (String) -> Unit,
-    onStart: (LocalTime) -> Unit,
-    onEnd: (LocalTime) -> Unit
-) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Theme.colors.card),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(CardGutter)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.NightsStay, contentDescription = null, tint = Theme.colors.accent)
-                Spacer(Modifier.width(8.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "Out of hours",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        "Sent when customers message between the times below.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Switch(checked = enabled, onCheckedChange = onEnabled)
-            }
-            Spacer(Modifier.height(FieldSpacing))
+        RuleCard(
+            title = "Away message",
+            subtitle = "Sent outside business hours",
+            enabled = state.awayEnabled,
+            onEnabled = onAwayEnabled
+        ) {
+            MessageBlock(
+                value = state.awayMessage,
+                onValueChange = onAwayMessage,
+                enabled = state.awayEnabled
+            )
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(FieldSpacing)
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
             ) {
-                TimePickerField(
-                    label = "Start",
-                    time = start,
-                    enabled = enabled,
-                    onChange = onStart,
+                TimeBox(
+                    label = "FROM",
+                    time = state.awayStart,
+                    enabled = state.awayEnabled,
+                    onChange = onAwayStart,
                     modifier = Modifier.weight(1f)
                 )
-                TimePickerField(
-                    label = "End",
-                    time = end,
-                    enabled = enabled,
-                    onChange = onEnd,
+                TimeBox(
+                    label = "TO",
+                    time = state.awayEnd,
+                    enabled = state.awayEnabled,
+                    onChange = onAwayEnd,
                     modifier = Modifier.weight(1f)
                 )
             }
-            Spacer(Modifier.height(FieldSpacing))
-            OutlinedTextField(
-                value = message,
-                onValueChange = onMessage,
-                label = { Text("Message") },
-                enabled = enabled,
-                minLines = 3,
-                maxLines = AWAY_MAX_LINES,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
+        Spacer(Modifier.height(4.dp))
+        PrimaryCta(text = "Save changes", onClick = onSave, loading = state.isSaving)
     }
 }
 
-private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+@Composable
+private fun RuleCard(
+    title: String,
+    subtitle: String,
+    enabled: Boolean,
+    onEnabled: (Boolean) -> Unit,
+    content: @Composable () -> Unit
+) {
+    val colors = Theme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(bottom = 12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.ink
+                )
+                Text(
+                    subtitle,
+                    fontSize = 11.5.sp,
+                    color = colors.muted,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+            NgToggle(checked = enabled, onCheckedChange = onEnabled)
+        }
+        content()
+    }
+}
 
 /**
- * Time field backed by a real Material 3 [TimePicker] hosted in a dialog. Tapping
- * "Change" opens the clock/dial picker seeded with the current value; confirming
+ * The prototype renders the rule text as a paper2 preview block; here it stays
+ * editable (the backend persists the message), styled to match the block.
+ */
+@Composable
+private fun MessageBlock(
+    value: String,
+    onValueChange: (String) -> Unit,
+    enabled: Boolean
+) {
+    val colors = Theme.colors
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        enabled = enabled,
+        minLines = 2,
+        maxLines = 6,
+        textStyle = MaterialTheme.typography.bodyMedium.copy(
+            fontSize = 12.5.sp,
+            lineHeight = 19.sp,
+            color = if (enabled) colors.ink2 else colors.muted
+        ),
+        cursorBrush = SolidColor(colors.brand),
+        decorationBox = { inner ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colors.paper2, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 13.dp, vertical = 11.dp)
+            ) { inner() }
+        },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+private val timeFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
+
+/**
+ * Bordered FROM/TO box backed by the real Material 3 [TimePicker] dialog.
+ * Tapping the box opens the dial seeded with the current value; confirming
  * propagates the chosen [LocalTime] back through [onChange].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TimePickerField(
+private fun TimeBox(
     label: String,
     time: LocalTime,
     enabled: Boolean,
     onChange: (LocalTime) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = Theme.colors
     var showPicker by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+            .clickable(enabled = enabled) { showPicker = true }
+            .padding(horizontal = 13.dp, vertical = 11.dp)
+    ) {
         Text(
             label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 1.sp,
+            color = colors.muted
         )
-        Spacer(Modifier.height(4.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                timeFormatter.format(time),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(Modifier.weight(1f))
-            OutlinedButton(
-                onClick = { showPicker = true },
-                enabled = enabled
-            ) { Text("Change") }
-        }
+        Text(
+            timeFormatter.format(time),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (enabled) colors.ink else colors.muted,
+            modifier = Modifier.padding(top = 2.dp)
+        )
     }
 
     if (showPicker) {
         val pickerState = rememberTimePickerState(
             initialHour = time.hour,
             initialMinute = time.minute,
-            is24Hour = true
+            is24Hour = false
         )
         AlertDialog(
             onDismissRequest = { showPicker = false },
-            title = { Text("$label time") },
+            title = { Text(if (label == "FROM") "From time" else "To time") },
             text = {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -342,16 +327,16 @@ private fun TimePickerField(
     }
 }
 
-@Preview(showBackground = true, name = "Auto-reply — body")
+@Preview(showBackground = true, name = "Auto-replies — body")
 @Composable
 private fun PreviewAutoReplyBody() {
     NitiGrowTheme {
         AutoReplyBody(
             state = AutoReplyUiState(
                 welcomeEnabled = true,
-                welcomeMessage = "Hi! Welcome to Aarav Traders 🙏 How can we help?",
+                welcomeMessage = "Namaste! Welcome to Sharma Sweets & Caterers. Hum 10 minute me reply karenge.",
                 awayEnabled = true,
-                awayMessage = "We're away right now — we'll reply by 9 AM."
+                awayMessage = "Dukaan abhi band hai (9 PM – 9 AM). Aapka message mil gaya hai."
             ),
             onWelcomeEnabled = {},
             onWelcomeMessage = {},
