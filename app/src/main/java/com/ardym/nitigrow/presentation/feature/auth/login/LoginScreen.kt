@@ -3,6 +3,7 @@ package com.ardym.nitigrow.presentation.feature.auth.login
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,12 +35,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,17 +52,6 @@ import com.ardym.nitigrow.presentation.components.ErrorBanner
 import com.ardym.nitigrow.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 
-/**
- * Phone-OTP login (design: OTP-mode login). Enter a WhatsApp number, request
- * a 6-digit code, then verify on the OTP screen. The design's email-default
- * login variant ships with the auth rework in a later phase.
- *
- * @param onLoginSuccess retained for source compatibility with the existing
- *   nav graph wiring; unused by the phone-OTP flow (the session is persisted
- *   on the OTP screen after verification).
- * @param onOtpRequested invoked with the 10-digit phone number once the OTP
- *   has been sent; the caller navigates to the OTP screen.
- */
 @Composable
 fun LoginScreen(
     @Suppress("UNUSED_PARAMETER") onLoginSuccess: () -> Unit = {},
@@ -71,6 +64,7 @@ fun LoginScreen(
         viewModel.effects.collectLatest { effect ->
             when (effect) {
                 is LoginEffect.NavigateToOtp -> onOtpRequested(effect.phone)
+                is LoginEffect.NavigateToHome -> onLoginSuccess()
             }
         }
     }
@@ -106,46 +100,75 @@ fun LoginScreen(
                 color = colors.ink3
             )
 
-            Spacer(Modifier.height(28.dp))
-            Text(
-                "WhatsApp number",
-                style = MaterialTheme.typography.labelMedium,
-                color = colors.ink3
-            )
-            Spacer(Modifier.height(6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Fixed +91 prefix
+            Spacer(Modifier.height(24.dp))
+            
+            // Toggle
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colors.paper2, RoundedCornerShape(12.dp))
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Box(
                     modifier = Modifier
-                        .background(colors.paper2, fieldShape)
-                        .border(1.dp, colors.border, fieldShape)
-                        .padding(horizontal = 12.dp, vertical = 13.dp)
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (state.isEmailMode) colors.card else colors.paper2)
+                        .clickable { viewModel.onToggleMode(true) }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "+91",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                        color = colors.ink3
+                        "Email",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (state.isEmailMode) colors.ink else colors.ink3
                     )
                 }
-                var focused by remember { mutableStateOf(false) }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (!state.isEmailMode) colors.card else colors.paper2)
+                        .clickable { viewModel.onToggleMode(false) }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Phone OTP",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (!state.isEmailMode) colors.ink else colors.ink3
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            if (state.isEmailMode) {
+                Text(
+                    "Email address",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.ink3
+                )
+                Spacer(Modifier.height(6.dp))
+                var emailFocused by remember { mutableStateOf(false) }
                 BasicTextField(
-                    value = state.phone,
-                    onValueChange = viewModel::onPhoneChange,
+                    value = state.email,
+                    onValueChange = viewModel::onEmailChange,
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.ink),
                     cursorBrush = SolidColor(colors.brand),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone,
-                        imeAction = ImeAction.Done
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
                     ),
-                    keyboardActions = KeyboardActions(onDone = { viewModel.onSubmit() }),
                     modifier = Modifier
-                        .weight(1f)
-                        .onFocusChanged { focused = it.isFocused }
+                        .fillMaxWidth()
+                        .onFocusChanged { emailFocused = it.isFocused }
                         .background(colors.card, fieldShape)
                         .border(
-                            width = if (focused) 2.dp else 1.dp,
-                            color = if (focused) colors.brand else colors.border,
+                            width = if (emailFocused) 2.dp else 1.dp,
+                            color = if (emailFocused) colors.brand else colors.border,
                             shape = fieldShape
                         ),
                     decorationBox = { innerTextField ->
@@ -153,9 +176,9 @@ fun LoginScreen(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
                             contentAlignment = Alignment.CenterStart
                         ) {
-                            if (state.phone.isEmpty()) {
+                            if (state.email.isEmpty()) {
                                 Text(
-                                    "10-digit number",
+                                    "you@example.com",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = colors.muted2
                                 )
@@ -164,21 +187,124 @@ fun LoginScreen(
                         }
                     }
                 )
-            }
 
-            Spacer(Modifier.height(14.dp))
-            Text(
-                "We will send a 6-digit code to this number on WhatsApp.",
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.muted
-            )
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    "Password",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.ink3
+                )
+                Spacer(Modifier.height(6.dp))
+                var passFocused by remember { mutableStateOf(false) }
+                BasicTextField(
+                    value = state.password,
+                    onValueChange = viewModel::onPasswordChange,
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.ink),
+                    cursorBrush = SolidColor(colors.brand),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { viewModel.onSubmit() }),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { passFocused = it.isFocused }
+                        .background(colors.card, fieldShape)
+                        .border(
+                            width = if (passFocused) 2.dp else 1.dp,
+                            color = if (passFocused) colors.brand else colors.border,
+                            shape = fieldShape
+                        ),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (state.password.isEmpty()) {
+                                Text(
+                                    "Enter password",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = colors.muted2
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+            } else {
+                Text(
+                    "WhatsApp number",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.ink3
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .background(colors.paper2, fieldShape)
+                            .border(1.dp, colors.border, fieldShape)
+                            .padding(horizontal = 12.dp, vertical = 13.dp)
+                    ) {
+                        Text(
+                            "+91",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                            color = colors.ink3
+                        )
+                    }
+                    var focused by remember { mutableStateOf(false) }
+                    BasicTextField(
+                        value = state.phone,
+                        onValueChange = viewModel::onPhoneChange,
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.ink),
+                        cursorBrush = SolidColor(colors.brand),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Phone,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(onDone = { viewModel.onSubmit() }),
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { focused = it.isFocused }
+                            .background(colors.card, fieldShape)
+                            .border(
+                                width = if (focused) 2.dp else 1.dp,
+                                color = if (focused) colors.brand else colors.border,
+                                shape = fieldShape
+                            ),
+                        decorationBox = { innerTextField ->
+                            Box(
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                if (state.phone.isEmpty()) {
+                                    Text(
+                                        "10-digit number",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = colors.muted2
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                }
+                Spacer(Modifier.height(14.dp))
+                Text(
+                    "We will send a 6-digit code to this number on WhatsApp.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.muted
+                )
+            }
 
             state.error?.let {
                 Spacer(Modifier.height(12.dp))
                 ErrorBanner(message = it)
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(24.dp))
             Button(
                 onClick = viewModel::onSubmit,
                 enabled = state.canSubmit,
@@ -199,7 +325,10 @@ fun LoginScreen(
                         color = colors.paper
                     )
                 } else {
-                    Text("Send OTP", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        if (state.isEmailMode) "Sign In" else "Send OTP",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
             }
         }

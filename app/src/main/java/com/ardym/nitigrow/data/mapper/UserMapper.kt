@@ -9,6 +9,6 @@ fun UserDto.toDomain(): User = User(
     tenantId = tenantId,
     name = name,
     email = email,
-    phone = phone,
+    phone = phone ?: "",
     role = runCatching { UserRole.valueOf(role.uppercase()) }.getOrDefault(UserRole.AGENT)
 )

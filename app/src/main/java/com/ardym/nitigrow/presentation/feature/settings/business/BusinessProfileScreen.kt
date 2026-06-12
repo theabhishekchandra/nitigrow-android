@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -79,7 +80,7 @@ fun BusinessProfileScreen(
         containerColor = colors.paper,
         topBar = { SubScreenHeader(title = "Business profile", onBack = onBack) },
         bottomBar = {
-            Column {
+            Column(modifier = Modifier.navigationBarsPadding()) {
                 HorizontalDivider(color = colors.border2)
                 Box(modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 16.dp)) {
                     PrimaryCta(

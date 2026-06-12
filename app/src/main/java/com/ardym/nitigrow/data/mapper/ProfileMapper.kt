@@ -24,7 +24,7 @@ fun UserDto.toProfileEntity(avatarUrl: String? = null) = ProfileEntity(
     tenantId = tenantId,
     name = name,
     email = email,
-    phone = phone,
+    phone = phone ?: "",
     role = role,
     avatarUrl = avatarUrl
 )

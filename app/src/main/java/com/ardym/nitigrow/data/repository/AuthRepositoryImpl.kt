@@ -29,7 +29,7 @@ class AuthRepositoryImpl @Inject constructor(
      * Email/password login. On success the backend (mobile path) returns both
      * tokens in the body; persist them encrypted and return the domain user.
      */
-    suspend fun login(email: String, password: String): ApiResult<User> =
+    override suspend fun login(email: String, password: String): ApiResult<User> =
         when (val res = safeApiCall(dispatchers.io) { api.login(LoginRequest(email.trim(), password)) }) {
             is ApiResult.Success -> {
                 val dto = res.data
@@ -113,7 +113,7 @@ class AuthRepositoryImpl @Inject constructor(
         tenantId = tenantId,
         name = name,
         email = email,
-        phone = phone, // login/me omit phone; DTO defaults it to "".
+        phone = phone ?: "", // login/me omit phone; Gson leaves it null despite the default argument
         role = runCatching { UserRole.valueOf(role.uppercase()) }.getOrDefault(UserRole.AGENT)
     )
 }

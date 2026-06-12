@@ -19,7 +19,7 @@ data class CampaignDto(
 )
 
 data class CampaignListResponse(
-    @SerializedName("data") val data: List<CampaignDto>
+    @SerializedName("data") val data: List<CampaignDto>? = null
 )
 
 data class CreateCampaignRequest(
@@ -41,7 +41,7 @@ data class TemplateDto(
 )
 
 data class TemplateListResponse(
-    @SerializedName("data") val data: List<TemplateDto>
+    @SerializedName("data") val data: List<TemplateDto>? = null
 )
 
 data class AudienceEstimateRequest(
