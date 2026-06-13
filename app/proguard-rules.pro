@@ -18,7 +18,7 @@
 -keep class com.google.gson.reflect.TypeToken { *; }
 -keep class * extends com.google.gson.reflect.TypeToken
 # Keep DTO classes (mark with @Keep or list packages)
--keep class com.ardym.nitigrow.data.remote.dto.** { *; }
+-keep class com.websbaba.nitigrow.data.remote.dto.** { *; }
 
 # --- Hilt / Dagger ---
 -keep class * extends dagger.hilt.android.internal.managers.ApplicationComponentManager { *; }
@@ -58,7 +58,7 @@
 }
 
 # --- Domain models (used by ViewModels/UI; keep enum names for status mapping) ---
--keep enum com.ardym.nitigrow.domain.model.** { *; }
+-keep enum com.websbaba.nitigrow.domain.model.** { *; }
 
 # --- Crashlytics ---
 -keep class com.google.firebase.crashlytics.** { *; }

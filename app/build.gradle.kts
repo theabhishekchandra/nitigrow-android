@@ -10,11 +10,11 @@ plugins {
 }
 
 android {
-    namespace = "com.ardym.nitigrow"
+    namespace = "com.websbaba.nitigrow"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.ardym.nitigrow"
+        applicationId = "com.websbaba.nitigrow"
         minSdk = 26              // Android 8.0 — covers 95%+ of Indian devices
         targetSdk = 36
         // Driven from CI so every uploaded build has a unique, monotonic code

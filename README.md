@@ -6,7 +6,7 @@ agents the inbox, notifications, campaigns, contacts, leads, analytics,
 payments, and core dashboard on the go.
 
 - **API:** `https://api.nitigrow.in` (see [`backend/`](../backend/))
-- **Package:** `com.ardym.nitigrow`
+- **Package:** `com.websbaba.nitigrow`
 
 ## Tech stack
 
@@ -38,7 +38,7 @@ payments, and core dashboard on the go.
 Clean Architecture with MVVM:
 
 ```
-com.ardym.nitigrow/
+com.websbaba.nitigrow/
 ├── core/            constants, extensions, utilities
 ├── data/            repositories, data sources, DTOs, Room DAOs
 ├── di/              Hilt modules

@@ -1,0 +1,21 @@
+package com.websbaba.nitigrow.presentation.feature.settings.waba
+
+/**
+ * UI state for the WhatsApp Business Account (WABA) number sub-screen.
+ *
+ * Mirrors the shape of `/api/tenant/waba` — refresh + re-verify use cases
+ * will write into this state once the parent wires real repositories.
+ */
+data class WabaNumberUiState(
+    val phone: String = "",
+    val displayName: String = "",
+    val status: com.websbaba.nitigrow.domain.model.WabaStatus =
+        com.websbaba.nitigrow.domain.model.WabaStatus.NOT_LINKED,
+    val qualityRating: String = "GREEN",
+    val verifiedAt: java.time.Instant? = null,
+    val messagingLimit: String = "1K/24h",
+    /** Business-initiated messages sent today (tier usage numerator). */
+    val dailyUsed: Int = 0,
+    /** Daily business-initiated cap for the current tier; 0 = unknown. */
+    val dailyLimit: Int = 0
+)
