@@ -15,9 +15,11 @@ data class ContactDto(
     @SerializedName("isBlocked") val isBlocked: Boolean = false
 )
 
+// Backend returns { contacts: [...], total, page, pages } (page-based).
+// `nextCursor` is absent → null → single-page sync of up to `limit` (200) rows.
 data class ContactListResponse(
-    @SerializedName("data") val data: List<ContactDto>? = null,
-    @SerializedName("nextCursor") val nextCursor: String?
+    @SerializedName("contacts") val data: List<ContactDto>? = null,
+    @SerializedName("nextCursor") val nextCursor: String? = null
 )
 
 data class CreateContactRequest(
