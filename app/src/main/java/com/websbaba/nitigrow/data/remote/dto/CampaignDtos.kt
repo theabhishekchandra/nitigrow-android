@@ -18,8 +18,9 @@ data class CampaignDto(
     @SerializedName("createdAt") val createdAt: String
 )
 
+// Backend returns { campaigns: [...], total, page, pages }.
 data class CampaignListResponse(
-    @SerializedName("data") val data: List<CampaignDto>? = null
+    @SerializedName("campaigns") val data: List<CampaignDto>? = null
 )
 
 data class CreateCampaignRequest(
