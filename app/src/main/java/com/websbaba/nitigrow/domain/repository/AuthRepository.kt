@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
  */
 interface AuthRepository {
     suspend fun login(email: String, password: String): ApiResult<User>
+    suspend fun forgotPassword(email: String): ApiResult<Unit>
     suspend fun requestOtp(phone: String): ApiResult<Unit>
     suspend fun verifyOtp(phone: String, code: String): ApiResult<User>
     suspend fun logout(): ApiResult<Unit>

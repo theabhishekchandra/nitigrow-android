@@ -25,7 +25,7 @@ interface ProfileRepository {
     suspend fun setLanguage(tag: String)
 
     suspend fun requestDataExport(): ApiResult<Unit>
-    suspend fun requestAccountDelete(reason: String?): ApiResult<Unit>
+    suspend fun requestAccountDelete(password: String): ApiResult<Unit>
 
     suspend fun inviteMember(email: String, role: String): ApiResult<TeamMember>
     suspend fun removeMember(memberId: String): ApiResult<Unit>

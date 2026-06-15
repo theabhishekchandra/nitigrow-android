@@ -70,6 +70,15 @@ data class GenericMessageDto(
 )
 
 /**
+ * Body for POST auth/forgot-password. The backend always responds 200 with a
+ * generic message (whether or not the email exists) to avoid account
+ * enumeration, then emails a single-use reset link if the account is real.
+ */
+data class ForgotPasswordRequest(
+    @SerializedName("email") val email: String
+)
+
+/**
  * Legacy phone-OTP request bodies. Retained so the existing OTP feature and the
  * domain AuthRepository interface keep compiling while the primary auth path is
  * email/password. Safe to remove once the OTP vertical is retired.

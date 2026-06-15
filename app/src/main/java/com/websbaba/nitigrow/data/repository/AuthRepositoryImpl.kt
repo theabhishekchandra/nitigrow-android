@@ -5,6 +5,7 @@ import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.storage.TokenDataStore
 import com.websbaba.nitigrow.core.util.DispatcherProvider
 import com.websbaba.nitigrow.data.remote.api.AuthApi
+import com.websbaba.nitigrow.data.remote.dto.ForgotPasswordRequest
 import com.websbaba.nitigrow.data.remote.dto.LoginRequest
 import com.websbaba.nitigrow.data.remote.dto.RegisterRequest
 import com.websbaba.nitigrow.data.remote.dto.RequestOtpRequest
@@ -64,6 +65,17 @@ class AuthRepositoryImpl @Inject constructor(
             is ApiResult.Error -> res
         }
     }
+
+    /**
+     * Request a password-reset email. The backend responds 200 with a generic
+     * message even for unknown emails (anti-enumeration), so any success here
+     * just means "the request was accepted" — never that the email exists.
+     */
+    override suspend fun forgotPassword(email: String): ApiResult<Unit> =
+        safeApiCall(dispatchers.io) {
+            api.forgotPassword(ForgotPasswordRequest(email.trim()))
+            Unit
+        }
 
     /** Validates the current session and refreshes the user/tenant snapshot. */
     suspend fun getMe(): ApiResult<User> =

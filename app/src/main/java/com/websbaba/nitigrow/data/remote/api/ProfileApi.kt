@@ -52,6 +52,8 @@ interface ProfileApi {
     @POST("me/export")
     suspend fun requestExport(): GenericMessageDto
 
-    @HTTP(method = "DELETE", path = "me", hasBody = true)
+    // Owner-only, password-confirmed. Soft-delete: backend marks the tenant
+    // cancelled and erases all data within 30 days (DELETE /api/account).
+    @HTTP(method = "DELETE", path = "account", hasBody = true)
     suspend fun requestAccountDelete(@Body body: DeleteAccountRequest): GenericMessageDto
 }

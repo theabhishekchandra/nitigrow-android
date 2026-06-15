@@ -47,5 +47,5 @@ data class InviteMemberRequest(
 )
 
 data class DeleteAccountRequest(
-    @SerializedName("reason") val reason: String?
+    @SerializedName("password") val password: String
 )

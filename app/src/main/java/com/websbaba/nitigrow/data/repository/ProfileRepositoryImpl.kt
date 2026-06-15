@@ -143,9 +143,9 @@ class ProfileRepositoryImpl @Inject constructor(
     override suspend fun requestDataExport(): ApiResult<Unit> =
         safeApiCall(dispatchers.io) { api.requestExport(); Unit }
 
-    override suspend fun requestAccountDelete(reason: String?): ApiResult<Unit> =
+    override suspend fun requestAccountDelete(password: String): ApiResult<Unit> =
         safeApiCall(dispatchers.io) {
-            api.requestAccountDelete(DeleteAccountRequest(reason)); Unit
+            api.requestAccountDelete(DeleteAccountRequest(password)); Unit
         }
 
     override suspend fun inviteMember(email: String, role: String): ApiResult<TeamMember> =

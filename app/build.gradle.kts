@@ -78,6 +78,11 @@ android {
             buildConfigField("String", "BASE_URL", "\"https://staging.api.nitigrow.in/api/\"")
             buildConfigField("boolean", "ENABLE_LOGGING", "true")
             signingConfig = signingConfigs.getByName("debug")
+            // Real google-services.json is in place — enable Firebase for the pre-prod build.
+            manifestPlaceholders["firebaseCrashlyticsEnabled"] = "true"
+            manifestPlaceholders["firebasePerfEnabled"] = "true"
+            manifestPlaceholders["firebaseAnalyticsEnabled"] = "true"
+            manifestPlaceholders["firebaseMessagingAutoInit"] = "true"
         }
         release {
             isMinifyEnabled = true
@@ -89,6 +94,11 @@ android {
             buildConfigField("String", "BASE_URL", "\"https://api.nitigrow.in/api/\"")
             buildConfigField("boolean", "ENABLE_LOGGING", "false")
             signingConfig = signingConfigs.getByName("release")
+            // Real google-services.json is in place — turn Firebase on for production.
+            manifestPlaceholders["firebaseCrashlyticsEnabled"] = "true"
+            manifestPlaceholders["firebasePerfEnabled"] = "true"
+            manifestPlaceholders["firebaseAnalyticsEnabled"] = "true"
+            manifestPlaceholders["firebaseMessagingAutoInit"] = "true"
         }
     }
 

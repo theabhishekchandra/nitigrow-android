@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -121,6 +123,9 @@ private fun PaymentLinkScreenContent(
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboardManager.current
     var sheet by remember { mutableStateOf(PaySheet.NONE) }
+    // Shown when online payments are gated off (Razorpay pending) and the user
+    // taps the primary action — offers a manual-payment request to copy/share.
+    var showManualDialog by remember { mutableStateOf(false) }
 
     // Close the new-link sheet only when the ViewModel reports a real success
     // (isSending flips off with no error — the form is cleared by then).
@@ -200,11 +205,34 @@ private fun PaymentLinkScreenContent(
     if (sheet == PaySheet.NEW_LINK) {
         NewLinkSheet(
             state = state,
+            onlineEnabled = ONLINE_PAYMENTS_ENABLED,
             onAmountChange = onAmountChange,
             onDescriptionChange = onDescriptionChange,
             onChangeContact = { sheet = PaySheet.PICK_CONTACT },
-            onSend = onSend,
+            onPrimary = {
+                if (ONLINE_PAYMENTS_ENABLED) {
+                    onSend()
+                } else {
+                    // Gateway pending — drop the sheet and show the manual popup.
+                    sheet = PaySheet.NONE
+                    showManualDialog = true
+                }
+            },
             onDismiss = { sheet = PaySheet.NONE },
+        )
+    }
+
+    if (showManualDialog) {
+        ManualPaymentDialog(
+            contactName = state.selectedContactName,
+            amountInr = state.amountInr.toLongOrNull() ?: 0L,
+            note = state.description,
+            onCopy = { message ->
+                clipboard.setText(AnnotatedString(message))
+                scope.launch { snackbar.showSnackbar("Payment request copied") }
+                showManualDialog = false
+            },
+            onDismiss = { showManualDialog = false },
         )
     }
 
@@ -265,10 +293,11 @@ private fun PaymentsHeader(state: PaymentLinkUiState, onBack: () -> Unit) {
 @Composable
 private fun NewLinkSheet(
     state: PaymentLinkUiState,
+    onlineEnabled: Boolean,
     onAmountChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onChangeContact: () -> Unit,
-    onSend: () -> Unit,
+    onPrimary: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val colors = Theme.colors
@@ -313,8 +342,8 @@ private fun NewLinkSheet(
             state.error?.let { SheetErrorBanner(message = it) }
 
             Button(
-                onClick = onSend,
-                enabled = state.isReadyToSend && !state.isSending,
+                onClick = onPrimary,
+                enabled = state.isReadyToSend && !(onlineEnabled && state.isSending),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colors.brand,
@@ -327,7 +356,7 @@ private fun NewLinkSheet(
                     .padding(top = 2.dp)
                     .height(50.dp),
             ) {
-                if (state.isSending) {
+                if (onlineEnabled && state.isSending) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
@@ -335,7 +364,7 @@ private fun NewLinkSheet(
                     )
                 } else {
                     Text(
-                        "Create & send on WhatsApp",
+                        if (onlineEnabled) "Create & send on WhatsApp" else "Request payment manually",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -343,6 +372,71 @@ private fun NewLinkSheet(
             }
         }
     }
+}
+
+// ── Manual-payment popup (shown while the online gateway is pending) ──────────
+
+@Composable
+private fun ManualPaymentDialog(
+    contactName: String?,
+    amountInr: Long,
+    note: String,
+    onCopy: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val colors = Theme.colors
+    val who = contactName?.takeIf { it.isNotBlank() } ?: "your customer"
+    val greetName = contactName?.takeIf { it.isNotBlank() } ?: "there"
+    val amountText = "₹${InrFormat.format(amountInr)}"
+    val reason = note.trim().takeIf { it.isNotEmpty() }?.let { " for $it" }.orEmpty()
+    val message = "Hi $greetName, please pay $amountText$reason. " +
+        "I'll share my UPI ID / bank details to complete the payment. Thank you!"
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = colors.paper,
+        title = {
+            Text(
+                "Online payments coming soon",
+                style = MaterialTheme.typography.headlineSmall,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.ink,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    "Card / UPI payment links are being activated for your account. " +
+                        "Until then, request this payment from $who manually — copy the " +
+                        "message below and send it on WhatsApp with your UPI ID or bank details.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.ink3,
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.ink,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(colors.card)
+                        .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+                        .padding(12.dp),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onCopy(message) }) {
+                Text("Copy message", color = colors.brand, fontWeight = FontWeight.SemiBold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close", color = colors.muted)
+            }
+        },
+    )
 }
 
 @Composable
