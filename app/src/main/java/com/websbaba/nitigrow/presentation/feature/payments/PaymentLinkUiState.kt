@@ -17,12 +17,11 @@ import java.time.ZoneId
 //   • leading-zero / empty / partial inputs render naturally,
 //   • parsing happens once at submission time (isReadyToSend).
 //
-// SentPaymentLink mirrors the eventual server payload shape — `id` is server
-// assigned, `status` advances PENDING → PAID/EXPIRED/FAILED via webhook. Until
-// the backend is wired we synthesise these locally inside the ViewModel.
+// SentPaymentLink mirrors the server payload shape — `id` is server assigned,
+// `status` advances PENDING → PAID/EXPIRED/FAILED via webhook. These come from
+// the real backend (PaymentLinksRepository) in PaymentLinkViewModel.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
 data class PaymentLinkUiState(
     val amountInr: String = "",
     val selectedContactId: String? = null,
@@ -54,7 +53,6 @@ data class PaymentLinkUiState(
         }
 }
 
-// TODO: This is dummy data we need to delete when development is complete and connect with real APIs.
 data class SentPaymentLink(
     val id: String,
     val contactName: String,

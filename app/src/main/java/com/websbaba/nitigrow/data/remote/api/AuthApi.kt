@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.remote.api
 
 import com.websbaba.nitigrow.data.remote.dto.AuthResponseDto
+import com.websbaba.nitigrow.data.remote.dto.ForgotPasswordRequest
 import com.websbaba.nitigrow.data.remote.dto.GenericMessageDto
 import com.websbaba.nitigrow.data.remote.dto.LoginRequest
 import com.websbaba.nitigrow.data.remote.dto.MeResponseDto
@@ -50,6 +51,15 @@ interface AuthApi {
 
     @POST("auth/logout")
     suspend fun logout(): GenericMessageDto
+
+    /**
+     * Request a password-reset email. No bearer (tagged No-Auth). The backend
+     * emails a single-use link valid for 30 minutes; the response is always a
+     * generic message regardless of whether the email is registered.
+     */
+    @Headers("No-Auth: true")
+    @POST("auth/forgot-password")
+    suspend fun forgotPassword(@Body body: ForgotPasswordRequest): GenericMessageDto
 
     // --- Legacy phone-OTP endpoints (kept for the existing OTP feature) ---
 

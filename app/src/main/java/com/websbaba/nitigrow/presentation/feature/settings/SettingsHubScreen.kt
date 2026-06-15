@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Palette
@@ -44,6 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -101,14 +104,12 @@ fun SettingsHubScreen(
     var langDialog by remember { mutableStateOf(false) }
     var deleteDialog by remember { mutableStateOf(false) }
     var logoutSheet by remember { mutableStateOf(false) }
-    var deleteReason by remember { mutableStateOf("") }
+    var deletePassword by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collectLatest { e ->
             when (e) {
                 is SettingsHubEffect.Toast -> snackbar.showSnackbar(e.text)
-                SettingsHubEffect.DeleteConfirmed ->
-                    snackbar.showSnackbar("Account deletion scheduled. You can undo within 7 days.")
                 SettingsHubEffect.LoggedOut -> onLogout()
             }
         }
@@ -222,7 +223,11 @@ fun SettingsHubScreen(
                         title = if (state.isExporting) "Exporting…" else "Export my data",
                         onClick = viewModel::requestExport
                     )
-                    HubRow(title = "Delete account", onClick = { deleteDialog = true })
+                    // Deleting the account erases the whole tenant — owner-only,
+                    // mirroring the backend's requireRole('owner') guard.
+                    if (state.profile?.role == UserRole.OWNER) {
+                        HubRow(title = "Delete account", onClick = { deleteDialog = true })
+                    }
                 }
             }
 
@@ -268,33 +273,43 @@ fun SettingsHubScreen(
 
     if (deleteDialog) {
         AlertDialog(
-            onDismissRequest = { deleteDialog = false },
+            onDismissRequest = {
+                if (!state.isDeleting) { deleteDialog = false; deletePassword = "" }
+            },
             title = { Text("Delete account?") },
             text = {
                 Column {
                     Text(
-                        "This schedules permanent deletion within 30 days. You can undo within 7 days via email link."
+                        "This permanently deletes your business account and all its " +
+                            "data within 30 days. Enter your password to confirm."
                     )
                     Spacer(Modifier.height(12.dp))
                     androidx.compose.material3.OutlinedTextField(
-                        value = deleteReason,
-                        onValueChange = { deleteReason = it },
-                        label = { Text("Reason (optional)") },
+                        value = deletePassword,
+                        onValueChange = { deletePassword = it },
+                        label = { Text("Password") },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         modifier = Modifier.fillMaxWidth()
                     )
+                    state.error?.let {
+                        Spacer(Modifier.height(8.dp))
+                        Text(it, color = Theme.colors.danger, fontSize = 13.sp)
+                    }
                 }
             },
             confirmButton = {
                 TextButton(
-                    onClick = {
-                        viewModel.confirmDelete(deleteReason.ifBlank { null })
-                        deleteDialog = false
-                    },
-                    enabled = !state.isDeleting
-                ) { Text("Delete", color = Theme.colors.danger) }
+                    onClick = { viewModel.confirmDelete(deletePassword) },
+                    enabled = deletePassword.isNotBlank() && !state.isDeleting
+                ) { Text(if (state.isDeleting) "Deleting…" else "Delete", color = Theme.colors.danger) }
             },
             dismissButton = {
-                TextButton(onClick = { deleteDialog = false }) { Text("Cancel") }
+                TextButton(
+                    onClick = { deleteDialog = false; deletePassword = "" },
+                    enabled = !state.isDeleting
+                ) { Text("Cancel") }
             }
         )
     }

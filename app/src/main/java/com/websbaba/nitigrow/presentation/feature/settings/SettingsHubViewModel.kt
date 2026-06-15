@@ -39,7 +39,6 @@ data class SettingsHubUiState(
 
 sealed interface SettingsHubEffect {
     data class Toast(val text: String) : SettingsHubEffect
-    data object DeleteConfirmed : SettingsHubEffect
     data object LoggedOut : SettingsHubEffect
 }
 
@@ -133,13 +132,17 @@ class SettingsHubViewModel @Inject constructor(
         }
     }
 
-    fun confirmDelete(reason: String?) {
+    fun confirmDelete(password: String) {
         viewModelScope.launch {
-            _state.update { it.copy(isDeleting = true) }
-            when (val res = repo.requestAccountDelete(reason)) {
+            _state.update { it.copy(isDeleting = true, error = null) }
+            when (val res = repo.requestAccountDelete(password)) {
                 is ApiResult.Success -> {
+                    // Account is scheduled for permanent deletion — clear the local
+                    // session and return to login, like a sign-out.
+                    runCatching { pushRepo.unregisterCurrentToken() }
+                    logout()
                     _state.update { it.copy(isDeleting = false) }
-                    _effects.send(SettingsHubEffect.DeleteConfirmed)
+                    _effects.send(SettingsHubEffect.LoggedOut)
                 }
                 is ApiResult.Error -> _state.update {
                     it.copy(isDeleting = false, error = res.message)
