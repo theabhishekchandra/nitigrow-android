@@ -68,7 +68,7 @@ class CampaignRepositoryImpl @Inject constructor(
     override suspend fun refreshTemplates(): ApiResult<Unit> =
         when (val res = safeApiCall(dispatchers.io) { api.listTemplates() }) {
             is ApiResult.Success -> {
-                templateDao.upsertAll((res.data.data ?: emptyList()).map { it.toEntity() })
+                templateDao.upsertAll(res.data.map { it.toEntity() })
                 ApiResult.Success(Unit)
             }
             is ApiResult.Error -> res

@@ -30,20 +30,23 @@ data class CreateCampaignRequest(
     @SerializedName("scheduledAt") val scheduledAt: String?
 )
 
+// GET /templates returns a TOP-LEVEL array of these. The backend sends
+// `components`, not a flat `body`/`variableCount`, so the picker derives both
+// from the BODY component (keeps TemplateDto.toEntity unchanged).
 data class TemplateDto(
     @SerializedName("_id") val id: String,
     @SerializedName("name") val name: String,
-    @SerializedName("language") val language: String,
-    @SerializedName("category") val category: String,
-    @SerializedName("status") val status: String,
-    @SerializedName("body") val body: String,
-    @SerializedName("variableCount") val variableCount: Int,
-    @SerializedName("updatedAt") val updatedAt: String
-)
-
-data class TemplateListResponse(
-    @SerializedName("data") val data: List<TemplateDto>? = null
-)
+    @SerializedName("language") val language: String = "en",
+    @SerializedName("category") val category: String = "MARKETING",
+    @SerializedName("status") val status: String = "PENDING",
+    @SerializedName("components") val components: List<TemplateComponentDto> = emptyList(),
+    @SerializedName("updatedAt") val updatedAt: String = ""
+) {
+    val body: String
+        get() = components.firstOrNull { it.type.equals("BODY", ignoreCase = true) }?.text.orEmpty()
+    val variableCount: Int
+        get() = Regex("""\{\{\s*(\d+)\s*}}""").findAll(body).map { it.groupValues[1] }.distinct().count()
+}
 
 data class AudienceEstimateRequest(
     @SerializedName("tags") val tags: List<String>

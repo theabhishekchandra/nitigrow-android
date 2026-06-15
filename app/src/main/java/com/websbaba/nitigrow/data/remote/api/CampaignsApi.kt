@@ -6,7 +6,7 @@ import com.websbaba.nitigrow.data.remote.dto.CampaignDto
 import com.websbaba.nitigrow.data.remote.dto.CampaignListResponse
 import com.websbaba.nitigrow.data.remote.dto.CreateCampaignRequest
 import com.websbaba.nitigrow.data.remote.dto.GenericMessageDto
-import com.websbaba.nitigrow.data.remote.dto.TemplateListResponse
+import com.websbaba.nitigrow.data.remote.dto.TemplateDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -26,6 +26,7 @@ interface CampaignsApi {
     @POST("campaigns/audience/estimate")
     suspend fun estimate(@Body body: AudienceEstimateRequest): AudienceEstimateResponse
 
+    // GET /templates returns a top-level array, not a wrapped object.
     @GET("templates")
-    suspend fun listTemplates(): TemplateListResponse
+    suspend fun listTemplates(): List<TemplateDto>
 }
