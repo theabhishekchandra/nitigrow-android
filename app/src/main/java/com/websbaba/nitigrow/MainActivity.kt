@@ -15,20 +15,14 @@ import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.websbaba.nitigrow.core.payments.RazorpayBridge
 import com.websbaba.nitigrow.presentation.navigation.NavRoutes
 import com.websbaba.nitigrow.presentation.navigation.NitiGrowNavGraph
 import com.websbaba.nitigrow.presentation.theme.ThemeViewModel
 import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.razorpay.PaymentData
-import com.razorpay.PaymentResultWithDataListener
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : FragmentActivity(), PaymentResultWithDataListener {
-
-    @Inject lateinit var razorpayBridge: RazorpayBridge
+class MainActivity : FragmentActivity() {
 
     // Activity-scoped so one instance drives NitiGrowTheme for the whole
     // composition; it resolves the persisted AppTheme gated by the plan tier.
@@ -58,14 +52,6 @@ class MainActivity : FragmentActivity(), PaymentResultWithDataListener {
                 )
             }
         }
-    }
-
-    override fun onPaymentSuccess(razorpayPaymentId: String?, data: PaymentData?) {
-        if (razorpayPaymentId != null) razorpayBridge.onSuccess(razorpayPaymentId, data)
-    }
-
-    override fun onPaymentError(code: Int, response: String?, data: PaymentData?) {
-        razorpayBridge.onError(code, response.orEmpty(), data)
     }
 
     private fun parseDeepLink(intent: Intent?): String? {

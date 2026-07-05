@@ -1,24 +1,13 @@
 package com.websbaba.nitigrow.presentation.feature.billing
 
-import com.websbaba.nitigrow.domain.model.CheckoutOrder
-import com.websbaba.nitigrow.domain.model.PaymentRecord
-import com.websbaba.nitigrow.domain.model.Plan
-import com.websbaba.nitigrow.domain.model.Subscription
-
-enum class CheckoutPhase { IDLE, CREATING_ORDER, AWAITING_PAYMENT, VERIFYING, SUCCESS, FAILED }
+import com.websbaba.nitigrow.domain.model.BillingStatus
+import com.websbaba.nitigrow.domain.model.Invoice
 
 data class BillingUiState(
-    val plans: List<Plan> = emptyList(),
-    val subscription: Subscription? = null,
-    val payments: List<PaymentRecord> = emptyList(),
+    val status: BillingStatus? = null,
+    val invoices: List<Invoice> = emptyList(),
     val isRefreshing: Boolean = false,
-    val phase: CheckoutPhase = CheckoutPhase.IDLE,
-    val pendingOrder: CheckoutOrder? = null,
-    val error: String? = null
+    val isWorking: Boolean = false,   // cancel in flight
+    val error: String? = null,
+    val message: String? = null,      // one-shot snackbar text
 )
-
-sealed interface BillingEffect {
-    data class LaunchCheckout(val order: CheckoutOrder) : BillingEffect
-    data object PaymentSucceeded : BillingEffect
-    data class PaymentFailed(val message: String) : BillingEffect
-}

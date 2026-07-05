@@ -1,31 +1,21 @@
 package com.websbaba.nitigrow.domain.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
-import com.websbaba.nitigrow.domain.model.CheckoutOrder
-import com.websbaba.nitigrow.domain.model.PaymentRecord
-import com.websbaba.nitigrow.domain.model.Plan
-import com.websbaba.nitigrow.domain.model.Subscription
+import com.websbaba.nitigrow.domain.model.BillingStatus
+import com.websbaba.nitigrow.domain.model.Invoice
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Read-only mobile billing. Subscribing happens on the web (IAP avoidance); the only
+ * write here is cancellation, which moves no money in.
+ */
 interface BillingRepository {
-    fun observePlans(): Flow<List<Plan>>
-    fun observeSubscription(): Flow<Subscription?>
-    fun observePayments(): Flow<List<PaymentRecord>>
+    fun observeStatus(): Flow<BillingStatus?>
+    fun observeInvoices(): Flow<List<Invoice>>
 
-    suspend fun refreshPlans(): ApiResult<Unit>
-    suspend fun refreshSubscription(): ApiResult<Unit>
-    suspend fun refreshPayments(): ApiResult<Unit>
+    suspend fun refreshStatus(): ApiResult<Unit>
+    suspend fun refreshInvoices(): ApiResult<Unit>
 
-    /** Server creates Razorpay order. Returns checkout params. */
-    suspend fun createOrder(planId: String): ApiResult<CheckoutOrder>
-
-    /** Posts payment id + signature to backend for HMAC verification. */
-    suspend fun verifyPayment(
-        razorpayOrderId: String,
-        razorpayPaymentId: String,
-        razorpaySignature: String
-    ): ApiResult<Unit>
-
-    /** Marks payment failed server-side so retry/refund flow can proceed. */
-    suspend fun reportFailure(razorpayOrderId: String, reason: String): ApiResult<Unit>
+    /** Cancels the active subscription at period end. Returns the server message. */
+    suspend fun cancel(): ApiResult<String?>
 }

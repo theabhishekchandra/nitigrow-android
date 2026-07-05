@@ -48,12 +48,12 @@ class AppearanceViewModel @Inject constructor(
         themeStore.theme
             .onEach { theme -> _state.update { it.copy(selected = theme) } }
             .launchIn(viewModelScope)
-        billing.observeSubscription()
-            .onEach { sub -> _state.update { it.copy(tier = PlanTier.fromPlanId(sub?.planId)) } }
+        billing.observeStatus()
+            .onEach { st -> _state.update { it.copy(tier = PlanTier.fromPlanId(st?.plan)) } }
             .launchIn(viewModelScope)
         // Best-effort refresh so a just-upgraded plan unlocks without app restart;
-        // the cached subscription above keeps the screen usable offline.
-        viewModelScope.launch { billing.refreshSubscription() }
+        // the cached status above keeps the screen usable offline.
+        viewModelScope.launch { billing.refreshStatus() }
     }
 
     fun onSelect(theme: AppTheme) {

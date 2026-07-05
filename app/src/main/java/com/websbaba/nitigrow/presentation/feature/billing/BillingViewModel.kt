@@ -2,134 +2,77 @@ package com.websbaba.nitigrow.presentation.feature.billing
 
 import androidx.lifecycle.viewModelScope
 import com.websbaba.nitigrow.core.network.ApiResult
-import com.websbaba.nitigrow.core.payments.RazorpayBridge
-import com.websbaba.nitigrow.core.payments.RazorpayResult
 import com.websbaba.nitigrow.domain.repository.BillingRepository
-import com.websbaba.nitigrow.domain.usecase.billing.ObservePaymentsUseCase
-import com.websbaba.nitigrow.domain.usecase.billing.ObservePlansUseCase
-import com.websbaba.nitigrow.domain.usecase.billing.ObserveSubscriptionUseCase
-import com.websbaba.nitigrow.domain.usecase.billing.ReportPaymentFailureUseCase
-import com.websbaba.nitigrow.domain.usecase.billing.StartCheckoutUseCase
-import com.websbaba.nitigrow.domain.usecase.billing.VerifyPaymentUseCase
+import com.websbaba.nitigrow.domain.usecase.billing.CancelSubscriptionUseCase
+import com.websbaba.nitigrow.domain.usecase.billing.ObserveBillingStatusUseCase
+import com.websbaba.nitigrow.domain.usecase.billing.ObserveInvoicesUseCase
 import com.websbaba.nitigrow.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Read-only billing. Mobile shows plan / usage / invoices and can cancel; subscribing
+ * and upgrading happen on the web to avoid the Apple/Google IAP mandate.
+ */
 @HiltViewModel
 class BillingViewModel @Inject constructor(
-    observePlans: ObservePlansUseCase,
-    observeSubscription: ObserveSubscriptionUseCase,
-    observePayments: ObservePaymentsUseCase,
+    observeStatus: ObserveBillingStatusUseCase,
+    observeInvoices: ObserveInvoicesUseCase,
     private val repo: BillingRepository,
-    private val startCheckout: StartCheckoutUseCase,
-    private val verify: VerifyPaymentUseCase,
-    private val reportFailure: ReportPaymentFailureUseCase,
-    private val razorpay: RazorpayBridge
+    private val cancelSubscription: CancelSubscriptionUseCase,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(BillingUiState(isRefreshing = true))
     val state: StateFlow<BillingUiState> = _state.asStateFlow()
 
-    private val _effects = Channel<BillingEffect>(Channel.BUFFERED)
-    val effects = _effects.receiveAsFlow()
-
     init {
-        observePlans()
-            .onEach { plans -> _state.update { it.copy(plans = plans) } }
+        observeStatus()
+            .onEach { s -> _state.update { it.copy(status = s) } }
             .launchIn(viewModelScope)
-        observeSubscription()
-            .onEach { sub -> _state.update { it.copy(subscription = sub) } }
+        observeInvoices()
+            .onEach { inv -> _state.update { it.copy(invoices = inv) } }
             .launchIn(viewModelScope)
-        observePayments()
-            .onEach { p -> _state.update { it.copy(payments = p) } }
-            .launchIn(viewModelScope)
-
-        razorpay.events
-            .onEach(::handleRazorpay)
-            .launchIn(viewModelScope)
-
         refresh()
     }
 
     fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true, error = null) }
-            repo.refreshPlans()
-            repo.refreshSubscription()
-            repo.refreshPayments()
-            _state.update { it.copy(isRefreshing = false) }
+            val statusRes = repo.refreshStatus()
+            val invoicesRes = repo.refreshInvoices()
+            val err = (statusRes as? ApiResult.Error)?.message
+                ?: (invoicesRes as? ApiResult.Error)?.message
+            _state.update { it.copy(isRefreshing = false, error = err) }
         }
     }
 
-    fun onBuy(planId: String) {
+    fun cancel() {
+        if (_state.value.isWorking) return
         viewModelScope.launch {
-            _state.update { it.copy(phase = CheckoutPhase.CREATING_ORDER, error = null) }
-            when (val res = startCheckout(planId)) {
-                is ApiResult.Success -> {
-                    _state.update {
-                        it.copy(
-                            phase = CheckoutPhase.AWAITING_PAYMENT,
-                            pendingOrder = res.data
-                        )
-                    }
-                    _effects.send(BillingEffect.LaunchCheckout(res.data))
+            _state.update { it.copy(isWorking = true, error = null) }
+            when (val res = cancelSubscription()) {
+                is ApiResult.Success -> _state.update {
+                    it.copy(
+                        isWorking = false,
+                        message = res.data
+                            ?: "Your subscription will be cancelled at the end of the billing period.",
+                    )
                 }
                 is ApiResult.Error -> _state.update {
-                    it.copy(phase = CheckoutPhase.FAILED, error = res.message)
+                    it.copy(isWorking = false, error = res.message)
                 }
             }
         }
     }
 
-    private fun handleRazorpay(result: RazorpayResult) {
-        when (result) {
-            is RazorpayResult.Success -> verifyOnServer(result)
-            is RazorpayResult.Failure -> markFailed(result)
-        }
-    }
-
-    private fun verifyOnServer(s: RazorpayResult.Success) {
-        viewModelScope.launch {
-            _state.update { it.copy(phase = CheckoutPhase.VERIFYING) }
-            val orderId = s.orderId ?: _state.value.pendingOrder?.razorpayOrderId.orEmpty()
-            val signature = s.signature.orEmpty()
-            val res = verify(orderId, s.paymentId, signature)
-            when (res) {
-                is ApiResult.Success -> {
-                    _state.update { it.copy(phase = CheckoutPhase.SUCCESS, pendingOrder = null) }
-                    _effects.send(BillingEffect.PaymentSucceeded)
-                }
-                is ApiResult.Error -> {
-                    _state.update {
-                        it.copy(phase = CheckoutPhase.FAILED, error = res.message)
-                    }
-                    _effects.send(BillingEffect.PaymentFailed(res.message))
-                }
-            }
-        }
-    }
-
-    private fun markFailed(f: RazorpayResult.Failure) {
-        viewModelScope.launch {
-            val orderId = f.orderId ?: _state.value.pendingOrder?.razorpayOrderId
-            if (!orderId.isNullOrBlank()) reportFailure(orderId, f.message)
-            _state.update {
-                it.copy(phase = CheckoutPhase.FAILED, error = f.message, pendingOrder = null)
-            }
-            _effects.send(BillingEffect.PaymentFailed(f.message))
-        }
-    }
-
-    fun resetPhase() {
-        _state.update { it.copy(phase = CheckoutPhase.IDLE, error = null) }
+    fun consumeMessage() {
+        _state.update { it.copy(message = null) }
     }
 }

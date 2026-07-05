@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Avatars/media are picked via the permission-less Android Photo Picker
-         (PickVisualMedia). The Razorpay checkout SDK injects CAMERA / RECORD_AUDIO /
+         (PickVisualMedia). Some SDKs inject CAMERA / RECORD_AUDIO /
          READ_MEDIA_* for optional features NitiGrow doesn't use (and online payments
          are gated off in v1), so strip them here — otherwise Google Play requires
          photo/video + camera + mic permission declarations for features that aren't
