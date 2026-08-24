@@ -1,37 +1,33 @@
 package com.websbaba.nitigrow.presentation.feature.billing
 
-import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,49 +37,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.websbaba.nitigrow.core.payments.RazorpayLauncher
-import com.websbaba.nitigrow.domain.model.PaymentRecord
-import com.websbaba.nitigrow.domain.model.PaymentStatus
-import com.websbaba.nitigrow.domain.model.Plan
-import com.websbaba.nitigrow.domain.model.Subscription
-import com.websbaba.nitigrow.domain.model.SubscriptionStatus
-import com.websbaba.nitigrow.presentation.feature.billing.components.PlanCard
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.domain.model.BillingStatus
+import com.websbaba.nitigrow.domain.model.Invoice
+import com.websbaba.nitigrow.domain.model.UsageMeter
 import com.websbaba.nitigrow.ui.theme.Theme
-import kotlinx.coroutines.flow.collectLatest
 import java.text.NumberFormat
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-// ─────────────────────────────────────────────────────────────────────────────
-// BillingScreen — "Billing & plan" (design: Billing screen).
-//
-//   ◀  Billing & plan                          ← Fraunces 21sp
-//   ┌─ espresso plan card ────────────────────┐
-//   │ GROWTH PLAN                     (ACTIVE)│  ← gold caps + turmeric pill
-//   │ ₹1,499 / month                          │  ← Fraunces 36sp
-//   │ Renews 8 Jul 2026                       │
-//   │ [        Change plan        ]           │  → "Choose a plan" sheet
-//   └─────────────────────────────────────────┘
-//   ┌─ PAYMENT HISTORY ───────────────────────┐
-//   │ June 2026 · Growth · ₹1,499      (PAID) │
-//   └─────────────────────────────────────────┘
-//
-// The plans sheet keeps the existing Razorpay checkout flow: tapping a plan
-// calls viewModel.onBuy → LaunchCheckout effect → RazorpayLauncher.
-// ─────────────────────────────────────────────────────────────────────────────
-
 private val nf = NumberFormat.getInstance(Locale("en", "IN"))
-private val renewFmt = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH).withZone(ZoneId.systemDefault())
-private val monthFmt = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH).withZone(ZoneId.systemDefault())
+private val dateFmt =
+    DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH).withZone(ZoneId.systemDefault())
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,27 +63,15 @@ fun BillingScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
-    var plansOpen by remember { mutableStateOf(false) }
+    var confirmCancel by remember { mutableStateOf(false) }
+    val colors = Theme.colors
 
-    LaunchedEffect(Unit) {
-        viewModel.effects.collectLatest { e ->
-            when (e) {
-                is BillingEffect.LaunchCheckout -> {
-                    plansOpen = false
-                    val activity = context as? Activity
-                    activity?.let { RazorpayLauncher.open(it, e.order) }
-                }
-                BillingEffect.PaymentSucceeded -> snackbar.showSnackbar("Payment successful")
-                is BillingEffect.PaymentFailed -> snackbar.showSnackbar("Payment failed: ${e.message}")
-            }
+    LaunchedEffect(state.message) {
+        state.message?.let {
+            snackbar.showSnackbar(it)
+            viewModel.consumeMessage()
         }
     }
-
-    val colors = Theme.colors
-    val busy = state.phase == CheckoutPhase.CREATING_ORDER ||
-        state.phase == CheckoutPhase.AWAITING_PAYMENT ||
-        state.phase == CheckoutPhase.VERIFYING
 
     Scaffold(
         containerColor = colors.paper,
@@ -132,40 +90,72 @@ fun BillingScreen(
             ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 24.dp),
+                    contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 28.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
+                    state.status?.let { st ->
+                        item { CurrentPlanCard(status = st) }
+                        item { UsageCard(status = st) }
+                    }
+
+                    state.error?.let { err -> item { BannerCard(message = err, danger = true) } }
+
                     item {
-                        CurrentPlanCard(
-                            subscription = state.subscription,
-                            plan = state.plans.firstOrNull { it.id == state.subscription?.planId },
-                            onChangePlan = { plansOpen = true },
+                        BannerCard(
+                            message = "To upgrade or change your plan, manage your subscription on the NitiGrow web dashboard.",
+                            danger = false,
                         )
                     }
 
-                    state.error?.let { err ->
-                        item { BillingErrorBanner(message = err) }
+                    if (state.invoices.isNotEmpty()) {
+                        item { InvoicesCard(invoices = state.invoices) }
                     }
 
-                    if (state.payments.isNotEmpty()) {
-                        item { PaymentHistoryCard(payments = state.payments) }
+                    val sub = state.status?.subscription
+                    if (sub?.isActive == true) {
+                        item {
+                            if (sub.cancelAtPeriodEnd) {
+                                Text(
+                                    text = "Your plan is set to cancel at the end of the current period.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.muted,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
+                                )
+                            } else {
+                                CancelRow(
+                                    enabled = !state.isWorking,
+                                    onCancel = { confirmCancel = true },
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    if (plansOpen) {
-        PlansSheet(
-            state = state,
-            busy = busy,
-            onPick = viewModel::onBuy,
-            onDismiss = { if (!busy) plansOpen = false },
+    if (confirmCancel) {
+        AlertDialog(
+            onDismissRequest = { confirmCancel = false },
+            title = { Text("Cancel subscription?") },
+            text = {
+                Text(
+                    "Your plan stays active until the end of the current billing period, then it " +
+                        "will not renew. You can re-subscribe anytime on the web."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmCancel = false
+                    viewModel.cancel()
+                }) { Text("Cancel plan", color = colors.danger) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmCancel = false }) { Text("Keep plan") }
+            },
         )
     }
 }
-
-// ── Header ──────────────────────────────────────────────────────────────────
 
 @Composable
 private fun BillingHeader(onBack: () -> Unit) {
@@ -178,11 +168,7 @@ private fun BillingHeader(onBack: () -> Unit) {
             .padding(start = 6.dp, end = 14.dp, top = 12.dp, bottom = 8.dp),
     ) {
         IconButton(onClick = onBack) {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = colors.ink,
-            )
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = colors.ink)
         }
         Text(
             text = "Billing & plan",
@@ -194,15 +180,11 @@ private fun BillingHeader(onBack: () -> Unit) {
     }
 }
 
-// ── Espresso plan card ──────────────────────────────────────────────────────
-
 @Composable
-private fun CurrentPlanCard(
-    subscription: Subscription?,
-    plan: Plan?,
-    onChangePlan: () -> Unit,
-) {
+private fun CurrentPlanCard(status: BillingStatus) {
     val colors = Theme.colors
+    val price = status.prices[status.plan] ?: 0
+    val sub = status.subscription
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -212,27 +194,27 @@ private fun CurrentPlanCard(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = if (subscription != null) "${subscription.planName.uppercase()} PLAN" else "NO ACTIVE PLAN",
+                text = "${status.planLabel.uppercase()} PLAN",
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.sidebarTextActive,
                 modifier = Modifier.weight(1f),
             )
-            subscription?.let { StatusOnEspressoPill(status = it.status) }
+            StatusPill(text = (sub?.status ?: status.accountStatus ?: "—").uppercase())
         }
 
-        if (plan != null) {
+        if (price > 0) {
             Row(
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier.padding(top = 10.dp),
             ) {
                 Text(
-                    text = "₹${nf.format(plan.priceInr)}",
-                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 36.sp, lineHeight = 40.sp),
+                    text = "₹${nf.format(price)}",
+                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 34.sp, lineHeight = 38.sp),
                     color = colors.sidebarInk,
                 )
                 Text(
-                    text = if (plan.periodDays in 28..31) "/ month" else "/ ${plan.periodDays} days",
+                    text = if (sub?.billingCycle == "annual") "/ year" else "/ month",
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.sidebarInk.copy(alpha = 0.55f),
                     modifier = Modifier.padding(bottom = 6.dp),
@@ -240,43 +222,32 @@ private fun CurrentPlanCard(
             }
         }
 
-        subscription?.renewsAt?.let { renews ->
+        val periodLine = when {
+            sub?.currentPeriodEnd != null && sub.cancelAtPeriodEnd ->
+                "Cancels ${dateFmt.format(sub.currentPeriodEnd)}"
+            sub?.currentPeriodEnd != null -> "Renews ${dateFmt.format(sub.currentPeriodEnd)}"
+            sub?.trialEndsAt != null -> "Trial ends ${dateFmt.format(sub.trialEndsAt)}"
+            else -> null
+        }
+        periodLine?.let {
             Text(
-                text = "Renews ${renewFmt.format(renews)}",
+                text = it,
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.sidebarInk.copy(alpha = 0.7f),
-                modifier = Modifier.padding(top = 6.dp),
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .border(1.dp, colors.sidebarInk.copy(alpha = 0.14f), RoundedCornerShape(12.dp))
-                .clickable(onClick = onChangePlan)
-                .padding(vertical = 11.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = if (subscription != null) "Change plan" else "Choose a plan",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.sidebarInk,
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
     }
 }
 
 @Composable
-private fun StatusOnEspressoPill(status: SubscriptionStatus) {
+private fun StatusPill(text: String) {
     val colors = Theme.colors
-    val active = status == SubscriptionStatus.ACTIVE || status == SubscriptionStatus.GRACE
-    val bg = if (active) colors.turmeric.copy(alpha = 0.14f) else colors.sidebarInk.copy(alpha = 0.14f)
-    val fg = if (active) colors.sidebarTextActive else colors.sidebarInk.copy(alpha = 0.7f)
+    val active = text == "ACTIVE" || text == "TRIAL"
+    val bg = if (active) colors.turmericSoft else colors.sidebarInk.copy(alpha = 0.14f)
+    val fg = if (active) colors.turmericInk else colors.sidebarInk.copy(alpha = 0.7f)
     Text(
-        text = status.name,
+        text = text,
         fontSize = 10.sp,
         fontWeight = FontWeight.Bold,
         color = fg,
@@ -287,10 +258,80 @@ private fun StatusOnEspressoPill(status: SubscriptionStatus) {
     )
 }
 
-// ── Payment history (invoice-style rows) ────────────────────────────────────
+@Composable
+private fun UsageCard(status: BillingStatus) {
+    val colors = Theme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.card)
+            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .padding(16.dp),
+    ) {
+        Text(
+            text = "THIS MONTH'S USAGE",
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.muted,
+            modifier = Modifier.padding(bottom = 12.dp),
+        )
+        UsageMeterRow("Conversations", status.usage.messages)
+        Spacer(Modifier.height(12.dp))
+        UsageMeterRow("AI replies", status.usage.ai)
+        Spacer(Modifier.height(12.dp))
+        UsageMeterRow("Contacts", status.usage.contacts)
+        Spacer(Modifier.height(12.dp))
+        UsageMeterRow("Team seats", status.usage.users)
+    }
+}
 
 @Composable
-private fun PaymentHistoryCard(payments: List<PaymentRecord>) {
+private fun UsageMeterRow(label: String, meter: UsageMeter) {
+    val colors = Theme.colors
+    val valueText = if (meter.isUnlimited) {
+        "${nf.format(meter.used)} / Unlimited"
+    } else {
+        "${nf.format(meter.used)} / ${nf.format(meter.limit)}"
+    }
+    val over = !meter.isUnlimited && meter.limit > 0 && meter.used >= meter.limit
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.ink,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = valueText,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (over) colors.danger else colors.muted,
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(colors.border2),
+        ) {
+            if (meter.fraction > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(meter.fraction)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(if (over) colors.danger else colors.brand),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InvoicesCard(invoices: List<Invoice>) {
     val colors = Theme.colors
     Column(
         modifier = Modifier
@@ -304,18 +345,19 @@ private fun PaymentHistoryCard(payments: List<PaymentRecord>) {
             text = "PAYMENT HISTORY",
             style = MaterialTheme.typography.labelSmall,
             color = colors.muted,
-            modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),
+            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
         )
-        payments.forEach { p ->
+        invoices.forEach { inv ->
             HorizontalDivider(thickness = 1.dp, color = colors.border2)
-            PaymentRow(p)
+            InvoiceRow(inv)
         }
     }
 }
 
 @Composable
-private fun PaymentRow(p: PaymentRecord) {
+private fun InvoiceRow(inv: Invoice) {
     val colors = Theme.colors
+    val rupees = inv.amountPaise / 100
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -325,193 +367,55 @@ private fun PaymentRow(p: PaymentRecord) {
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = monthFmt.format(p.createdAt),
+                text = inv.paidAt?.let { dateFmt.format(it) } ?: (inv.number ?: "Invoice"),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.ink,
             )
-            Text(
-                text = buildString {
-                    append(p.planName ?: "Payment")
-                    append(" · ₹${nf.format(p.amountInr)}")
-                    p.method?.let { append(" · $it") }
-                },
-                fontSize = 11.sp,
-                color = colors.muted,
-            )
-        }
-        PaymentStatusPill(status = p.status)
-    }
-}
-
-@Composable
-private fun PaymentStatusPill(status: PaymentStatus) {
-    val colors = Theme.colors
-    val (bg, fg, label) = when (status) {
-        PaymentStatus.CAPTURED -> Triple(colors.brandSoft, colors.brand, "PAID")
-        PaymentStatus.FAILED -> Triple(colors.danger.copy(alpha = 0.12f), colors.danger, "FAILED")
-        PaymentStatus.REFUNDED -> Triple(colors.paper2, colors.muted, "REFUNDED")
-        PaymentStatus.CREATED, PaymentStatus.AUTHORIZED ->
-            Triple(colors.turmericSoft, colors.turmericInk, "PENDING")
-    }
-    Text(
-        text = label,
-        fontSize = 10.sp,
-        fontWeight = FontWeight.Bold,
-        color = fg,
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(bg)
-            .padding(horizontal = 9.dp, vertical = 3.dp),
-    )
-}
-
-// ── Plans sheet ─────────────────────────────────────────────────────────────
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PlansSheet(
-    state: BillingUiState,
-    busy: Boolean,
-    onPick: (planId: String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val colors = Theme.colors
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = colors.paper,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        dragHandle = { SheetDragHandle() },
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
-        ) {
-            Text(
-                text = "Choose a plan",
-                style = MaterialTheme.typography.headlineMedium,
-                fontSize = 19.sp,
-                color = colors.ink,
-                modifier = Modifier.padding(bottom = 14.dp),
-            )
-            if (state.plans.isEmpty()) {
-                Text(
-                    text = "No plans available right now — pull to refresh and try again.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.muted,
-                    modifier = Modifier.padding(vertical = 24.dp),
-                )
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    state.plans.forEach { plan ->
-                        PlanCard(
-                            plan = plan,
-                            isCurrent = state.subscription?.planId == plan.id,
-                            enabled = !busy,
-                            onClick = { onPick(plan.id) },
-                        )
-                    }
-                }
-            }
-            if (busy) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(top = 14.dp),
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = colors.brand,
-                    )
-                    Text(
-                        text = "Opening checkout…",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.muted,
-                    )
-                }
+            inv.number?.let {
+                Text(text = it, fontSize = 11.sp, color = colors.muted)
             }
         }
+        Text(
+            text = "₹${nf.format(rupees)}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.ink,
+        )
+        StatusPill(text = (inv.status ?: "PAID").uppercase())
     }
 }
 
 @Composable
-private fun SheetDragHandle() {
+private fun CancelRow(enabled: Boolean, onCancel: () -> Unit) {
+    val colors = Theme.colors
     Box(
         modifier = Modifier
-            .padding(top = 12.dp, bottom = 4.dp)
-            .width(38.dp)
-            .height(4.dp)
-            .clip(RoundedCornerShape(999.dp))
-            .background(Theme.colors.muted3)
-    )
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .border(1.dp, colors.danger.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+            .then(if (enabled) Modifier else Modifier)
+            .padding(vertical = 11.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        TextButton(onClick = onCancel, enabled = enabled) {
+            Text("Cancel subscription", color = colors.danger, fontWeight = FontWeight.SemiBold)
+        }
+    }
 }
 
-// ── Error banner ────────────────────────────────────────────────────────────
-
 @Composable
-private fun BillingErrorBanner(message: String) {
+private fun BannerCard(message: String, danger: Boolean) {
     val colors = Theme.colors
     Text(
         text = message,
         style = MaterialTheme.typography.bodySmall,
-        color = colors.danger,
+        color = if (danger) colors.danger else colors.muted,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(colors.danger.copy(alpha = 0.12f))
+            .background(if (danger) colors.danger.copy(alpha = 0.12f) else colors.card)
+            .border(1.dp, if (danger) colors.danger.copy(alpha = 0.2f) else colors.border, RoundedCornerShape(12.dp))
             .padding(12.dp),
     )
-}
-
-// ── Previews ────────────────────────────────────────────────────────────────
-
-private val previewPlan = Plan(
-    id = "growth", name = "Growth", priceInr = 1_499, periodDays = 30,
-    features = listOf("2,500 conversations", "5 seats", "leads + analytics"),
-    isPopular = true,
-)
-
-@Preview(showBackground = true, name = "CurrentPlanCard — active")
-@Composable
-private fun PreviewCurrentPlanCard() {
-    NitiGrowTheme {
-        CurrentPlanCard(
-            subscription = Subscription(
-                planId = "growth",
-                planName = "Growth",
-                status = SubscriptionStatus.ACTIVE,
-                renewsAt = java.time.Instant.now().plusSeconds(60L * 60 * 24 * 26),
-                cancelledAt = null,
-            ),
-            plan = previewPlan,
-            onChangePlan = {},
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "PaymentHistoryCard")
-@Composable
-private fun PreviewPaymentHistoryCard() {
-    NitiGrowTheme {
-        PaymentHistoryCard(
-            payments = listOf(
-                PaymentRecord(
-                    id = "pay1", orderId = "ord1", amountInr = 1_499,
-                    status = PaymentStatus.CAPTURED, method = "upi",
-                    createdAt = java.time.Instant.now(), planName = "Growth",
-                ),
-                PaymentRecord(
-                    id = "pay2", orderId = "ord2", amountInr = 999,
-                    status = PaymentStatus.REFUNDED, method = null,
-                    createdAt = java.time.Instant.now().minusSeconds(60L * 60 * 24 * 31),
-                    planName = "Starter",
-                ),
-            )
-        )
-    }
 }

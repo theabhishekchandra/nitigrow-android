@@ -3,8 +3,9 @@ package com.websbaba.nitigrow.presentation.feature.settings.appearance
 import app.cash.turbine.test
 import com.websbaba.nitigrow.core.network.ApiResult
 import com.websbaba.nitigrow.core.storage.ThemeDataStore
-import com.websbaba.nitigrow.domain.model.Subscription
-import com.websbaba.nitigrow.domain.model.SubscriptionStatus
+import com.websbaba.nitigrow.domain.model.BillingStatus
+import com.websbaba.nitigrow.domain.model.Usage
+import com.websbaba.nitigrow.domain.model.UsageMeter
 import com.websbaba.nitigrow.domain.repository.BillingRepository
 import com.websbaba.nitigrow.ui.theme.AppTheme
 import com.websbaba.nitigrow.ui.theme.PlanTier
@@ -30,30 +31,32 @@ class AppearanceViewModelTest {
     private val themeStore: ThemeDataStore = mockk(relaxed = true)
     private val billing: BillingRepository = mockk()
 
-    private fun subscription(planId: String) = Subscription(
-        planId = planId,
-        planName = planId,
-        status = SubscriptionStatus.ACTIVE,
-        renewsAt = null,
-        cancelledAt = null
+    private fun status(plan: String?) = BillingStatus(
+        plan = plan ?: "trial",
+        accountStatus = "active",
+        subscription = null,
+        usage = Usage(UsageMeter(0, 0), UsageMeter(0, 0), UsageMeter(0, 0), UsageMeter(0, 0)),
+        prices = emptyMap(),
+        referralCreditPaise = 0,
+        branding = false,
     )
 
     @Before fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         every { themeStore.theme } returns MutableStateFlow(AppTheme.SOFT_PAPER)
-        every { billing.observeSubscription() } returns MutableStateFlow(subscription("growth"))
-        coEvery { billing.refreshSubscription() } returns ApiResult.Success(Unit)
+        every { billing.observeStatus() } returns MutableStateFlow(status("growth"))
+        coEvery { billing.refreshStatus() } returns ApiResult.Success(Unit)
     }
 
     @After fun tearDown() { Dispatchers.resetMain() }
 
     @Test
-    fun `state mirrors persisted theme and plan tier, and refreshes subscription on init`() = runTest {
+    fun `state mirrors persisted theme and plan tier, and refreshes status on init`() = runTest {
         val vm = AppearanceViewModel(themeStore, billing)
 
         assertThat(vm.state.value.selected).isEqualTo(AppTheme.SOFT_PAPER)
         assertThat(vm.state.value.tier).isEqualTo(PlanTier.GROWTH)
-        coVerify(exactly = 1) { billing.refreshSubscription() }
+        coVerify(exactly = 1) { billing.refreshStatus() }
     }
 
     @Test
@@ -78,8 +81,8 @@ class AppearanceViewModelTest {
     }
 
     @Test
-    fun `no subscription means starter tier and everything premium locked`() = runTest {
-        every { billing.observeSubscription() } returns MutableStateFlow<Subscription?>(null)
+    fun `no plan means starter tier and everything premium locked`() = runTest {
+        every { billing.observeStatus() } returns MutableStateFlow<BillingStatus?>(null)
         val vm = AppearanceViewModel(themeStore, billing)
 
         assertThat(vm.state.value.tier).isEqualTo(PlanTier.STARTER)

@@ -27,8 +27,8 @@ class ThemeViewModel @Inject constructor(
     billingRepository: BillingRepository
 ) : ViewModel() {
 
-    val planTier: StateFlow<PlanTier> = billingRepository.observeSubscription()
-        .map { subscription -> PlanTier.fromPlanId(subscription?.planId) }
+    val planTier: StateFlow<PlanTier> = billingRepository.observeStatus()
+        .map { status -> PlanTier.fromPlanId(status?.plan) }
         .catch { emit(PlanTier.STARTER) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PlanTier.STARTER)
 

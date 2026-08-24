@@ -1,34 +1,24 @@
 package com.websbaba.nitigrow.data.remote.api
 
-import com.websbaba.nitigrow.data.remote.dto.CreateOrderRequest
-import com.websbaba.nitigrow.data.remote.dto.CreateOrderResponse
-import com.websbaba.nitigrow.data.remote.dto.GenericMessageDto
-import com.websbaba.nitigrow.data.remote.dto.PaymentListResponse
-import com.websbaba.nitigrow.data.remote.dto.PlanListResponse
-import com.websbaba.nitigrow.data.remote.dto.ReportFailureRequest
-import com.websbaba.nitigrow.data.remote.dto.SubscriptionDto
-import com.websbaba.nitigrow.data.remote.dto.VerifyPaymentRequest
-import retrofit2.http.Body
+import com.websbaba.nitigrow.data.remote.dto.BillingStatusDto
+import com.websbaba.nitigrow.data.remote.dto.CancelResponse
+import com.websbaba.nitigrow.data.remote.dto.InvoicesResponse
 import retrofit2.http.GET
 import retrofit2.http.POST
 
+/**
+ * Read-only subscription billing for mobile. Subscribing/upgrading happens on the web
+ * (avoids the Apple/Google IAP mandate), so there is no order/checkout endpoint here —
+ * only status, invoices, and cancellation (which moves no money in).
+ */
 interface BillingApi {
 
-    @GET("billing/plans")
-    suspend fun listPlans(): PlanListResponse
+    @GET("billing/status")
+    suspend fun status(): BillingStatusDto
 
-    @GET("billing/subscription")
-    suspend fun subscription(): SubscriptionDto
+    @GET("billing/invoices")
+    suspend fun invoices(): InvoicesResponse
 
-    @GET("billing/payments")
-    suspend fun listPayments(): PaymentListResponse
-
-    @POST("billing/orders")
-    suspend fun createOrder(@Body body: CreateOrderRequest): CreateOrderResponse
-
-    @POST("billing/verify")
-    suspend fun verify(@Body body: VerifyPaymentRequest): GenericMessageDto
-
-    @POST("billing/failure")
-    suspend fun reportFailure(@Body body: ReportFailureRequest): GenericMessageDto
+    @POST("billing/cancel")
+    suspend fun cancel(): CancelResponse
 }

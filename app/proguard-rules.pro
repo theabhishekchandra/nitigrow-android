@@ -42,17 +42,6 @@
 
 # --- Timber ---
 -dontwarn org.jetbrains.annotations.**
-
-# --- Razorpay ---
--keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
--keepclasseswithmembers class * { @proguard.annotation.Keep *; }
--keepclasseswithmembers class * { @proguard.annotation.KeepClassMembers *; }
--keep class com.razorpay.** { *; }
--keep interface com.razorpay.** { *; }
--keep class proguard.annotation.** { *; }
--keep interface proguard.annotation.** { *; }
--dontwarn com.razorpay.**
--dontwarn proguard.annotation.**
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }

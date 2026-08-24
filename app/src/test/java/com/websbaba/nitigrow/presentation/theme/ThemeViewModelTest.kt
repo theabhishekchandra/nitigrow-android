@@ -2,8 +2,9 @@ package com.websbaba.nitigrow.presentation.theme
 
 import app.cash.turbine.test
 import com.websbaba.nitigrow.core.storage.ThemeDataStore
-import com.websbaba.nitigrow.domain.model.Subscription
-import com.websbaba.nitigrow.domain.model.SubscriptionStatus
+import com.websbaba.nitigrow.domain.model.BillingStatus
+import com.websbaba.nitigrow.domain.model.Usage
+import com.websbaba.nitigrow.domain.model.UsageMeter
 import com.websbaba.nitigrow.domain.repository.BillingRepository
 import com.websbaba.nitigrow.ui.theme.AppTheme
 import com.websbaba.nitigrow.ui.theme.PlanTier
@@ -28,12 +29,14 @@ class ThemeViewModelTest {
     private val themeDataStore: ThemeDataStore = mockk()
     private val billing: BillingRepository = mockk()
 
-    private fun subscription(planId: String?) = Subscription(
-        planId = planId ?: "",
-        planName = planId ?: "",
-        status = SubscriptionStatus.ACTIVE,
-        renewsAt = null,
-        cancelledAt = null
+    private fun status(plan: String?) = BillingStatus(
+        plan = plan ?: "trial",
+        accountStatus = "active",
+        subscription = null,
+        usage = Usage(UsageMeter(0, 0), UsageMeter(0, 0), UsageMeter(0, 0), UsageMeter(0, 0)),
+        prices = emptyMap(),
+        referralCreditPaise = 0,
+        branding = false,
     )
 
     @Before fun setUp() {
@@ -47,7 +50,7 @@ class ThemeViewModelTest {
     @Test
     fun `premium theme applies when plan unlocks it`() = runTest {
         every { themeDataStore.theme } returns MutableStateFlow(AppTheme.ESPRESSO_PREMIUM)
-        every { billing.observeSubscription() } returns MutableStateFlow(subscription("pro"))
+        every { billing.observeStatus() } returns MutableStateFlow(status("pro"))
 
         vm().appTheme.test {
             assertThat(expectMostRecentItem()).isEqualTo(AppTheme.ESPRESSO_PREMIUM)
@@ -57,7 +60,7 @@ class ThemeViewModelTest {
     @Test
     fun `premium theme falls back to default when plan is too low`() = runTest {
         every { themeDataStore.theme } returns MutableStateFlow(AppTheme.ESPRESSO_PREMIUM)
-        every { billing.observeSubscription() } returns MutableStateFlow(subscription("starter"))
+        every { billing.observeStatus() } returns MutableStateFlow(status("starter"))
 
         vm().appTheme.test {
             assertThat(expectMostRecentItem()).isEqualTo(AppTheme.Default)
@@ -67,7 +70,7 @@ class ThemeViewModelTest {
     @Test
     fun `growth plan unlocks brand forward but not espresso`() = runTest {
         every { themeDataStore.theme } returns MutableStateFlow(AppTheme.BRAND_FORWARD)
-        every { billing.observeSubscription() } returns MutableStateFlow(subscription("growth"))
+        every { billing.observeStatus() } returns MutableStateFlow(status("growth"))
 
         val viewModel = vm()
         viewModel.appTheme.test {
@@ -80,13 +83,13 @@ class ThemeViewModelTest {
 
     @Test
     fun `theme downgrades live when the subscription lapses`() = runTest {
-        val sub = MutableStateFlow<Subscription?>(subscription("pro"))
+        val st = MutableStateFlow<BillingStatus?>(status("pro"))
         every { themeDataStore.theme } returns MutableStateFlow(AppTheme.ESPRESSO_PREMIUM)
-        every { billing.observeSubscription() } returns sub
+        every { billing.observeStatus() } returns st
 
         vm().appTheme.test {
             assertThat(expectMostRecentItem()).isEqualTo(AppTheme.ESPRESSO_PREMIUM)
-            sub.value = null // subscription gone → STARTER
+            st.value = null // status gone → STARTER
             assertThat(awaitItem()).isEqualTo(AppTheme.Default)
         }
     }
@@ -94,7 +97,7 @@ class ThemeViewModelTest {
     @Test
     fun `billing stream error degrades to starter tier instead of crashing`() = runTest {
         every { themeDataStore.theme } returns MutableStateFlow(AppTheme.BRAND_FORWARD)
-        every { billing.observeSubscription() } returns flow { throw RuntimeException("boom") }
+        every { billing.observeStatus() } returns flow { throw RuntimeException("boom") }
 
         val viewModel = vm()
         viewModel.planTier.test {

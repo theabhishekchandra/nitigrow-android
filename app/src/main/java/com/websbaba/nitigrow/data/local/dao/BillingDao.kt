@@ -4,43 +4,30 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.websbaba.nitigrow.data.local.entity.PaymentEntity
-import com.websbaba.nitigrow.data.local.entity.PlanEntity
-import com.websbaba.nitigrow.data.local.entity.SubscriptionEntity
+import com.websbaba.nitigrow.data.local.entity.BillingStatusEntity
+import com.websbaba.nitigrow.data.local.entity.InvoiceEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface PlanDao {
-    @Query("SELECT * FROM plans ORDER BY priceInr ASC")
-    fun observeAll(): Flow<List<PlanEntity>>
+interface BillingStatusDao {
+    @Query("SELECT * FROM billing_status WHERE id = 0 LIMIT 1")
+    fun observe(): Flow<BillingStatusEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertAll(items: List<PlanEntity>)
+    suspend fun upsert(item: BillingStatusEntity)
 
-    @Query("DELETE FROM plans")
+    @Query("DELETE FROM billing_status")
     suspend fun clear()
 }
 
 @Dao
-interface SubscriptionDao {
-    @Query("SELECT * FROM subscription WHERE id = 0 LIMIT 1")
-    fun observe(): Flow<SubscriptionEntity?>
+interface InvoiceDao {
+    @Query("SELECT * FROM invoices ORDER BY paidAtEpochMs DESC")
+    fun observeAll(): Flow<List<InvoiceEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(item: SubscriptionEntity)
+    suspend fun upsertAll(items: List<InvoiceEntity>)
 
-    @Query("DELETE FROM subscription")
-    suspend fun clear()
-}
-
-@Dao
-interface PaymentDao {
-    @Query("SELECT * FROM payments ORDER BY createdAtEpochMs DESC")
-    fun observeAll(): Flow<List<PaymentEntity>>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertAll(items: List<PaymentEntity>)
-
-    @Query("DELETE FROM payments")
+    @Query("DELETE FROM invoices")
     suspend fun clear()
 }

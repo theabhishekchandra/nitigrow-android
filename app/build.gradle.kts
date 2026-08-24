@@ -217,8 +217,6 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.perf)
 
-    // Razorpay
-    implementation(libs.razorpay.checkout)
 
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)

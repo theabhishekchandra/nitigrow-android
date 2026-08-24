@@ -2,63 +2,59 @@ package com.websbaba.nitigrow.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class PlanDto(
-    @SerializedName("_id") val id: String,
-    @SerializedName("name") val name: String,
-    @SerializedName("priceInr") val priceInr: Long,
-    @SerializedName("periodDays") val periodDays: Int,
-    @SerializedName("features") val features: List<String>,
-    @SerializedName("isPopular") val isPopular: Boolean = false
+// GET /api/billing/status
+data class BillingStatusDto(
+    @SerializedName("plan") val plan: String? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("subscription") val subscription: SubscriptionDto? = null,
+    @SerializedName("usage") val usage: UsageDto? = null,
+    @SerializedName("prices") val prices: Map<String, Int>? = null,
+    @SerializedName("referralCreditPaise") val referralCreditPaise: Int? = null,
+    @SerializedName("branding") val branding: Boolean? = null,
 )
 
-data class PlanListResponse(
-    @SerializedName("data") val data: List<PlanDto>? = null
-)
-
+// tenant.subscription sub-document. Field renamed razorpaySubscriptionId ->
+// gatewaySubscriptionId in the Cashfree migration.
 data class SubscriptionDto(
-    @SerializedName("planId") val planId: String,
-    @SerializedName("planName") val planName: String,
-    @SerializedName("status") val status: String,
-    @SerializedName("renewsAt") val renewsAt: String?,
-    @SerializedName("cancelledAt") val cancelledAt: String?
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("trialEndsAt") val trialEndsAt: String? = null,
+    @SerializedName("currentPeriodStart") val currentPeriodStart: String? = null,
+    @SerializedName("currentPeriodEnd") val currentPeriodEnd: String? = null,
+    @SerializedName("gatewaySubscriptionId") val gatewaySubscriptionId: String? = null,
+    @SerializedName("cancelAtPeriodEnd") val cancelAtPeriodEnd: Boolean? = null,
+    @SerializedName("billingCycle") val billingCycle: String? = null,
 )
 
-data class PaymentDto(
-    @SerializedName("_id") val id: String,
-    @SerializedName("orderId") val orderId: String,
-    @SerializedName("amountInr") val amountInr: Long,
-    @SerializedName("status") val status: String,
-    @SerializedName("method") val method: String?,
-    @SerializedName("planName") val planName: String?,
-    @SerializedName("createdAt") val createdAt: String
+data class UsageDto(
+    @SerializedName("messages") val messages: UsageMeterDto? = null,
+    @SerializedName("ai") val ai: UsageMeterDto? = null,
+    @SerializedName("contacts") val contacts: UsageMeterDto? = null,
+    @SerializedName("users") val users: UsageMeterDto? = null,
 )
 
-data class PaymentListResponse(
-    @SerializedName("data") val data: List<PaymentDto>? = null
+data class UsageMeterDto(
+    @SerializedName("used") val used: Int? = null,
+    @SerializedName("limit") val limit: Int? = null,
 )
 
-data class CreateOrderRequest(
-    @SerializedName("planId") val planId: String
+// GET /api/billing/invoices -> { invoices: [...] }. Raw gateway fields vary.
+data class InvoiceDto(
+    @SerializedName("id") val id: String? = null,
+    @SerializedName("invoice_number") val invoiceNumber: String? = null,
+    @SerializedName("receipt") val receipt: String? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("amount") val amount: Long? = null,
+    @SerializedName("amount_paid") val amountPaid: Long? = null,
+    @SerializedName("paid_at") val paidAt: Long? = null,
+    @SerializedName("created_at") val createdAt: Long? = null,
+    @SerializedName("date") val date: Long? = null,
 )
 
-data class CreateOrderResponse(
-    @SerializedName("razorpayOrderId") val razorpayOrderId: String,
-    @SerializedName("keyId") val keyId: String,
-    @SerializedName("amountPaise") val amountPaise: Long,
-    @SerializedName("currency") val currency: String,
-    @SerializedName("name") val name: String,
-    @SerializedName("description") val description: String,
-    @SerializedName("prefillEmail") val prefillEmail: String?,
-    @SerializedName("prefillContact") val prefillContact: String?
+data class InvoicesResponse(
+    @SerializedName("invoices") val invoices: List<InvoiceDto>? = null,
 )
 
-data class VerifyPaymentRequest(
-    @SerializedName("razorpayOrderId") val razorpayOrderId: String,
-    @SerializedName("razorpayPaymentId") val razorpayPaymentId: String,
-    @SerializedName("razorpaySignature") val razorpaySignature: String
-)
-
-data class ReportFailureRequest(
-    @SerializedName("razorpayOrderId") val razorpayOrderId: String,
-    @SerializedName("reason") val reason: String
+// POST /api/billing/cancel
+data class CancelResponse(
+    @SerializedName("message") val message: String? = null,
 )

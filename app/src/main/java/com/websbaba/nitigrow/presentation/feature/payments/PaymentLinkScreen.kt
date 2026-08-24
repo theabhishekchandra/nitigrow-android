@@ -123,7 +123,7 @@ private fun PaymentLinkScreenContent(
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboardManager.current
     var sheet by remember { mutableStateOf(PaySheet.NONE) }
-    // Shown when online payments are gated off (Razorpay pending) and the user
+    // Shown when online payments are gated off (Cashfree pending) and the user
     // taps the primary action — offers a manual-payment request to copy/share.
     var showManualDialog by remember { mutableStateOf(false) }
 
