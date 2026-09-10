@@ -7,6 +7,8 @@ import com.websbaba.nitigrow.core.util.Constants
 import com.websbaba.nitigrow.data.remote.api.AuthApi
 import com.websbaba.nitigrow.data.remote.api.CampaignsApi
 import com.websbaba.nitigrow.data.remote.api.ChatApi
+import com.websbaba.nitigrow.data.remote.api.CommerceApi
+import com.websbaba.nitigrow.data.remote.api.FlowsApi
 import com.websbaba.nitigrow.data.remote.api.ContactsApi
 import com.websbaba.nitigrow.data.remote.api.DashboardApi
 import com.websbaba.nitigrow.data.remote.api.InboxApi
@@ -110,6 +112,16 @@ object NetworkModule {
     @Singleton
     fun provideChatApi(retrofit: Retrofit): ChatApi =
         retrofit.create(ChatApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCommerceApi(retrofit: Retrofit): CommerceApi =
+        retrofit.create(CommerceApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideFlowsApi(retrofit: Retrofit): FlowsApi =
+        retrofit.create(FlowsApi::class.java)
 
     @Provides
     @Singleton

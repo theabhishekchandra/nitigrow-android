@@ -12,6 +12,8 @@ import com.websbaba.nitigrow.data.repository.LeadRepositoryImpl
 import com.websbaba.nitigrow.data.repository.PaymentLinksRepositoryImpl
 import com.websbaba.nitigrow.data.repository.ProfileRepositoryImpl
 import com.websbaba.nitigrow.data.repository.PushTokenRepositoryImpl
+import com.websbaba.nitigrow.data.repository.CommerceRepositoryImpl
+import com.websbaba.nitigrow.data.repository.FlowsRepositoryImpl
 import com.websbaba.nitigrow.data.repository.ReferralsRepositoryImpl
 import com.websbaba.nitigrow.data.repository.SettingsRepositoryImpl
 import com.websbaba.nitigrow.data.repository.TemplatesRepositoryImpl
@@ -27,6 +29,8 @@ import com.websbaba.nitigrow.domain.repository.LeadRepository
 import com.websbaba.nitigrow.domain.repository.PaymentLinksRepository
 import com.websbaba.nitigrow.domain.repository.ProfileRepository
 import com.websbaba.nitigrow.domain.repository.PushTokenRepository
+import com.websbaba.nitigrow.domain.repository.CommerceRepository
+import com.websbaba.nitigrow.domain.repository.FlowsRepository
 import com.websbaba.nitigrow.domain.repository.ReferralsRepository
 import com.websbaba.nitigrow.domain.repository.SettingsRepository
 import com.websbaba.nitigrow.domain.repository.TemplatesRepository
@@ -83,6 +87,14 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindReferralsRepository(impl: ReferralsRepositoryImpl): ReferralsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCommerceRepository(impl: CommerceRepositoryImpl): CommerceRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFlowsRepository(impl: FlowsRepositoryImpl): FlowsRepository
 
     @Binds
     @Singleton

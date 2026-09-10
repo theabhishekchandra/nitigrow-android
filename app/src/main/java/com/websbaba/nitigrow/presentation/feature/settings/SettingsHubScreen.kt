@@ -94,6 +94,8 @@ fun SettingsHubScreen(
     onLeadsKanban: () -> Unit = {},
     onLeadsList: () -> Unit = {},
     onReferrals: () -> Unit = {},
+    onCommerce: () -> Unit = {},
+    onFlows: () -> Unit = {},
     onConflicts: () -> Unit = {},
     onLogout: () -> Unit,
     viewModel: SettingsHubViewModel = hiltViewModel()
@@ -179,6 +181,8 @@ fun SettingsHubScreen(
 
             item {
                 GroupCard("SHORTCUTS") {
+                    HubRow(title = "Commerce", onClick = onCommerce)
+                    HubRow(title = "WhatsApp Flows", onClick = onFlows)
                     HubRow(title = "Templates", onClick = onTemplates)
                     HubRow(title = "Analytics", onClick = onAnalytics)
                     HubRow(title = "Send payment link", onClick = onPaymentLink)

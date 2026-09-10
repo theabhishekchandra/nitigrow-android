@@ -31,6 +31,8 @@ object NavRoutes {
     const val CHAT = "chat/{conversationId}"
     fun chat(conversationId: String) = "chat/$conversationId"
 
+    const val COMMERCE = "commerce"
+    const val FLOWS = "flows"
     const val LEADS = "leads"
     const val LEADS_KANBAN = "leads/kanban"
 

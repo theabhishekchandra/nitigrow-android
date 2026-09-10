@@ -235,6 +235,8 @@ private fun TabHost(tabNav: NavHostController, rootNav: NavHostController) {
                 onLeadsKanban = { rootNav.navigate(NavRoutes.LEADS_KANBAN) },
                 onLeadsList = { rootNav.navigate(NavRoutes.LEADS) },
                 onReferrals = { rootNav.navigate(NavRoutes.REFERRALS) },
+                onCommerce = { rootNav.navigate(NavRoutes.COMMERCE) },
+                onFlows = { rootNav.navigate(NavRoutes.FLOWS) },
                 onConflicts = { rootNav.navigate(NavRoutes.CONFLICTS) },
                 onLogout = {
                     rootNav.navigate(NavRoutes.GRAPH_AUTH) {

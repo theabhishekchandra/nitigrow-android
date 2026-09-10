@@ -23,6 +23,8 @@ import com.websbaba.nitigrow.presentation.feature.leads.LeadsScreen
 import com.websbaba.nitigrow.presentation.feature.leads.detail.LeadDetailScreen
 import com.websbaba.nitigrow.presentation.feature.leads.kanban.LeadsKanbanScreen
 import com.websbaba.nitigrow.presentation.feature.onboarding.OnboardingScreen
+import com.websbaba.nitigrow.presentation.feature.commerce.CommerceScreen
+import com.websbaba.nitigrow.presentation.feature.flows.FlowsScreen
 import com.websbaba.nitigrow.presentation.feature.referrals.ReferralsScreen
 import com.websbaba.nitigrow.presentation.feature.payments.PaymentLinkScreen
 import com.websbaba.nitigrow.presentation.feature.settings.appearance.AppearanceScreen
@@ -84,6 +86,12 @@ fun NitiGrowNavGraph(
             arguments = listOf(navArgument("conversationId") { type = NavType.StringType })
         ) {
             ChatScreen(onBack = { navController.popBackStack() })
+        }
+        composable(NavRoutes.COMMERCE) {
+            CommerceScreen(onBack = { navController.popBackStack() })
+        }
+        composable(NavRoutes.FLOWS) {
+            FlowsScreen(onBack = { navController.popBackStack() })
         }
         composable(NavRoutes.LEADS) {
             LeadsScreen(onBack = { navController.popBackStack() })
