@@ -255,8 +255,3 @@ private fun NavHostController.navigateToTab(tab: MainTab) {
         restoreState = true
     }
 }
-
-@Composable
-private fun Placeholder(label: String) {
-    Box(modifier = Modifier.fillMaxSize()) { Text(label) }
-}

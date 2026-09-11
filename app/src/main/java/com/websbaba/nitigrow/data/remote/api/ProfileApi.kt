@@ -8,7 +8,6 @@ import com.websbaba.nitigrow.data.remote.dto.MeResponseDto
 import com.websbaba.nitigrow.data.remote.dto.NotificationPrefsRequest
 import com.websbaba.nitigrow.data.remote.dto.TeamListResponse
 import com.websbaba.nitigrow.data.remote.dto.TeamMemberDto
-import com.websbaba.nitigrow.data.remote.dto.TenantDto
 import com.websbaba.nitigrow.data.remote.dto.UpdateProfileRequest
 import com.websbaba.nitigrow.data.remote.dto.UserDto
 import okhttp3.MultipartBody

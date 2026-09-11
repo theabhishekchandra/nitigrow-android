@@ -14,8 +14,6 @@ import com.websbaba.nitigrow.data.remote.dto.VerifyOtpRequest
 import com.websbaba.nitigrow.domain.model.User
 import com.websbaba.nitigrow.domain.model.UserRole
 import com.websbaba.nitigrow.domain.repository.AuthRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -112,9 +110,6 @@ class AuthRepositoryImpl @Inject constructor(
         tokenStore.clear()
         return res
     }
-
-    override fun observeAuthState(): Flow<Boolean> =
-        tokenStore.accessToken.map { !it.isNullOrBlank() }
 
     /**
      * Local mapping that tolerates the missing `phone` field returned by the

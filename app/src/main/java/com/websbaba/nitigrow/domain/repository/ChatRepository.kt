@@ -3,7 +3,6 @@ package com.websbaba.nitigrow.domain.repository
 import androidx.paging.PagingData
 import com.websbaba.nitigrow.core.network.ApiResult
 import com.websbaba.nitigrow.domain.model.Message
-import com.websbaba.nitigrow.domain.model.MessageType
 import kotlinx.coroutines.flow.Flow
 
 interface ChatRepository {
