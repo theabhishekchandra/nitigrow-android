@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.work
+package com.websbaba.nitigrow.core.work
 
 import android.content.Context
 import androidx.work.Constraints

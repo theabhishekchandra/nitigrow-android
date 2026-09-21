@@ -36,8 +36,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.websbaba.nitigrow.domain.model.Template
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 

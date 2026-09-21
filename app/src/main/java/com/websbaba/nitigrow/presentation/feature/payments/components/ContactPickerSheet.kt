@@ -45,9 +45,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.websbaba.nitigrow.domain.model.Contact
 import com.websbaba.nitigrow.presentation.feature.inbox.list.components.Avatar
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.launch
+import java.time.Instant
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ContactPickerSheet — "Choose contact" bottom sheet (design: pick-contact
@@ -267,12 +268,12 @@ private fun PreviewContactPickerContent() {
                 Contact(
                     id = "c1", name = "Riya Shah", phone = "+919812345678", email = "riya@shah.in",
                     avatarUrl = null, tags = listOf("vip"), notes = null,
-                    createdAt = java.time.Instant.now(), updatedAt = java.time.Instant.now(), isBlocked = false
+                    createdAt = Instant.now(), updatedAt = Instant.now(), isBlocked = false
                 ),
                 Contact(
                     id = "c2", name = "Aman Gupta", phone = "+919812300000", email = null,
                     avatarUrl = null, tags = emptyList(), notes = null,
-                    createdAt = java.time.Instant.now(), updatedAt = java.time.Instant.now(), isBlocked = false
+                    createdAt = Instant.now(), updatedAt = Instant.now(), isBlocked = false
                 )
             ),
             onPick = {}

@@ -1,33 +1,29 @@
 package com.websbaba.nitigrow.presentation.feature.leads.detail
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,43 +31,49 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.domain.model.Lead
 import com.websbaba.nitigrow.domain.model.LeadStage
-import com.websbaba.nitigrow.presentation.components.ErrorBanner
-import com.websbaba.nitigrow.presentation.feature.leads.components.LeadAvatar
+import com.websbaba.nitigrow.presentation.components.NitiIconButton
+import com.websbaba.nitigrow.presentation.components.NitiStateView
+import com.websbaba.nitigrow.presentation.components.NitiTextButton
+import com.websbaba.nitigrow.presentation.feature.inbox.list.components.Avatar
+import com.websbaba.nitigrow.presentation.feature.leads.components.LeadStagePill
+import com.websbaba.nitigrow.presentation.feature.leads.components.PipelineStages
+import com.websbaba.nitigrow.presentation.feature.leads.components.StepState
 import com.websbaba.nitigrow.presentation.feature.leads.components.formatInr
-import com.websbaba.nitigrow.presentation.feature.leads.kanban.components.relativeTime
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.presentation.feature.leads.components.relativeTime
+import com.websbaba.nitigrow.presentation.feature.leads.components.stageTone
+import com.websbaba.nitigrow.presentation.feature.leads.components.stepState
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiIcons
+import com.websbaba.nitigrow.core.ui.theme.NitiStatusBar
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LeadDetailScreen — single-lead view per the Claude Design handoff:
-// profile card (54dp avatar, name, value + source pill), STAGE chip selector
-// wired to PATCH /api/leads/:id/stage, "Open chat" + "Mark as Won" actions,
-// NOTES card (when the lead has notes) and an ACTIVITY timeline derived from
-// the lead's real stage / created / updated fields. No fake content.
+// LeadDetailScreen — single lead.
+//   ◀ Lead detail
+//   avatar · name · "phone · source" · stage pill
+//   ┌ Deal value ₹42,500                              Owner Anita ┐
+//   │ STAGE  ●──●──●──④──⑤   (tap a step to move the lead)        │
+//   [Open chat] [Mark as Won]        Mark as lost
+//   Notes (when present) · Activity timeline (from real fields only)
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val CardShape16 = RoundedCornerShape(16.dp)
-private val CardShape18 = RoundedCornerShape(18.dp)
-private val ButtonShape = RoundedCornerShape(13.dp)
-private val ChipShape = RoundedCornerShape(999.dp)
-private val PillShape = RoundedCornerShape(999.dp)
-
 private val createdDateFormat: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("d MMM", Locale("en", "IN"))
-        .withZone(ZoneId.systemDefault())
+    DateTimeFormatter.ofPattern("d MMM", Locale("en", "IN")).withZone(ZoneId.systemDefault())
 
 @Composable
 fun LeadDetailScreen(
@@ -80,65 +82,41 @@ fun LeadDetailScreen(
     viewModel: LeadDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val colors = Niti.colors
     val lead = state.lead
 
-    Scaffold(containerColor = Theme.colors.paper) { padding ->
-        Column(
+    NitiStatusBar(color = colors.surface, darkIcons = colors.isLight)
+
+    Column(modifier = Modifier.fillMaxSize().background(colors.surface).statusBarsPadding()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 64.dp)
+                .padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
         ) {
-            // ── Header ─────────────────────────────────────────────────────
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 4.dp, end = 4.dp, top = 6.dp),
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Theme.colors.ink,
-                    )
-                }
-                Text(
-                    text = "Lead detail",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontSize = 19.sp),
-                    color = Theme.colors.ink,
-                )
+            NitiIconButton(icon = NitiIcons.Back, contentDescription = "Back", onClick = onBack)
+            Text(text = "Lead detail", style = NitiType.title, color = colors.onSurface)
+        }
+
+        when {
+            lead != null -> LeadDetailContent(
+                lead = lead,
+                error = state.error,
+                movingStage = state.movingStage,
+                onMoveStage = viewModel::onMoveStage,
+                onOpenChat = { onOpenChat(lead.contactId) },
+            )
+            state.isRefreshing -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = colors.primary, trackColor = colors.primaryTone.container)
             }
-
-            state.error?.let {
-                ErrorBanner(message = it, modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp))
-            }
-
-            when {
-                lead != null -> LeadDetailContent(
-                    lead = lead,
-                    movingStage = state.movingStage,
-                    onMoveStage = viewModel::onMoveStage,
-                    onOpenChat = { onOpenChat(lead.contactId) },
-                )
-
-                state.isRefreshing -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) { CircularProgressIndicator(color = Theme.colors.brand) }
-
-                else -> Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        "This lead is no longer available.",
-                        fontSize = 14.sp,
-                        color = Theme.colors.muted,
-                    )
-                }
-            }
+            else -> NitiStateView(
+                icon = NitiIcons.Leads,
+                tone = colors.tertiaryTone,
+                title = "Lead not available",
+                body = state.error ?: "This lead is no longer available."
+            )
         }
     }
 }
@@ -146,347 +124,297 @@ fun LeadDetailScreen(
 @Composable
 private fun LeadDetailContent(
     lead: Lead,
+    error: String?,
     movingStage: Boolean,
     onMoveStage: (LeadStage) -> Unit,
     onOpenChat: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        ProfileCard(lead = lead)
-        StageSelector(
-            current = lead.stage,
-            enabled = !movingStage,
-            onSelect = onMoveStage,
-        )
-        ActionRow(
-            lead = lead,
-            movingStage = movingStage,
-            onOpenChat = onOpenChat,
-            onMarkWon = { onMoveStage(LeadStage.WON) },
-        )
-        if (!lead.notes.isNullOrBlank()) {
-            NotesCard(notes = lead.notes)
-        }
-        ActivityCard(lead = lead)
-    }
-}
-
-// ─── Profile ────────────────────────────────────────────────────────────────
-
-@Composable
-private fun ProfileCard(lead: Lead) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(CardShape18)
-            .background(Theme.colors.card)
-            .border(width = 1.dp, color = Theme.colors.border, shape = CardShape18)
-            .padding(18.dp),
-    ) {
-        LeadAvatar(name = lead.contactName, size = 54.dp, fontSize = 18.sp)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = lead.contactName,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                color = Theme.colors.ink,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = lead.contactPhone,
-                fontSize = 13.sp,
-                color = Theme.colors.muted,
-                modifier = Modifier.padding(top = 2.dp),
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 6.dp),
-            ) {
+    val colors = Niti.colors
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        // Identity
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp)
+        ) {
+            Avatar(name = lead.contactName, url = null, sizeDp = 64)
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = formatInr(lead.valueInr),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Theme.colors.brand,
+                    text = lead.contactName,
+                    style = NitiType.title.copy(fontSize = 24.sp, lineHeight = 30.sp, letterSpacing = (-0.5).sp),
+                    color = colors.onSurface
                 )
                 Text(
-                    text = lead.source,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Theme.colors.muted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .clip(PillShape)
-                        .background(Theme.colors.paper2)
-                        .padding(horizontal = 9.dp, vertical = 3.dp),
+                    text = listOf(lead.contactPhone, lead.source).filter { it.isNotBlank() }.joinToString(" · "),
+                    style = NitiType.label.copy(fontWeight = FontWeight.Normal),
+                    color = colors.onSurfaceVariant
+                )
+                LeadStagePill(lead.stage, modifier = Modifier.padding(top = 8.dp))
+            }
+        }
+
+        // Deal value + stepper
+        Column(
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+            modifier = Modifier
+                .padding(start = 16.dp, end = 16.dp, top = 20.dp)
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(colors.surfaceLow)
+                .padding(18.dp)
+        ) {
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    Text(text = "Deal value", style = NitiType.label, color = colors.onSurfaceVariant)
+                    Text(text = formatInr(lead.valueInr), style = NitiType.numberLg, color = colors.onSurface)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(text = "Owner", style = NitiType.label, color = colors.onSurfaceVariant)
+                    Text(
+                        text = lead.ownerName?.takeIf { it.isNotBlank() } ?: "Unassigned",
+                        style = NitiType.bodyStrong.copy(fontWeight = FontWeight.SemiBold),
+                        color = colors.onSurface
+                    )
+                }
+            }
+            Text(
+                text = "Stage",
+                style = NitiType.caption.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp),
+                color = colors.onSurfaceVariant
+            )
+            StageStepper(current = lead.stage, enabled = !movingStage, onSelect = onMoveStage)
+        }
+
+        // Actions
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)
+        ) {
+            ActionButton(
+                label = "Open chat",
+                icon = NitiIcons.Chat,
+                container = colors.primaryTone.container,
+                content = colors.primaryTone.onContainer,
+                enabled = true,
+                onClick = onOpenChat,
+                modifier = Modifier.weight(1f)
+            )
+            ActionButton(
+                label = "Mark as Won",
+                icon = NitiIcons.Check,
+                container = colors.primary,
+                content = colors.onPrimary,
+                enabled = !movingStage && lead.stage != LeadStage.WON,
+                onClick = { onMoveStage(LeadStage.WON) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        if (lead.stage != LeadStage.LOST && lead.stage != LeadStage.WON) {
+            NitiTextButton(
+                text = "Mark as lost",
+                onClick = { onMoveStage(LeadStage.LOST) },
+                color = colors.error,
+                enabled = !movingStage,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+
+        error?.let { msg ->
+            Text(
+                text = msg,
+                style = NitiType.label,
+                color = colors.error,
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(colors.error.copy(alpha = 0.12f))
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            )
+        }
+
+        if (!lead.notes.isNullOrBlank()) {
+            DetailCard(title = "Notes") {
+                Text(
+                    text = lead.notes,
+                    style = NitiType.bodyCompact.copy(lineHeight = 21.sp),
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
         }
+        ActivityCard(lead)
+        Box(Modifier.height(24.dp))
     }
 }
 
-// ─── Stage selector ─────────────────────────────────────────────────────────
+// ── Stage stepper ────────────────────────────────────────────────────────────
 
+/** Five connected steps; done steps are checked, the current one is highlighted. Tap to move. */
 @Composable
-private fun StageSelector(
-    current: LeadStage,
-    enabled: Boolean,
-    onSelect: (LeadStage) -> Unit,
-) {
-    Column {
-        SectionLabel(text = "STAGE")
-        // Six domain stages (the design shows four): two rows of three equal
-        // chips so labels like "Contacted" stay readable on phone widths.
-        val rows = LeadStage.entries.chunked(3)
-        Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-            rows.forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    row.forEach { stage ->
-                        StageChip(
-                            stage = stage,
-                            selected = stage == current,
+private fun StageStepper(current: LeadStage, enabled: Boolean, onSelect: (LeadStage) -> Unit) {
+    val colors = Niti.colors
+    Box(modifier = Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.6f)) {
+        // Connector behind the circles, running between the first and last centres.
+        Box(
+            Modifier
+                .padding(top = 23.dp, start = 36.dp, end = 36.dp)
+                .fillMaxWidth()
+                .height(2.dp)
+                .background(colors.outlineVariant)
+        )
+        Row(modifier = Modifier.fillMaxWidth()) {
+            PipelineStages.forEach { step ->
+                val state = stepState(current, step)
+                val tone = stageTone(step, colors)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 64.dp)
+                        .selectable(
+                            selected = state == StepState.CURRENT,
                             enabled = enabled,
-                            onClick = { onSelect(stage) },
-                            modifier = Modifier.weight(1f),
+                            role = Role.RadioButton,
+                            onClick = { onSelect(step) }
                         )
+                        .padding(top = 8.dp)
+                ) {
+                    val fill = when (state) {
+                        StepState.DONE -> colors.primary
+                        StepState.CURRENT -> tone.container
+                        StepState.UPCOMING -> colors.surfaceHigh
                     }
+                    val ink = when (state) {
+                        StepState.DONE -> colors.onPrimary
+                        StepState.CURRENT -> tone.onContainer
+                        StepState.UPCOMING -> colors.onSurfaceVariant
+                    }
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .then(
+                                if (state == StepState.CURRENT)
+                                    Modifier.drawBehind { drawCircle(fill, radius = 20.dp.toPx()) }
+                                else Modifier
+                            )
+                            .background(fill, CircleShape)
+                    ) {
+                        if (state == StepState.DONE) {
+                            Icon(NitiIcons.Check, contentDescription = null, tint = ink, modifier = Modifier.size(16.dp))
+                        } else {
+                            Text(
+                                text = (PipelineStages.indexOf(step) + 1).toString(),
+                                style = NitiType.label.copy(fontWeight = FontWeight.Bold),
+                                color = ink
+                            )
+                        }
+                    }
+                    Text(
+                        text = step.label,
+                        style = NitiType.caption.copy(
+                            fontSize = 11.sp,
+                            fontWeight = if (state == StepState.CURRENT) FontWeight.SemiBold else FontWeight.Medium
+                        ),
+                        color = if (state == StepState.CURRENT) colors.onSurface else colors.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
+                    )
                 }
             }
         }
     }
 }
 
+// ── Actions ──────────────────────────────────────────────────────────────────
+
 @Composable
-private fun StageChip(
-    stage: LeadStage,
-    selected: Boolean,
+private fun ActionButton(
+    label: String,
+    icon: ImageVector,
+    container: Color,
+    content: Color,
     enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val bg = if (selected) Theme.colors.brand else Theme.colors.card
-    val fg = if (selected) Theme.colors.paper else Theme.colors.ink3
-    val borderColor = if (selected) Theme.colors.brand else Theme.colors.border
-
-    Box(
-        contentAlignment = Alignment.Center,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         modifier = modifier
-            .alpha(if (enabled) 1f else 0.6f)
-            .clip(ChipShape)
-            .background(bg)
-            .border(width = 1.dp, color = borderColor, shape = ChipShape)
-            .clickable(
-                enabled = enabled,
-                onClickLabel = "Set stage to ${stage.label}",
-                onClick = onClick,
-            )
-            .padding(vertical = 8.dp),
+            .alpha(if (enabled) 1f else 0.5f)
+            .heightIn(min = 52.dp)
+            .clip(RoundedCornerShape(26.dp))
+            .background(container)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(horizontal = 12.dp)
     ) {
+        Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(20.dp))
         Text(
-            text = stage.label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = fg,
-            maxLines = 1,
-            textAlign = TextAlign.Center,
+            text = label,
+            style = NitiType.body.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.1.sp),
+            color = content,
+            maxLines = 1
         )
     }
 }
 
-// ─── Actions ────────────────────────────────────────────────────────────────
+// ── Cards ────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun ActionRow(
-    lead: Lead,
-    movingStage: Boolean,
-    onOpenChat: () -> Unit,
-    onMarkWon: () -> Unit,
-) {
-    Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-        // Open chat — brand primary
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-            modifier = Modifier
-                .weight(1f)
-                .clip(ButtonShape)
-                .background(Theme.colors.brand)
-                .clickable(onClickLabel = "Open chat with ${lead.contactName}", onClick = onOpenChat)
-                .padding(vertical = 13.dp),
-        ) {
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Chat,
-                contentDescription = null,
-                tint = Theme.colors.paper,
-                modifier = Modifier.size(16.dp),
-            )
-            Text(
-                text = "Open chat",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Theme.colors.paper,
-            )
-            Spacer(modifier = Modifier.weight(1f))
-        }
-
-        // Mark as Won — brandSoft secondary
-        val wonEnabled = !movingStage && lead.stage != LeadStage.WON
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .weight(1f)
-                .alpha(if (wonEnabled) 1f else 0.6f)
-                .clip(ButtonShape)
-                .background(Theme.colors.brandSoft)
-                .border(
-                    width = 1.dp,
-                    color = Theme.colors.brand.copy(alpha = .25f),
-                    shape = ButtonShape,
-                )
-                .clickable(
-                    enabled = wonEnabled,
-                    onClickLabel = "Mark ${lead.contactName} as won",
-                    onClick = onMarkWon,
-                )
-                .padding(vertical = 13.dp),
-        ) {
-            Text(
-                text = "Mark as Won",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Theme.colors.brand,
-            )
-        }
-    }
-}
-
-// ─── Notes ──────────────────────────────────────────────────────────────────
-
-@Composable
-private fun NotesCard(notes: String) {
+private fun DetailCard(title: String, content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp)
             .fillMaxWidth()
-            .clip(CardShape16)
-            .background(Theme.colors.card)
-            .border(width = 1.dp, color = Theme.colors.border, shape = CardShape16)
-            .padding(16.dp),
+            .clip(RoundedCornerShape(24.dp))
+            .background(Niti.colors.surfaceLow)
+            .padding(18.dp)
     ) {
-        SectionLabel(text = "NOTES", bottomGap = 10.dp)
-        Text(
-            text = notes,
-            fontSize = 13.sp,
-            lineHeight = 21.sp,
-            color = Theme.colors.ink2,
-        )
+        Text(text = title, style = NitiType.titleUi, color = Niti.colors.onSurface)
+        content()
     }
 }
 
-// ─── Activity timeline ──────────────────────────────────────────────────────
+private data class ActivityEntry(val title: String, val meta: String)
 
-private data class ActivityEntry(val dot: Color, val title: String, val meta: String)
+/** Timeline built only from real fields: latest stage change, then creation. */
+private fun activityFor(lead: Lead): List<ActivityEntry> = listOf(
+    ActivityEntry(
+        title = "Stage set to ${lead.stage.label}",
+        meta = relativeTime(lead.updatedAt) + (lead.ownerName?.takeIf { it.isNotBlank() }?.let { " · $it" } ?: "")
+    ),
+    ActivityEntry(
+        title = "Lead created",
+        meta = createdDateFormat.format(lead.createdAt) + (lead.source.takeIf { it.isNotBlank() }?.let { " · $it" } ?: "")
+    )
+)
 
 @Composable
 private fun ActivityCard(lead: Lead) {
-    // Real fields only: the domain model has no activity log, so the timeline
-    // is derived from stage + updatedAt (latest) and source + createdAt (first).
-    val colors = Theme.colors
-    val entries = buildList {
-        add(
-            ActivityEntry(
-                dot = colors.brand,
-                title = "Stage set to ${lead.stage.label}",
-                meta = relativeTime(lead.updatedAt) +
-                    (lead.ownerName?.let { " · $it" } ?: ""),
-            )
-        )
-        add(
-            ActivityEntry(
-                dot = colors.accent,
-                title = "Lead created",
-                meta = "${createdDateFormat.format(lead.createdAt)} · ${lead.source}",
-            )
-        )
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(CardShape16)
-            .background(colors.card)
-            .border(width = 1.dp, color = colors.border, shape = CardShape16)
-            .padding(16.dp),
-    ) {
-        SectionLabel(text = "ACTIVITY", bottomGap = 12.dp)
-        entries.forEachIndexed { index, entry ->
-            TimelineRow(entry = entry, isLast = index == entries.lastIndex)
+    val entries = activityFor(lead)
+    DetailCard(title = "Activity") {
+        Column(modifier = Modifier.padding(top = 16.dp)) {
+            entries.forEachIndexed { i, entry -> TimelineRow(entry, isLast = i == entries.lastIndex) }
         }
     }
 }
 
 @Composable
 private fun TimelineRow(entry: ActivityEntry, isLast: Boolean) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.height(IntrinsicSize.Min),
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxHeight(),
-        ) {
-            Box(
-                modifier = Modifier
-                    .padding(top = 4.dp)
-                    .size(9.dp)
-                    .clip(CircleShape)
-                    .background(entry.dot),
-            )
+    val colors = Niti.colors
+    Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxHeight()) {
+            Box(Modifier.padding(top = 5.dp).size(12.dp).background(colors.primary, CircleShape))
             if (!isLast) {
-                Box(
-                    modifier = Modifier
-                        .padding(top = 2.dp)
-                        .width(2.dp)
-                        .weight(1f)
-                        .background(Theme.colors.border2),
-                )
+                Box(Modifier.padding(top = 2.dp).width(2.dp).weight(1f).background(colors.outlineVariant))
             }
         }
         Column(modifier = Modifier.padding(bottom = if (isLast) 0.dp else 14.dp)) {
-            Text(
-                text = entry.title,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Theme.colors.ink,
-            )
-            Text(
-                text = entry.meta,
-                fontSize = 11.sp,
-                color = Theme.colors.muted2,
-                modifier = Modifier.padding(top = 1.dp),
-            )
+            Text(text = entry.title, style = NitiType.bodyCompact.copy(fontWeight = FontWeight.Medium), color = colors.onSurface)
+            Text(text = entry.meta, style = NitiType.caption.copy(fontWeight = FontWeight.Normal), color = colors.onSurfaceVariant)
         }
     }
-}
-
-// ─── Shared ─────────────────────────────────────────────────────────────────
-
-@Composable
-private fun SectionLabel(text: String, bottomGap: Dp = 8.dp) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.4.sp),
-        fontWeight = FontWeight.SemiBold,
-        color = Theme.colors.muted,
-        modifier = Modifier.padding(bottom = bottomGap),
-    )
 }

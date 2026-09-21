@@ -8,35 +8,41 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.websbaba.nitigrow.R
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiStatusBar
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import kotlinx.coroutines.flow.collectLatest
 
+/**
+ * Brand reveal while the session is validated: soft tonal blobs, the logo tile,
+ * wordmark and tagline, and a looping progress sliver above the byline.
+ */
 @Composable
 fun SplashScreen(
     onNavigate: (String) -> Unit,
@@ -49,101 +55,93 @@ fun SplashScreen(
             }
         }
     }
-    val colors = Theme.colors
-    val logoShape = RoundedCornerShape(28.dp)
-    val pulse by rememberInfiniteTransition(label = "splash-pulse").animateFloat(
-        initialValue = 1f,
-        targetValue = 1.04f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 900, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "logo-scale"
+    val colors = Niti.colors
+    NitiStatusBar(color = colors.surface, darkIcons = colors.isLight)
+
+    val transition = rememberInfiniteTransition(label = "splash")
+    val slide by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(durationMillis = 900, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "progress-slide"
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.paper)
-    ) {
-        // Soft radial glows — turmeric top-right, brand bottom-left.
+    Box(modifier = Modifier.fillMaxSize().background(colors.surface)) {
+        // Decorative tonal blobs, top-left, bottom-right and a small accent.
         Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = 100.dp, y = (-120).dp)
-                .size(320.dp)
-                .background(
-                    Brush.radialGradient(
-                        0f to colors.turmeric.copy(alpha = 0.18f),
-                        0.65f to Color.Transparent
-                    )
-                )
+            Modifier
+                .align(Alignment.TopStart)
+                .offset(x = (-120).dp, y = (-100).dp)
+                .size(380.dp)
+                .alpha(0.55f)
+                .background(colors.primaryTone.container, CircleShape)
         )
         Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .offset(x = (-110).dp, y = 80.dp)
-                .size(300.dp)
-                .background(
-                    Brush.radialGradient(
-                        0f to colors.brand.copy(alpha = 0.12f),
-                        0.65f to Color.Transparent
-                    )
-                )
+            Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 140.dp, y = 60.dp)
+                .size(400.dp)
+                .alpha(0.6f)
+                .background(colors.secondaryTone.container, CircleShape)
+        )
+        Box(
+            Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = (-40).dp, y = 120.dp)
+                .size(64.dp)
+                .alpha(0.9f)
+                .background(colors.tertiaryTone.container, CircleShape)
         )
 
         Column(
-            modifier = Modifier.align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.align(Alignment.Center)
         ) {
+            val tile = RoundedCornerShape(44.dp)
             Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .graphicsLayer {
-                        scaleX = pulse
-                        scaleY = pulse
-                    }
-                    .size(100.dp)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = logoShape,
-                        ambientColor = colors.ink.copy(alpha = 0.08f),
-                        spotColor = colors.ink.copy(alpha = 0.08f)
-                    )
-                    .background(colors.card, logoShape)
-                    .border(1.dp, colors.border2, logoShape),
-                contentAlignment = Alignment.Center
+                    .size(148.dp)
+                    .shadow(elevation = 8.dp, shape = tile)
+                    .background(colors.logoTile, tile)
             ) {
                 Image(
                     painter = painterResource(R.mipmap.ic_launcher_foreground),
                     contentDescription = "NitiGrow logo",
-                    modifier = Modifier.size(80.dp)
+                    modifier = Modifier.size(112.dp)
                 )
             }
-            Spacer(Modifier.height(22.dp))
-            Text(
-                text = "NitiGrow",
-                color = colors.ink,
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontSize = 34.sp,
-                    lineHeight = 40.sp,
-                    letterSpacing = (-0.5).sp
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "NitiGrow",
+                    style = NitiType.display.copy(fontSize = 44.sp, lineHeight = 48.sp, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp),
+                    color = colors.onSurface
                 )
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "WHATSAPP BUSINESS CRM",
-                color = colors.muted,
-                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.2.sp)
-            )
+                Text(
+                    text = "WHATSAPP BUSINESS CRM",
+                    style = NitiType.caption.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 2.4.sp),
+                    color = colors.onSurfaceVariant
+                )
+            }
         }
 
-        Text(
-            text = "by Websbaba Technologies",
-            color = colors.muted2,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 34.dp)
-        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 44.dp)
+        ) {
+            Box(Modifier.width(120.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(colors.track)) {
+                Box(
+                    Modifier
+                        .offset(x = (56 * slide).dp)
+                        .width(64.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(colors.primary)
+                )
+            }
+            Text(text = "by Websbaba Technologies", style = NitiType.label, color = colors.onSurfaceVariant)
+        }
     }
 }

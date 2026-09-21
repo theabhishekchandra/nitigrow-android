@@ -27,8 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.websbaba.nitigrow.presentation.feature.payments.SentLinkStatus
 import com.websbaba.nitigrow.presentation.feature.payments.SentPaymentLink
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.text.NumberFormat
 import java.time.Instant
 import java.time.LocalDate

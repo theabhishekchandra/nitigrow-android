@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.presentation.feature.conflicts.components.ConflictCard
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 

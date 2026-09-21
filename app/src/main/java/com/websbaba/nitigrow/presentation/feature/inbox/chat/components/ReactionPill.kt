@@ -1,5 +1,6 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Row
@@ -17,8 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 
 private val PillVerticalPadding = 3.dp
 private val PillHorizontalPadding = 8.dp
@@ -44,8 +44,8 @@ fun ReactionPill(
         modifier = modifier
             .offset(x = xOffset, y = PillOffsetY)
             .clip(RoundedCornerShape(PillCorner))
-            .background(Theme.colors.card)
-            .border(1.dp, Theme.colors.border, RoundedCornerShape(PillCorner))
+            .background(Niti.colors.surfaceLow)
+            .border(1.dp, Niti.colors.outlineVariant, RoundedCornerShape(PillCorner))
             .padding(horizontal = PillHorizontalPadding, vertical = PillVerticalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -58,7 +58,7 @@ fun ReactionPill(
             Text(
                 text = count.toString(),
                 style = MaterialTheme.typography.labelSmall,
-                color = Theme.colors.ink2,
+                color = Niti.colors.onSurfaceVariant,
                 fontWeight = FontWeight.Medium,
             )
         }

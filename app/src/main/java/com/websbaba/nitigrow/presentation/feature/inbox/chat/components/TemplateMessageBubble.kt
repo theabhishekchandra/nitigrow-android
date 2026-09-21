@@ -1,7 +1,9 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.size
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,20 +30,19 @@ import coil.compose.AsyncImage
 import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
-import com.websbaba.nitigrow.ui.theme.BubbleInShape
-import com.websbaba.nitigrow.ui.theme.BubbleOutShape
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.BubbleInShape
+import com.websbaba.nitigrow.core.ui.theme.BubbleOutShape
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 private val BubbleMaxWidth = 320.dp
 private val HeaderHeight = 160.dp
-private val InnerPadding = 4.dp
+private val InnerPadding = 6.dp
 private val ContentPadding = 12.dp
 private val ButtonGap = 6.dp
-private val ButtonHeight = 40.dp
+private val ButtonHeight = 44.dp
 private val MaxButtons = 3
 private const val TITLE_SEPARATOR = "\n\n"
 
@@ -87,8 +87,9 @@ fun TemplateMessageBubble(
     modifier: Modifier = Modifier,
 ) {
     val shape = if (isOutbound) BubbleOutShape else BubbleInShape
-    val bg = if (isOutbound) Theme.colors.bubbleOut else Theme.colors.bubbleIn
-    val ink = if (isOutbound) Theme.colors.bubbleOutInk else Theme.colors.bubbleInInk
+    val bubble = bubbleColors(isOutbound)
+    val bg = bubble.container
+    val ink = bubble.content
     val metaColor = bubbleMetaColor(isOutbound = isOutbound)
     val align = if (isOutbound) Alignment.End else Alignment.Start
 
@@ -97,7 +98,7 @@ fun TemplateMessageBubble(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         horizontalAlignment = align,
     ) {
         Column(
@@ -105,7 +106,6 @@ fun TemplateMessageBubble(
                 .widthIn(max = BubbleMaxWidth)
                 .clip(shape)
                 .background(bg)
-                .border(1.dp, if (isOutbound) bg else Theme.colors.bubbleInBorder, shape)
                 .padding(InnerPadding),
         ) {
             if (!message.mediaUrl.isNullOrBlank()) {
@@ -115,8 +115,8 @@ fun TemplateMessageBubble(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(HeaderHeight)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Theme.colors.paper2),
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(bubble.panel),
                 )
                 Spacer(Modifier.height(ContentPadding))
             }
@@ -125,7 +125,7 @@ fun TemplateMessageBubble(
                 if (payload.title.isNotBlank()) {
                     Text(
                         text = payload.title,
-                        style = MaterialTheme.typography.titleSmall,
+                        style = NitiType.bodyStrong,
                         color = ink,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -134,7 +134,7 @@ fun TemplateMessageBubble(
                 if (payload.body.isNotBlank()) {
                     Text(
                         text = payload.body,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = NitiType.bodyCompact,
                         color = ink,
                     )
                     Spacer(Modifier.height(8.dp))
@@ -165,7 +165,7 @@ fun TemplateMessageBubble(
                     verticalArrangement = Arrangement.spacedBy(ButtonGap),
                 ) {
                     payload.buttons.forEach { label ->
-                        TemplateButton(label = label, onClick = { onButtonClick(label) })
+                        TemplateButton(label = label, colors = bubble, onClick = { onButtonClick(label) })
                     }
                 }
                 Spacer(Modifier.height(InnerPadding))
@@ -175,29 +175,28 @@ fun TemplateMessageBubble(
 }
 
 @Composable
-private fun TemplateButton(label: String, onClick: () -> Unit) {
+private fun TemplateButton(label: String, colors: BubbleColors, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(ButtonHeight)
-            .clip(RoundedCornerShape(10.dp))
-            .border(1.dp, Theme.colors.border, RoundedCornerShape(10.dp))
-            .background(Theme.colors.card)
-            .clickable { onClick() },
+            .clip(RoundedCornerShape(14.dp))
+            .background(colors.panel)
+            .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Filled.OpenInNew,
                 contentDescription = null,
-                tint = Theme.colors.brand,
-                modifier = Modifier.padding(end = 6.dp),
+                tint = colors.content,
+                modifier = Modifier.padding(end = 6.dp).size(18.dp),
             )
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelLarge,
-                color = Theme.colors.brand,
-                fontWeight = FontWeight.Medium,
+                style = NitiType.bodyCompact,
+                color = colors.content,
+                fontWeight = FontWeight.SemiBold,
             )
         }
     }

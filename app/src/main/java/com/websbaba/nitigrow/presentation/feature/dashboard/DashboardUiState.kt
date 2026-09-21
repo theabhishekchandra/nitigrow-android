@@ -16,6 +16,10 @@ data class DashboardUiState(
     val expiringWindowCount: Int = 0,
     /** True when any conversation has unread messages — drives the bell dot. */
     val hasUnreadConversations: Boolean = false,
+    /** Conversations with unread customer messages — "Pending replies". */
+    val pendingReplies: Int = 0,
+    /** Conversations whose latest message landed today (device time zone). */
+    val conversationsToday: Int = 0,
     val isRefreshing: Boolean = false,
     val error: String? = null
 ) {

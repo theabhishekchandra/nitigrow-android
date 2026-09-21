@@ -73,6 +73,17 @@ class InboxViewModel @Inject constructor(
         _state.update { it.copy(isFilterSheetVisible = visible) }
     }
 
+    /** Clears the quick filter and the sheet selections back to their defaults. */
+    fun onResetFilters() {
+        _state.update {
+            it.copy(
+                filter = InboxFilter.ALL,
+                assigneeFilter = InboxUiState.DEFAULT_ASSIGNEE,
+                labelFilter = InboxUiState.DEFAULT_LABEL
+            )
+        }
+    }
+
     fun onAssigneeFilterChange(value: String) {
         _state.update { it.copy(assigneeFilter = value) }
     }

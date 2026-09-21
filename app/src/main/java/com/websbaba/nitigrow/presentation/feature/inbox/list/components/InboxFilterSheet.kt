@@ -1,119 +1,109 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.list.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.presentation.components.NitiChip
+import com.websbaba.nitigrow.presentation.components.NitiPrimaryButton
+import com.websbaba.nitigrow.presentation.components.NitiSectionLabel
+import com.websbaba.nitigrow.presentation.components.NitiTextButton
+import com.websbaba.nitigrow.presentation.feature.inbox.list.InboxFilter
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 
 // Static presentation options. The Conversation model has no assignee or
 // label fields yet, so these selections are remembered in InboxUiState and
 // will start filtering once the domain model exposes the data.
 val DefaultAssigneeOptions = listOf("Anyone", "Me", "Unassigned")
 
+private val StatusOptions = listOf(
+    "Any" to InboxFilter.ALL,
+    "Unread" to InboxFilter.UNREAD,
+    "Window expiring" to InboxFilter.EXPIRING,
+    "Pinned" to InboxFilter.PINNED,
+)
+
 /**
- * "Filter inbox" bottom sheet — paper surface, 24dp top radius, drag handle,
- * ALL-CAPS sections of selectable pill chips and a brand Apply CTA.
- * A section is hidden when it has no options to offer (e.g. no labels exist).
+ * "Filter inbox" bottom sheet: drag handle, title with Reset, chip sections and
+ * an Apply button. Status maps onto the same quick filter as the chips under
+ * the title, so the two stay in sync. A section is hidden when it has no
+ * options to offer (e.g. no labels exist).
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InboxFilterSheet(
     selectedAssignee: String,
     onAssigneeChange: (String) -> Unit,
     selectedLabel: String,
     onLabelChange: (String) -> Unit,
+    selectedStatus: InboxFilter,
+    onStatusChange: (InboxFilter) -> Unit,
+    onReset: () -> Unit,
     onApply: () -> Unit,
     onDismiss: () -> Unit,
     assigneeOptions: List<String> = DefaultAssigneeOptions,
     labelOptions: List<String> = emptyList(),
 ) {
+    val colors = Niti.colors
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Theme.colors.paper,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        dragHandle = { SheetDragHandle() }
-    ) {
-        Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
-            Text(
-                text = "Filter inbox",
-                style = MaterialTheme.typography.headlineSmall,
-                color = Theme.colors.ink
+        containerColor = colors.surface,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .padding(top = 12.dp, bottom = 4.dp)
+                    .width(32.dp)
+                    .height(4.dp)
+                    .background(colors.outlineVariant, RoundedCornerShape(2.dp))
             )
-            Spacer(Modifier.height(14.dp))
-
-            if (assigneeOptions.isNotEmpty()) {
-                ChipSection(
-                    title = "ASSIGNED TO",
-                    options = assigneeOptions,
-                    selected = selectedAssignee,
-                    onSelect = onAssigneeChange
-                )
-                Spacer(Modifier.height(16.dp))
-            }
-
-            if (labelOptions.isNotEmpty()) {
-                ChipSection(
-                    title = "LABEL",
-                    options = labelOptions,
-                    selected = selectedLabel,
-                    onSelect = onLabelChange
-                )
-                Spacer(Modifier.height(16.dp))
-            }
-
-            Spacer(Modifier.height(4.dp))
-            Button(
-                onClick = onApply,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Theme.colors.brand,
-                    contentColor = Theme.colors.paper
-                ),
-                contentPadding = PaddingValues(vertical = 14.dp),
+        }
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 28.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "Apply filters",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text(text = "Filter inbox", style = NitiType.title, color = colors.onSurface)
+                NitiTextButton(text = "Reset", onClick = onReset)
             }
+
+            if (assigneeOptions.isNotEmpty()) {
+                ChipSection("Assigned to", assigneeOptions, selectedAssignee, onAssigneeChange)
+            }
+            if (labelOptions.isNotEmpty()) {
+                ChipSection("Label", labelOptions, selectedLabel, onLabelChange)
+            }
+            ChipSection(
+                title = "Status",
+                options = StatusOptions.map { it.first },
+                selected = StatusOptions.first { it.second == selectedStatus }.first,
+                onSelect = { label -> onStatusChange(StatusOptions.first { it.first == label }.second) }
+            )
+
+            NitiPrimaryButton(text = "Apply filters", onClick = onApply, modifier = Modifier.fillMaxWidth())
         }
     }
-}
-
-@Composable
-private fun SheetDragHandle() {
-    Box(
-        modifier = Modifier
-            .padding(top = 12.dp, bottom = 4.dp)
-            .width(38.dp)
-            .height(4.dp)
-            .clip(RoundedCornerShape(999.dp))
-            .background(Theme.colors.muted3)
-    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -124,39 +114,12 @@ private fun ChipSection(
     selected: String,
     onSelect: (String) -> Unit
 ) {
-    Column {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelSmall,
-            color = Theme.colors.muted
-        )
-        Spacer(Modifier.height(8.dp))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        NitiSectionLabel(title)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             options.forEach { option ->
-                SelectableChip(
-                    label = option,
-                    selected = option == selected,
-                    onClick = { onSelect(option) }
-                )
+                NitiChip(label = option, selected = option == selected, onClick = { onSelect(option) })
             }
         }
     }
-}
-
-@Composable
-private fun SelectableChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    Text(
-        text = label,
-        style = MaterialTheme.typography.bodySmall,
-        fontWeight = FontWeight.SemiBold,
-        color = if (selected) Theme.colors.paper else Theme.colors.ink3,
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(if (selected) Theme.colors.brand else Theme.colors.paper2)
-            .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 7.dp)
-    )
 }

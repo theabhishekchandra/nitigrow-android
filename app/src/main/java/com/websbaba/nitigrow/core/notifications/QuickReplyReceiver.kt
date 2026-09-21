@@ -6,7 +6,7 @@ import android.content.Intent
 import androidx.core.app.RemoteInput
 import com.websbaba.nitigrow.domain.usecase.chat.MarkConversationReadUseCase
 import com.websbaba.nitigrow.domain.usecase.chat.SendMessageUseCase
-import com.websbaba.nitigrow.work.PendingMessageScheduler
+import com.websbaba.nitigrow.core.work.PendingMessageScheduler
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

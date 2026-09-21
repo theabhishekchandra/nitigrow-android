@@ -46,6 +46,15 @@ class LeadsViewModel @Inject constructor(
         }
     }
 
+    fun onStageFilter(stage: LeadStage?) = _state.update { it.copy(stageFilter = stage) }
+
+    fun onQueryChange(value: String) = _state.update { it.copy(query = value) }
+
+    /** Shows or hides the search field; hiding also clears the query. */
+    fun onSearchToggle() = _state.update {
+        if (it.isSearching) it.copy(isSearching = false, query = "") else it.copy(isSearching = true)
+    }
+
     fun onMove(leadId: String, stage: LeadStage) {
         viewModelScope.launch { moveStage(leadId, stage) }
     }

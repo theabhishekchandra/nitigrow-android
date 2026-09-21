@@ -1,37 +1,36 @@
 package com.websbaba.nitigrow.presentation.feature.campaigns.detail
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,318 +39,198 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.domain.model.Campaign
 import com.websbaba.nitigrow.domain.model.CampaignStatus
-import com.websbaba.nitigrow.presentation.components.ErrorBanner
-import com.websbaba.nitigrow.ui.theme.Theme
-import java.text.NumberFormat
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-import kotlin.math.roundToInt
+import com.websbaba.nitigrow.presentation.components.NitiIconButton
+import com.websbaba.nitigrow.presentation.components.NitiStateView
+import com.websbaba.nitigrow.presentation.components.NitiTextButton
+import com.websbaba.nitigrow.presentation.feature.campaigns.detail.components.AudienceCard
+import com.websbaba.nitigrow.presentation.feature.campaigns.detail.components.DeliveryFunnelCard
+import com.websbaba.nitigrow.presentation.feature.campaigns.detail.components.DraftHeroCard
+import com.websbaba.nitigrow.presentation.feature.campaigns.detail.components.RecipientsCard
+import com.websbaba.nitigrow.presentation.feature.campaigns.detail.components.ScheduledHeroCard
+import com.websbaba.nitigrow.presentation.feature.campaigns.detail.components.SentHeroCard
+import com.websbaba.nitigrow.presentation.feature.campaigns.detail.components.TemplateCard
+import com.websbaba.nitigrow.presentation.feature.campaigns.detail.components.completedCaption
+import com.websbaba.nitigrow.presentation.feature.campaigns.list.components.CampaignStatusPill
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiIcons
+import com.websbaba.nitigrow.core.ui.theme.NitiStatusBar
+import com.websbaba.nitigrow.core.ui.theme.NitiType
+import java.time.Instant
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CampaignDetailScreen — live report for one broadcast.
+// CampaignDetailScreen — report for one broadcast.
 //
-//   ◀  Mango Mithai Festival            ── Fraunces 19sp + meta subtitle
-//   ┌─ espresso hero ─────────────────┐
-//   │ TOTAL SENT                       │
-//   │ 1,240            (Fraunces 40sp) │
-//   │ 96%        71%        (gold)     │
-//   │ DELIVERED  READ                  │
-//   └──────────────────────────────────┘
-//   ┌─ DELIVERY FUNNEL ── brand / turmeric (+ danger when failures) bars ─┐
-//   ┌─ AUDIENCE ──────── segments · recipients · schedule ───────────────┐
+//   ◀  Diwali Early Bird
+//   [Sending now]
+//   ┌─ hero ─ TOTAL SENT + progress (running) / SCHEDULED FOR (scheduled) ┐
+//   ┌─ Delivery funnel ─ sent · delivered · read · failed ────────────────┐
+//   ┌─ Recipients (scheduled) · Audience · Template ──────────────────────┐
 //   [ Cancel broadcast ]  (scheduled / running only)
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val nf: NumberFormat = NumberFormat.getInstance(Locale("en", "IN"))
-private val dayFormat =
-    DateTimeFormatter.ofPattern("d MMM", Locale.ENGLISH).withZone(ZoneId.systemDefault())
-private val scheduleFormat =
-    DateTimeFormatter.ofPattern("EEE, d MMM · h:mm a", Locale.ENGLISH).withZone(ZoneId.systemDefault())
-
-private val SectionShape = RoundedCornerShape(16.dp)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampaignDetailScreen(
     onBack: () -> Unit,
     viewModel: CampaignDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val colors = Theme.colors
+    val colors = Niti.colors
     val c = state.campaign
 
-    Scaffold(containerColor = colors.paper) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 6.dp, end = 14.dp, top = 12.dp, bottom = 6.dp)
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = colors.ink,
-                        modifier = Modifier.size(21.dp)
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        c?.name ?: "Broadcast",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontSize = 19.sp),
-                        color = colors.ink,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    c?.let {
-                        Text(
-                            campaignMeta(it),
-                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
-                            color = colors.muted,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
+    NitiStatusBar(color = colors.surface, darkIcons = colors.isLight)
 
-            if (c == null) {
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    state.error?.let { ErrorBanner(message = it) } ?: Text(
-                        "Loading…",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.muted
-                    )
-                }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 18.dp, end = 18.dp, top = 12.dp, bottom = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    HeroCard(c)
-                    FunnelCard(c)
-                    AudienceCard(c)
-                    if (c.status == CampaignStatus.SCHEDULED || c.status == CampaignStatus.RUNNING) {
-                        OutlinedButton(
-                            onClick = viewModel::onCancel,
-                            enabled = !state.cancelling,
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.dp, colors.border),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = colors.card,
-                                contentColor = colors.danger
-                            ),
-                            modifier = Modifier.fillMaxWidth().height(48.dp)
-                        ) {
-                            Text(
-                                "Cancel broadcast",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                    state.error?.let { ErrorBanner(message = it) }
-                }
-            }
-        }
-    }
-}
-
-private fun campaignMeta(c: Campaign): String {
-    val statusPart = when (c.status) {
-        CampaignStatus.SCHEDULED ->
-            c.scheduledAt?.let { "Scheduled ${scheduleFormat.format(it)}" } ?: "Scheduled"
-        CampaignStatus.COMPLETED -> "Completed ${dayFormat.format(c.createdAt)}"
-        CampaignStatus.RUNNING -> "Sending now"
-        CampaignStatus.DRAFT -> "Draft"
-        CampaignStatus.FAILED -> "Failed"
-        CampaignStatus.CANCELLED -> "Cancelled"
-    }
-    return listOf(c.templateName, statusPart)
-        .filter { it.isNotBlank() }
-        .joinToString(" · ")
-}
-
-private fun pctOfSent(count: Long, sent: Long): Int =
-    if (sent > 0) (count * 100f / sent).roundToInt() else 0
-
-// ── Espresso hero ────────────────────────────────────────────────────────────
-
-@Composable
-private fun HeroCard(c: Campaign) {
-    val colors = Theme.colors
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(colors.sidebarBg)
-            .padding(18.dp)
-    ) {
-        Text(
-            "TOTAL SENT",
-            style = MaterialTheme.typography.labelSmall,
-            color = colors.sidebarInk.copy(alpha = 0.7f)
-        )
-        Text(
-            nf.format(c.sentCount),
-            style = MaterialTheme.typography.displayLarge.copy(fontSize = 40.sp, lineHeight = 46.sp),
-            color = colors.sidebarInk,
-            modifier = Modifier.padding(top = 4.dp)
-        )
+    Column(modifier = Modifier.fillMaxSize().background(colors.surface).statusBarsPadding()) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(18.dp),
-            modifier = Modifier.padding(top = 14.dp)
-        ) {
-            HeroStat("${pctOfSent(c.deliveredCount, c.sentCount)}%", "DELIVERED")
-            HeroStat("${pctOfSent(c.readCount, c.sentCount)}%", "READ")
-        }
-    }
-}
-
-@Composable
-private fun HeroStat(value: String, label: String) {
-    val colors = Theme.colors
-    Column {
-        Text(
-            value,
-            style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp),
-            fontWeight = FontWeight.Bold,
-            color = colors.sidebarTextActive
-        )
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, letterSpacing = 0.8.sp),
-            color = colors.sidebarInk.copy(alpha = 0.55f)
-        )
-    }
-}
-
-// ── Delivery funnel ──────────────────────────────────────────────────────────
-
-@Composable
-private fun FunnelCard(c: Campaign) {
-    val colors = Theme.colors
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(SectionShape)
-            .background(colors.card)
-            .border(1.dp, colors.border, SectionShape)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text(
-            "DELIVERY FUNNEL",
-            style = MaterialTheme.typography.labelSmall,
-            color = colors.muted,
-            modifier = Modifier.padding(bottom = 2.dp)
-        )
-        FunnelRow("Delivered", c.deliveredCount, c.sentCount, colors.brand)
-        FunnelRow("Read", c.readCount, c.sentCount, colors.turmeric)
-        if (c.failedCount > 0) {
-            FunnelRow("Failed", c.failedCount, c.sentCount, colors.danger)
-        }
-    }
-}
-
-@Composable
-private fun FunnelRow(label: String, count: Long, sent: Long, fill: Color) {
-    val colors = Theme.colors
-    val fraction = if (sent > 0) (count.toFloat() / sent).coerceIn(0f, 1f) else 0f
-    Column {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)
-        ) {
-            Text(
-                label,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.5.sp),
-                fontWeight = FontWeight.SemiBold,
-                color = colors.ink
-            )
-            Text(
-                nf.format(count),
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.5.sp),
-                color = colors.muted
-            )
-        }
-        Box(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(colors.paper2)
+                .defaultMinSize(minHeight = 64.dp)
+                .padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(fraction)
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(fill)
+            NitiIconButton(icon = NitiIcons.Back, contentDescription = "Back", onClick = onBack)
+            Text(
+                text = c?.name ?: "Broadcast",
+                style = NitiType.title,
+                color = colors.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
         }
-    }
-}
 
-// ── Audience ─────────────────────────────────────────────────────────────────
-
-@Composable
-private fun AudienceCard(c: Campaign) {
-    val colors = Theme.colors
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(SectionShape)
-            .background(colors.card)
-            .border(1.dp, colors.border, SectionShape)
-            .padding(horizontal = 16.dp)
-    ) {
-        Text(
-            "AUDIENCE",
-            style = MaterialTheme.typography.labelSmall,
-            color = colors.muted,
-            modifier = Modifier.padding(top = 14.dp)
-        )
-        Spacer(Modifier.height(2.dp))
-        InfoRow("Segments", c.audienceTags.joinToString(", ").ifBlank { "—" })
-        HorizontalDivider(color = colors.border2)
-        InfoRow("Recipients", nf.format(c.audienceSize))
-        c.scheduledAt?.let {
-            HorizontalDivider(color = colors.border2)
-            InfoRow("Scheduled for", scheduleFormat.format(it))
+        val ptrState = rememberPullToRefreshState()
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = viewModel::refresh,
+            state = ptrState,
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = ptrState,
+                    isRefreshing = state.isRefreshing,
+                    containerColor = colors.primaryTone.container,
+                    color = colors.primary,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            if (c == null) {
+                if (state.error != null) {
+                    NitiStateView(
+                        icon = NitiIcons.Warning,
+                        tone = colors.tertiaryTone,
+                        title = "Couldn't load this broadcast",
+                        body = state.error.orEmpty(),
+                        actionLabel = "Retry",
+                        onAction = viewModel::refresh
+                    )
+                } else {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Loading…", style = NitiType.body, color = colors.onSurfaceVariant)
+                    }
+                }
+            } else {
+                DetailContent(
+                    campaign = c,
+                    state = state,
+                    onCancel = viewModel::onCancelRequested
+                )
+            }
         }
     }
+
+    if (state.confirmingCancel) {
+        CancelDialog(onConfirm = viewModel::onCancelConfirmed, onDismiss = viewModel::onCancelDismissed)
+    }
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
-    val colors = Theme.colors
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.muted
-        )
-        Text(
-            value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = colors.ink,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 16.dp)
-        )
+private fun DetailContent(
+    campaign: Campaign,
+    state: CampaignDetailUiState,
+    onCancel: () -> Unit
+) {
+    val colors = Niti.colors
+    val now = remember(campaign) { Instant.now() }
+    val status = campaign.status
+    val cancellable = status == CampaignStatus.SCHEDULED || status == CampaignStatus.RUNNING
+    val hasSent = status == CampaignStatus.RUNNING || status == CampaignStatus.COMPLETED ||
+        status == CampaignStatus.FAILED || status == CampaignStatus.CANCELLED
+
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        CampaignStatusPill(status, modifier = Modifier.padding(start = 20.dp, bottom = 12.dp))
+
+        when {
+            status == CampaignStatus.SCHEDULED -> ScheduledHeroCard(campaign.scheduledAt, now)
+            status == CampaignStatus.DRAFT -> DraftHeroCard()
+            else -> SentHeroCard(
+                campaign = campaign,
+                showProgress = status == CampaignStatus.RUNNING,
+                caption = if (status == CampaignStatus.RUNNING) "Sending in progress" else completedCaption(campaign)
+            )
+        }
+
+        if (hasSent) DeliveryFunnelCard(campaign) else RecipientsCard(campaign.audienceSize)
+        AudienceCard(campaign.audienceTags)
+        TemplateCard(templateName = campaign.templateName, template = state.template)
+
+        state.error?.let { msg ->
+            Text(
+                text = msg,
+                style = NitiType.label,
+                color = colors.error,
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(colors.error.copy(alpha = 0.12f))
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            )
+        }
+
+        if (cancellable) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp, top = 20.dp)
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
+                    .clip(RoundedCornerShape(26.dp))
+                    .border(1.dp, colors.error.copy(alpha = if (state.cancelling) 0.4f else 1f), RoundedCornerShape(26.dp))
+                    .clickable(enabled = !state.cancelling, role = Role.Button, onClick = onCancel)
+            ) {
+                Icon(NitiIcons.Close, contentDescription = null, tint = colors.error, modifier = Modifier.size(20.dp))
+                Text(
+                    text = if (state.cancelling) "Cancelling…" else "Cancel broadcast",
+                    style = NitiType.body.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.1.sp),
+                    color = colors.error
+                )
+            }
+        }
+        Box(Modifier.size(24.dp))
     }
+}
+
+/** Cancelling can't be undone, so ask first. */
+@Composable
+private fun CancelDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val colors = Niti.colors
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = colors.surface,
+        shape = RoundedCornerShape(28.dp),
+        title = { Text("Cancel this broadcast?", style = NitiType.title, color = colors.onSurface) },
+        text = {
+            Text(
+                "Messages that were already sent can't be recalled. Anyone who hasn't received it yet won't.",
+                style = NitiType.body,
+                color = colors.onSurfaceVariant
+            )
+        },
+        confirmButton = { NitiTextButton(text = "Cancel broadcast", onClick = onConfirm) },
+        dismissButton = { NitiTextButton(text = "Keep sending", onClick = onDismiss) }
+    )
 }

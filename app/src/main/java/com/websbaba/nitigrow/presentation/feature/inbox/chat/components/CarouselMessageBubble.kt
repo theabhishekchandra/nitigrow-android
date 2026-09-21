@@ -1,7 +1,9 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
+import androidx.compose.ui.unit.sp
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,8 +32,7 @@ import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
 import com.websbaba.nitigrow.presentation.feature.inbox.list.components.StatusTicks
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -41,8 +41,8 @@ private val CardWidth = 220.dp
 private val CardImageHeight = 120.dp
 private val CardSpacing = 10.dp
 private val SidePadding = 8.dp
-private val ButtonHeight = 36.dp
-private val CardCorner = 12.dp
+private val ButtonHeight = 44.dp
+private val CardCorner = 22.dp
 
 private val CarouselTimeFmt =
     DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
@@ -89,7 +89,7 @@ fun CarouselMessageBubble(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 5.dp),
         horizontalAlignment = align,
     ) {
         LazyRow(
@@ -112,7 +112,7 @@ fun CarouselMessageBubble(
             Text(
                 text = CarouselTimeFmt.format(message.sentAt),
                 style = bubbleTimeStyle(),
-                color = Theme.colors.muted2,
+                color = Niti.colors.onSurfaceVariant,
             )
             if (isOutbound) {
                 Spacer(Modifier.width(4.dp))
@@ -132,8 +132,7 @@ private fun CarouselCardView(
         modifier = Modifier
             .width(CardWidth)
             .clip(RoundedCornerShape(CardCorner))
-            .background(Theme.colors.card)
-            .border(1.dp, Theme.colors.border, RoundedCornerShape(CardCorner))
+            .background(Niti.colors.bubbleIn)
             .clickable { onClick() },
     ) {
         if (!card.imageUrl.isNullOrBlank()) {
@@ -143,15 +142,15 @@ private fun CarouselCardView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(CardImageHeight)
-                    .background(Theme.colors.paper2),
+                    .background(Niti.colors.secondaryTone.container),
             )
         }
         Column(modifier = Modifier.padding(10.dp)) {
             if (card.title.isNotBlank()) {
                 Text(
                     text = card.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = Theme.colors.ink,
+                    style = NitiType.bodyStrong,
+                    color = Niti.colors.onBubbleIn,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -161,8 +160,8 @@ private fun CarouselCardView(
             if (card.body.isNotBlank()) {
                 Text(
                     text = card.body,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Theme.colors.ink2,
+                    style = NitiType.caption.copy(lineHeight = 16.sp),
+                    color = Niti.colors.onSurfaceVariant,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -174,14 +173,14 @@ private fun CarouselCardView(
                         .fillMaxWidth()
                         .height(ButtonHeight)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Theme.colors.brandSoft)
+                        .background(Niti.colors.surface)
                         .clickable { onButtonClick() },
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = card.buttonLabel,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Theme.colors.brand,
+                        style = NitiType.bodyCompact.copy(fontWeight = FontWeight.SemiBold),
+                        color = Niti.colors.primary,
                         fontWeight = FontWeight.Medium,
                     )
                 }

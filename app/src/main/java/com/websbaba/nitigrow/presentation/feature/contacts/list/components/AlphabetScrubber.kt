@@ -4,7 +4,6 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -15,9 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 
 @Composable
 fun AlphabetScrubber(
@@ -45,12 +46,13 @@ fun AlphabetScrubber(
         letters.forEach { ch ->
             Text(
                 text = ch.toString(),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 10.sp,
-                    letterSpacing = 0.sp
+                style = NitiType.caption.copy(
+                    fontSize = 11.sp,
+                    lineHeight = 12.sp,
+                    fontWeight = FontWeight.SemiBold
                 ),
-                color = Theme.colors.muted,
-                modifier = Modifier.padding(vertical = 1.dp)
+                color = Niti.colors.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 2.5.dp)
             )
         }
     }

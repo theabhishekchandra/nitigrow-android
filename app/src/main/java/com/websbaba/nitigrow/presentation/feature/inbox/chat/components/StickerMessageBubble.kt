@@ -1,5 +1,6 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +22,7 @@ import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
 import com.websbaba.nitigrow.presentation.feature.inbox.list.components.StatusTicks
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -47,7 +47,7 @@ fun StickerMessageBubble(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         horizontalAlignment = align,
     ) {
         Box(
@@ -76,7 +76,7 @@ fun StickerMessageBubble(
             Text(
                 text = StickerTimeFmt.format(message.sentAt),
                 style = bubbleTimeStyle(),
-                color = Theme.colors.muted2,
+                color = Niti.colors.onSurfaceVariant,
             )
             if (isOutbound) {
                 Spacer(Modifier.size(4.dp))

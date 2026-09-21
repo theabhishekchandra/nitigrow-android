@@ -29,8 +29,8 @@ import androidx.compose.ui.unit.dp
 import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 
 // ─────────────────────────────────────────────────────────────────────────────

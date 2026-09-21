@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.di
+package com.websbaba.nitigrow.core.di
 
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration

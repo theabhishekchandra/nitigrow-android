@@ -1,8 +1,8 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import android.text.format.Formatter
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,10 +31,9 @@ import androidx.compose.ui.unit.dp
 import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
-import com.websbaba.nitigrow.ui.theme.BubbleInShape
-import com.websbaba.nitigrow.ui.theme.BubbleOutShape
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.BubbleInShape
+import com.websbaba.nitigrow.core.ui.theme.BubbleOutShape
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -58,8 +56,9 @@ fun DocumentMessageBubble(
     modifier: Modifier = Modifier,
 ) {
     val shape = if (isOutbound) BubbleOutShape else BubbleInShape
-    val bg = if (isOutbound) Theme.colors.bubbleOut else Theme.colors.bubbleIn
-    val ink = if (isOutbound) Theme.colors.bubbleOutInk else Theme.colors.bubbleInInk
+    val bubble = bubbleColors(isOutbound)
+    val bg = bubble.container
+    val ink = bubble.content
     val metaColor = bubbleMetaColor(isOutbound = isOutbound)
     val align = if (isOutbound) Alignment.End else Alignment.Start
 
@@ -74,7 +73,7 @@ fun DocumentMessageBubble(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         horizontalAlignment = align,
     ) {
         Row(
@@ -82,7 +81,6 @@ fun DocumentMessageBubble(
                 .widthIn(max = BubbleMaxWidth)
                 .clip(shape)
                 .background(bg)
-                .border(1.dp, if (isOutbound) bg else Theme.colors.bubbleInBorder, shape)
                 .clickable { onOpenDoc() }
                 .padding(horizontal = HorizontalPadding, vertical = VerticalPadding),
             verticalAlignment = Alignment.CenterVertically,
@@ -105,7 +103,7 @@ fun DocumentMessageBubble(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = filename,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = NitiType.bodyStrong,
                     color = ink,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,

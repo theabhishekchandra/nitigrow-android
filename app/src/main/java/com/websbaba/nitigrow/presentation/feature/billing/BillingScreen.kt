@@ -45,7 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.domain.model.BillingStatus
 import com.websbaba.nitigrow.domain.model.Invoice
 import com.websbaba.nitigrow.domain.model.UsageMeter
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.text.NumberFormat
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter

@@ -3,6 +3,7 @@ package com.websbaba.nitigrow.presentation.feature.contacts.list
 import androidx.lifecycle.viewModelScope
 import com.websbaba.nitigrow.core.network.ApiResult
 import com.websbaba.nitigrow.domain.model.Contact
+import com.websbaba.nitigrow.domain.usecase.dashboard.GetDashboardStatsUseCase
 import com.websbaba.nitigrow.domain.usecase.contacts.ImportCsvContactsUseCase
 import com.websbaba.nitigrow.domain.usecase.contacts.ObserveContactsUseCase
 import com.websbaba.nitigrow.domain.usecase.contacts.RefreshContactsUseCase
@@ -32,7 +33,8 @@ class ContactsViewModel @Inject constructor(
     observe: ObserveContactsUseCase,
     private val refresh: RefreshContactsUseCase,
     private val save: SaveContactUseCase,
-    private val importCsv: ImportCsvContactsUseCase
+    private val importCsv: ImportCsvContactsUseCase,
+    getStats: GetDashboardStatsUseCase
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(ContactsUiState(isRefreshing = true))
@@ -50,7 +52,18 @@ class ContactsViewModel @Inject constructor(
             .flatMapLatest { observe(it) }
             .onEach { items -> _state.update { it.copy(items = items) } }
             .launchIn(viewModelScope)
+        // Leads board card: reuse the dashboard's cached lead counts.
+        getStats()
+            .onEach { stats ->
+                if (stats != null) _state.update { it.copy(leadsTotal = stats.leadsTotal, leadsNew = stats.leadsNew) }
+            }
+            .launchIn(viewModelScope)
         refresh()
+    }
+
+    /** Tapping the active chip clears the filter. */
+    fun onTagFilter(tag: String?) = _state.update {
+        it.copy(tagFilter = if (tag != null && tag.equals(it.tagFilter, ignoreCase = true)) null else tag)
     }
 
     fun onQueryChange(value: String) {

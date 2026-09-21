@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.ui.theme
+package com.websbaba.nitigrow.core.ui.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf

@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.ui.theme
+package com.websbaba.nitigrow.core.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -133,7 +133,14 @@ fun NitiGrowTheme(
         }
     }
 
-    CompositionLocalProvider(LocalNitiGrowColors provides niti) {
+    // Redesign tokens follow the palette's lightness, so Espresso Premium
+    // (always dark) gets the dark tokens even when the device is in light mode.
+    val redesign = if (niti.isLight) NitiLightColors else NitiDarkColors
+
+    CompositionLocalProvider(
+        LocalNitiGrowColors provides niti,
+        LocalNitiColors provides redesign,
+    ) {
         MaterialTheme(
             colorScheme = m3,
             typography = nitiGrowTypography(),

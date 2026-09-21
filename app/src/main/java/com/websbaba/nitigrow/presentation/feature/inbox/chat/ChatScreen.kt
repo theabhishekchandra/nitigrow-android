@@ -7,19 +7,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -31,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,18 +35,21 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.websbaba.nitigrow.core.util.TimeFormatter
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
+import com.websbaba.nitigrow.presentation.components.NitiIconButton
 import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.ChatHeaderPresence
 import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.DateSeparator
 import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.MessageBubble
 import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.MessageInput
 import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.RichMessageBubble
 import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.TypingIndicator
-import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.WindowPill
+import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.WindowStatusBanner
 import com.websbaba.nitigrow.presentation.feature.inbox.list.components.Avatar
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiIcons
+import com.websbaba.nitigrow.core.ui.theme.NitiStatusBar
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.time.Instant
 import java.time.ZoneId
 
 @Composable
@@ -66,6 +62,7 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val colors = Niti.colors
 
     LaunchedEffect(Unit) {
         viewModel.effects.collectLatest { ev ->
@@ -81,17 +78,21 @@ fun ChatScreen(
         }
     }
 
+    NitiStatusBar(color = colors.surface, darkIcons = colors.isLight)
+
     Scaffold(
-        containerColor = Theme.colors.paper2,
+        containerColor = colors.surface,
         topBar = {
-            ChatHeader(
-                contactName = state.contactName,
-                contactPhone = state.contactPhone,
-                avatarUrl = state.avatarUrl,
-                typing = state.typing,
-                windowExpiresAt = state.windowExpiresAt,
-                onBack = onBack
-            )
+            Column(modifier = Modifier.fillMaxWidth().background(colors.surface).statusBarsPadding()) {
+                ChatHeader(
+                    contactName = state.contactName,
+                    contactPhone = state.contactPhone,
+                    avatarUrl = state.avatarUrl,
+                    typing = state.typing,
+                    onBack = onBack
+                )
+                WindowStatusBanner(windowExpiresAt = state.windowExpiresAt)
+            }
         },
         bottomBar = {
             MessageInput(
@@ -109,7 +110,7 @@ fun ChatScreen(
         LazyColumn(
             state = listState,
             reverseLayout = true,
-            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
             modifier = Modifier.fillMaxSize().padding(padding)
         ) {
             // Bottom of the reversed list — typing bubble while the contact types.
@@ -144,8 +145,8 @@ fun ChatScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
-                            color = Theme.colors.brand,
-                            trackColor = Theme.colors.brandSoft
+                            color = colors.primary,
+                            trackColor = colors.primaryTone.container
                         )
                     }
                 }
@@ -154,46 +155,36 @@ fun ChatScreen(
     }
 }
 
-/**
- * Custom chat top bar — paper surface with a bottom hairline: back arrow,
- * 38dp avatar, contact name over phone/presence, and the live window pill.
- */
+/** Back arrow, 40dp avatar and the contact's name over typing/phone. */
 @Composable
 private fun ChatHeader(
     contactName: String,
     contactPhone: String,
     avatarUrl: String?,
     typing: Boolean,
-    windowExpiresAt: Instant?,
     onBack: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().background(Theme.colors.paper).statusBarsPadding()) {
+    val colors = Niti.colors
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 64.dp)
+            .padding(start = 4.dp, end = 8.dp, top = 6.dp, bottom = 6.dp)
+    ) {
+        NitiIconButton(icon = NitiIcons.Back, contentDescription = "Back", onClick = onBack)
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.weight(1f)
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Theme.colors.ink,
-                    modifier = Modifier.size(21.dp)
-                )
-            }
-            Avatar(
-                name = contactName.ifBlank { "?" },
-                url = avatarUrl,
-                sizeDp = 38
-            )
-            Column(modifier = Modifier.weight(1f)) {
+            Avatar(name = contactName.ifBlank { "?" }, url = avatarUrl, sizeDp = 40)
+            Column {
                 Text(
                     text = contactName.ifBlank { "Conversation" },
-                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.5.sp),
-                    fontWeight = FontWeight.SemiBold,
-                    color = Theme.colors.ink,
+                    style = NitiType.titleUi.copy(fontSize = 17.sp),
+                    color = colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -203,8 +194,6 @@ private fun ChatHeader(
                     fallback = contactPhone
                 )
             }
-            WindowPill(windowExpiresAt = windowExpiresAt)
         }
-        HorizontalDivider(thickness = 1.dp, color = Theme.colors.border)
     }
 }

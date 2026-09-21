@@ -2,6 +2,7 @@ package com.websbaba.nitigrow.presentation.feature.dashboard
 
 import androidx.lifecycle.viewModelScope
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.util.isToday
 import com.websbaba.nitigrow.domain.repository.ProfileRepository
 import com.websbaba.nitigrow.domain.usecase.dashboard.GetDashboardStatsUseCase
 import com.websbaba.nitigrow.domain.usecase.dashboard.RefreshDashboardUseCase
@@ -58,7 +59,11 @@ class DashboardViewModel @Inject constructor(
                         expiringWindowCount =
                             conversations.count { c -> c.windowExpiryLabel() != null },
                         hasUnreadConversations =
-                            conversations.any { c -> c.unreadCount > 0 }
+                            conversations.any { c -> c.unreadCount > 0 },
+                        pendingReplies =
+                            conversations.count { c -> c.unreadCount > 0 },
+                        conversationsToday =
+                            conversations.count { c -> c.lastMessageAt.isToday() }
                     )
                 }
             }

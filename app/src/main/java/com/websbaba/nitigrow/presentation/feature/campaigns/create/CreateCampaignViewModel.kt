@@ -89,7 +89,13 @@ class CreateCampaignViewModel @Inject constructor(
         }
     }
 
-    fun setSendNow(now: Boolean) = _state.update { it.copy(sendNow = now, scheduledAt = if (now) null else it.scheduledAt) }
+    /** Switching to "later" pre-fills tomorrow morning so the pickers never start empty. */
+    fun setSendNow(now: Boolean) = _state.update {
+        it.copy(
+            sendNow = now,
+            scheduledAt = if (now) null else it.scheduledAt ?: SchedulePresets.defaultLater(Instant.now())
+        )
+    }
     fun setScheduledAt(instant: Instant) = _state.update { it.copy(scheduledAt = instant) }
 
     fun next() {

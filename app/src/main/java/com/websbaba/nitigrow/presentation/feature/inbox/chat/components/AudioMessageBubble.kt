@@ -2,7 +2,6 @@ package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,10 +34,9 @@ import androidx.compose.ui.unit.dp
 import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
-import com.websbaba.nitigrow.ui.theme.BubbleInShape
-import com.websbaba.nitigrow.ui.theme.BubbleOutShape
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.BubbleInShape
+import com.websbaba.nitigrow.core.ui.theme.BubbleOutShape
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -46,7 +44,7 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 private val BubbleMaxWidth = 280.dp
-private val PlayButtonSize = 40.dp
+private val PlayButtonSize = 44.dp
 private val PlayIconSize = 24.dp
 private val WaveformHeight = 28.dp
 private val InnerHorizontal = 10.dp
@@ -68,8 +66,9 @@ fun AudioMessageBubble(
     modifier: Modifier = Modifier,
 ) {
     val shape = if (isOutbound) BubbleOutShape else BubbleInShape
-    val bg = if (isOutbound) Theme.colors.bubbleOut else Theme.colors.bubbleIn
-    val ink = if (isOutbound) Theme.colors.bubbleOutInk else Theme.colors.bubbleInInk
+    val bubble = bubbleColors(isOutbound)
+    val bg = bubble.container
+    val ink = bubble.content
     val align = if (isOutbound) Alignment.End else Alignment.Start
 
     var playing by remember { mutableStateOf(false) }
@@ -94,7 +93,7 @@ fun AudioMessageBubble(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         horizontalAlignment = align,
     ) {
         Row(
@@ -102,7 +101,6 @@ fun AudioMessageBubble(
                 .widthIn(max = BubbleMaxWidth)
                 .clip(shape)
                 .background(bg)
-                .border(1.dp, if (isOutbound) bg else Theme.colors.bubbleInBorder, shape)
                 .padding(horizontal = InnerHorizontal, vertical = InnerVertical),
             verticalAlignment = Alignment.CenterVertically,
         ) {

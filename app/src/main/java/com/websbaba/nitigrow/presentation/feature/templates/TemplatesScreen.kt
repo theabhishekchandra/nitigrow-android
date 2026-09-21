@@ -38,8 +38,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.presentation.feature.templates.components.TemplateCard
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Theme
+import java.time.Instant
 
 private val ListHorizontalPadding: Dp = 18.dp
 private val CardSpacing: Dp = 10.dp
@@ -234,7 +235,7 @@ private fun TemplatesScreenPreview() {
                         category = TemplateCategory.UTILITY,
                         status = TemplateStatus.APPROVED,
                         body = "Hi {{1}}, your order {{2}} is confirmed. Total ₹{{3}}.",
-                        updatedAt = java.time.Instant.now()
+                        updatedAt = Instant.now()
                     ),
                     Template(
                         id = "t2",
@@ -243,7 +244,7 @@ private fun TemplatesScreenPreview() {
                         category = TemplateCategory.MARKETING,
                         status = TemplateStatus.PENDING,
                         body = "Celebrate Diwali with 25% off! Use DIWALI25.",
-                        updatedAt = java.time.Instant.now()
+                        updatedAt = Instant.now()
                     ),
                     Template(
                         id = "t3",
@@ -253,7 +254,7 @@ private fun TemplatesScreenPreview() {
                         status = TemplateStatus.REJECTED,
                         body = "Catering chahiye? Humse quote lo.",
                         rejectionReason = "Meta: promotional content not allowed in Utility category. Edit and resubmit.",
-                        updatedAt = java.time.Instant.now()
+                        updatedAt = Instant.now()
                     )
                 )
             ),

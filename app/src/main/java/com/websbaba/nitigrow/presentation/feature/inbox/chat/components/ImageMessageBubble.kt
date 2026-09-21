@@ -1,7 +1,8 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,18 +35,17 @@ import coil.compose.AsyncImage
 import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
-import com.websbaba.nitigrow.ui.theme.BubbleInShape
-import com.websbaba.nitigrow.ui.theme.BubbleOutShape
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.BubbleInShape
+import com.websbaba.nitigrow.core.ui.theme.BubbleOutShape
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 // Layout constants — kept local to avoid magic numbers downstream.
 private val BubbleMaxWidth = 280.dp
-private val ThumbHeight = 200.dp
-private val InnerPadding = 4.dp
+private val ThumbHeight = 170.dp
+private val InnerPadding = 6.dp
 private val CaptionPadding = 8.dp
 private val MetaSpacing = 4.dp
 
@@ -59,8 +59,9 @@ fun ImageMessageBubble(
     modifier: Modifier = Modifier,
 ) {
     val shape = if (isOutbound) BubbleOutShape else BubbleInShape
-    val bg = if (isOutbound) Theme.colors.bubbleOut else Theme.colors.bubbleIn
-    val ink = if (isOutbound) Theme.colors.bubbleOutInk else Theme.colors.bubbleInInk
+    val bubble = bubbleColors(isOutbound)
+    val bg = bubble.container
+    val ink = bubble.content
     val align = if (isOutbound) Alignment.End else Alignment.Start
 
     var fullScreen by remember { mutableStateOf(false) }
@@ -68,7 +69,7 @@ fun ImageMessageBubble(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         horizontalAlignment = align,
     ) {
         Column(
@@ -76,7 +77,6 @@ fun ImageMessageBubble(
                 .widthIn(max = BubbleMaxWidth)
                 .clip(shape)
                 .background(bg)
-                .border(1.dp, if (isOutbound) bg else Theme.colors.bubbleInBorder, shape)
                 .padding(InnerPadding),
         ) {
             AsyncImage(
@@ -85,8 +85,8 @@ fun ImageMessageBubble(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(ThumbHeight)
-                    .clip(shape)
-                    .background(Theme.colors.paper2)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(bubble.panel)
                     .pointerInput(message.id) {
                         detectTransformGestures { _, _, _, _ -> fullScreen = true }
                     },
@@ -96,7 +96,7 @@ fun ImageMessageBubble(
                 Spacer(Modifier.height(MetaSpacing))
                 Text(
                     text = message.text,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = NitiType.body,
                     color = ink,
                     modifier = Modifier.padding(horizontal = CaptionPadding),
                 )

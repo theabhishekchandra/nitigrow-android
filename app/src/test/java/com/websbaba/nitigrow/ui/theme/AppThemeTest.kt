@@ -1,6 +1,8 @@
 package com.websbaba.nitigrow.ui.theme
 
 import com.google.common.truth.Truth.assertThat
+import com.websbaba.nitigrow.core.ui.theme.AppTheme
+import com.websbaba.nitigrow.core.ui.theme.PlanTier
 import org.junit.Test
 
 class AppThemeTest {

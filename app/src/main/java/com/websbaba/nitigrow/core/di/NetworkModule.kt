@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.di
+package com.websbaba.nitigrow.core.di
 
 import com.websbaba.nitigrow.BuildConfig
 import com.websbaba.nitigrow.core.network.AuthInterceptor
@@ -16,6 +16,13 @@ import com.websbaba.nitigrow.data.remote.api.LeadsApi
 import com.websbaba.nitigrow.data.remote.api.PushApi
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.websbaba.nitigrow.data.remote.api.AnalyticsApi
+import com.websbaba.nitigrow.data.remote.api.BillingApi
+import com.websbaba.nitigrow.data.remote.api.PaymentLinksApi
+import com.websbaba.nitigrow.data.remote.api.ProfileApi
+import com.websbaba.nitigrow.data.remote.api.ReferralsApi
+import com.websbaba.nitigrow.data.remote.api.SettingsApi
+import com.websbaba.nitigrow.data.remote.api.TemplatesApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -145,36 +152,36 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideReferralsApi(retrofit: Retrofit): com.websbaba.nitigrow.data.remote.api.ReferralsApi =
-        retrofit.create(com.websbaba.nitigrow.data.remote.api.ReferralsApi::class.java)
+    fun provideReferralsApi(retrofit: Retrofit): ReferralsApi =
+        retrofit.create(ReferralsApi::class.java)
 
     @Provides
     @Singleton
-    fun provideTemplatesApi(retrofit: Retrofit): com.websbaba.nitigrow.data.remote.api.TemplatesApi =
-        retrofit.create(com.websbaba.nitigrow.data.remote.api.TemplatesApi::class.java)
+    fun provideTemplatesApi(retrofit: Retrofit): TemplatesApi =
+        retrofit.create(TemplatesApi::class.java)
 
     @Provides
     @Singleton
-    fun provideAnalyticsApi(retrofit: Retrofit): com.websbaba.nitigrow.data.remote.api.AnalyticsApi =
-        retrofit.create(com.websbaba.nitigrow.data.remote.api.AnalyticsApi::class.java)
+    fun provideAnalyticsApi(retrofit: Retrofit): AnalyticsApi =
+        retrofit.create(AnalyticsApi::class.java)
 
     @Provides
     @Singleton
-    fun provideSettingsApi(retrofit: Retrofit): com.websbaba.nitigrow.data.remote.api.SettingsApi =
-        retrofit.create(com.websbaba.nitigrow.data.remote.api.SettingsApi::class.java)
+    fun provideSettingsApi(retrofit: Retrofit): SettingsApi =
+        retrofit.create(SettingsApi::class.java)
 
     @Provides
     @Singleton
-    fun providePaymentLinksApi(retrofit: Retrofit): com.websbaba.nitigrow.data.remote.api.PaymentLinksApi =
-        retrofit.create(com.websbaba.nitigrow.data.remote.api.PaymentLinksApi::class.java)
+    fun providePaymentLinksApi(retrofit: Retrofit): PaymentLinksApi =
+        retrofit.create(PaymentLinksApi::class.java)
 
     @Provides
     @Singleton
-    fun provideBillingApi(retrofit: Retrofit): com.websbaba.nitigrow.data.remote.api.BillingApi =
-        retrofit.create(com.websbaba.nitigrow.data.remote.api.BillingApi::class.java)
+    fun provideBillingApi(retrofit: Retrofit): BillingApi =
+        retrofit.create(BillingApi::class.java)
 
     @Provides
     @Singleton
-    fun provideProfileApi(retrofit: Retrofit): com.websbaba.nitigrow.data.remote.api.ProfileApi =
-        retrofit.create(com.websbaba.nitigrow.data.remote.api.ProfileApi::class.java)
+    fun provideProfileApi(retrofit: Retrofit): ProfileApi =
+        retrofit.create(ProfileApi::class.java)
 }

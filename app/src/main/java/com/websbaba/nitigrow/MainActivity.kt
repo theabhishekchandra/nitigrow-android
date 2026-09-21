@@ -18,7 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.presentation.navigation.NavRoutes
 import com.websbaba.nitigrow.presentation.navigation.NitiGrowNavGraph
 import com.websbaba.nitigrow.presentation.theme.ThemeViewModel
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

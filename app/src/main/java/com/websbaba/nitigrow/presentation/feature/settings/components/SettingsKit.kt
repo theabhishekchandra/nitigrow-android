@@ -37,7 +37,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SettingsKit — shared design primitives for the Settings hub + sub-screens,

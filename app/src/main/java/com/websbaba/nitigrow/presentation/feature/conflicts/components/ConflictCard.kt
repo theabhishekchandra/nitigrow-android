@@ -41,8 +41,8 @@ import androidx.compose.ui.unit.dp
 import com.websbaba.nitigrow.presentation.feature.conflicts.ConflictAction
 import com.websbaba.nitigrow.presentation.feature.conflicts.ConflictRule
 import com.websbaba.nitigrow.presentation.feature.conflicts.SyncConflict
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 

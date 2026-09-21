@@ -1,9 +1,10 @@
-package com.websbaba.nitigrow.work
+package com.websbaba.nitigrow.core.work
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.websbaba.nitigrow.core.network.ApiResult
 import com.websbaba.nitigrow.data.local.dao.MessageDao
 import com.websbaba.nitigrow.domain.repository.ChatRepository
 import dagger.assisted.Assisted
@@ -29,7 +30,7 @@ class SendPendingWorker @AssistedInject constructor(
         pending.forEach { msg ->
             val cid = msg.clientId ?: msg.localId
             val result = chatRepo.retry(cid)
-            if (result is com.websbaba.nitigrow.core.network.ApiResult.Error) anyFail = true
+            if (result is ApiResult.Error) anyFail = true
         }
         return if (anyFail) Result.retry() else Result.success()
     }

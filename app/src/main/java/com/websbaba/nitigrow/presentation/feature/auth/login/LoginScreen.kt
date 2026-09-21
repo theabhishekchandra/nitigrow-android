@@ -3,29 +3,28 @@ package com.websbaba.nitigrow.presentation.feature.auth.login
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,28 +35,40 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.R
-import com.websbaba.nitigrow.presentation.components.ErrorBanner
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.presentation.components.NitiIconButton
+import com.websbaba.nitigrow.presentation.components.NitiPrimaryButton
+import com.websbaba.nitigrow.presentation.components.NitiTextButton
+import com.websbaba.nitigrow.presentation.components.nitiTextFieldColors
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiIcons
+import com.websbaba.nitigrow.core.ui.theme.NitiStatusBar
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun LoginScreen(
     @Suppress("UNUSED_PARAMETER") onLoginSuccess: () -> Unit = {},
     onOtpRequested: (String) -> Unit = {},
+    onForgotPassword: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val colors = Niti.colors
 
     LaunchedEffect(Unit) {
         viewModel.effects.collectLatest { effect ->
@@ -68,268 +79,173 @@ fun LoginScreen(
         }
     }
 
-    val colors = Theme.colors
-    val fieldShape = RoundedCornerShape(12.dp)
+    NitiStatusBar(color = colors.surface, darkIcons = colors.isLight)
 
-    Scaffold(containerColor = colors.paper) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 28.dp)
-        ) {
-            Image(
-                painter = painterResource(R.mipmap.ic_launcher_foreground),
-                contentDescription = "NitiGrow logo",
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .size(56.dp)
-            )
-            Spacer(Modifier.height(22.dp))
+    Column(
+        verticalArrangement = Arrangement.spacedBy(28.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.surface)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding()
+            .verticalScroll(rememberScrollState())
+            .padding(start = 24.dp, end = 24.dp, top = 40.dp, bottom = 24.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            val tile = RoundedCornerShape(18.dp)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(56.dp).shadow(6.dp, tile).background(colors.logoTile, tile)
+            ) {
+                Image(
+                    painter = painterResource(R.mipmap.ic_launcher_foreground),
+                    contentDescription = "NitiGrow logo",
+                    modifier = Modifier.size(42.dp)
+                )
+            }
             Text(
-                "Welcome back",
-                style = MaterialTheme.typography.displayMedium,
-                color = colors.ink
+                text = "NitiGrow",
+                style = NitiType.title.copy(fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
+                color = colors.onSurface
             )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "Sign in to continue to your business",
-                style = MaterialTheme.typography.bodyLarge,
-                color = colors.ink3
-            )
+        }
 
-            Spacer(Modifier.height(24.dp))
-            
-            // Toggle
-            Row(
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                text = "Welcome back",
+                style = NitiType.display.copy(fontSize = 36.sp, lineHeight = 42.sp, letterSpacing = (-1).sp),
+                color = colors.onSurface
+            )
+            Text(
+                text = "Sign in to continue to your business",
+                style = NitiType.body.copy(fontSize = 16.sp, lineHeight = 24.sp),
+                color = colors.onSurfaceVariant
+            )
+        }
+
+        ModeToggle(isEmail = state.isEmailMode, onSelect = viewModel::onToggleMode)
+
+        if (state.isEmailMode) {
+            EmailForm(state, viewModel, onForgotPassword)
+        } else {
+            PhoneForm(state, viewModel)
+        }
+
+        state.error?.let {
+            Text(
+                text = it,
+                style = NitiType.label,
+                color = colors.error,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(colors.paper2, RoundedCornerShape(12.dp))
-                    .padding(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (state.isEmailMode) colors.card else colors.paper2)
-                        .clickable { viewModel.onToggleMode(true) }
-                        .padding(vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "Email",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (state.isEmailMode) colors.ink else colors.ink3
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (!state.isEmailMode) colors.card else colors.paper2)
-                        .clickable { viewModel.onToggleMode(false) }
-                        .padding(vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "Phone OTP",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (!state.isEmailMode) colors.ink else colors.ink3
-                    )
-                }
-            }
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(colors.error.copy(alpha = 0.12f))
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            )
+        }
 
-            Spacer(Modifier.height(24.dp))
+        NitiPrimaryButton(
+            text = if (state.isEmailMode) "Sign in" else "Send OTP",
+            onClick = viewModel::onSubmit,
+            enabled = state.canSubmit,
+            loading = state.isLoading,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
 
-            if (state.isEmailMode) {
-                Text(
-                    "Email address",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.ink3
-                )
-                Spacer(Modifier.height(6.dp))
-                var emailFocused by remember { mutableStateOf(false) }
-                BasicTextField(
-                    value = state.email,
-                    onValueChange = viewModel::onEmailChange,
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.ink),
-                    cursorBrush = SolidColor(colors.brand),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onFocusChanged { emailFocused = it.isFocused }
-                        .background(colors.card, fieldShape)
-                        .border(
-                            width = if (emailFocused) 2.dp else 1.dp,
-                            color = if (emailFocused) colors.brand else colors.border,
-                            shape = fieldShape
-                        ),
-                    decorationBox = { innerTextField ->
-                        Box(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            if (state.email.isEmpty()) {
-                                Text(
-                                    "you@example.com",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = colors.muted2
-                                )
-                            }
-                            innerTextField()
-                        }
-                    }
-                )
+/** Email / Phone OTP switch: a 48dp outlined pill split in two, the active half tinted. */
+@Composable
+private fun ModeToggle(isEmail: Boolean, onSelect: (Boolean) -> Unit) {
+    val colors = Niti.colors
+    val shape = RoundedCornerShape(24.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(shape)
+            .border(1.dp, colors.outline, shape)
+    ) {
+        ToggleHalf("Email", NitiIcons.Mail, isEmail, { onSelect(true) }, Modifier.weight(1f))
+        Box(Modifier.width(1.dp).fillMaxHeight().background(colors.outline))
+        ToggleHalf("Phone OTP", NitiIcons.Chat, !isEmail, { onSelect(false) }, Modifier.weight(1f))
+    }
+}
 
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    "Password",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.ink3
-                )
-                Spacer(Modifier.height(6.dp))
-                var passFocused by remember { mutableStateOf(false) }
-                BasicTextField(
-                    value = state.password,
-                    onValueChange = viewModel::onPasswordChange,
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.ink),
-                    cursorBrush = SolidColor(colors.brand),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(onDone = { viewModel.onSubmit() }),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onFocusChanged { passFocused = it.isFocused }
-                        .background(colors.card, fieldShape)
-                        .border(
-                            width = if (passFocused) 2.dp else 1.dp,
-                            color = if (passFocused) colors.brand else colors.border,
-                            shape = fieldShape
-                        ),
-                    decorationBox = { innerTextField ->
-                        Box(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            if (state.password.isEmpty()) {
-                                Text(
-                                    "Enter password",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = colors.muted2
-                                )
-                            }
-                            innerTextField()
-                        }
-                    }
-                )
-            } else {
-                Text(
-                    "WhatsApp number",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.ink3
-                )
-                Spacer(Modifier.height(6.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(
-                        modifier = Modifier
-                            .background(colors.paper2, fieldShape)
-                            .border(1.dp, colors.border, fieldShape)
-                            .padding(horizontal = 12.dp, vertical = 13.dp)
-                    ) {
-                        Text(
-                            "+91",
-                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                            color = colors.ink3
-                        )
-                    }
-                    var focused by remember { mutableStateOf(false) }
-                    BasicTextField(
-                        value = state.phone,
-                        onValueChange = viewModel::onPhoneChange,
-                        singleLine = true,
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.ink),
-                        cursorBrush = SolidColor(colors.brand),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Phone,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(onDone = { viewModel.onSubmit() }),
-                        modifier = Modifier
-                            .weight(1f)
-                            .onFocusChanged { focused = it.isFocused }
-                            .background(colors.card, fieldShape)
-                            .border(
-                                width = if (focused) 2.dp else 1.dp,
-                                color = if (focused) colors.brand else colors.border,
-                                shape = fieldShape
-                            ),
-                        decorationBox = { innerTextField ->
-                            Box(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                if (state.phone.isEmpty()) {
-                                    Text(
-                                        "10-digit number",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = colors.muted2
-                                    )
-                                }
-                                innerTextField()
-                            }
-                        }
-                    )
-                }
-                Spacer(Modifier.height(14.dp))
-                Text(
-                    "We will send a 6-digit code to this number on WhatsApp.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.muted
-                )
-            }
+@Composable
+private fun ToggleHalf(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit, modifier: Modifier) {
+    val colors = Niti.colors
+    val ink = if (selected) colors.primaryTone.onContainer else colors.onSurfaceVariant
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        modifier = modifier
+            .fillMaxSize()
+            .background(if (selected) colors.primaryTone.container else Color.Transparent)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+    ) {
+        Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(18.dp))
+        Text(text = label, style = NitiType.bodyCompact.copy(fontWeight = FontWeight.SemiBold), color = ink)
+    }
+}
 
-            state.error?.let {
-                Spacer(Modifier.height(12.dp))
-                ErrorBanner(message = it)
-            }
-
-            Spacer(Modifier.height(24.dp))
-            Button(
-                onClick = viewModel::onSubmit,
-                enabled = state.canSubmit,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.brand,
-                    contentColor = colors.paper,
-                    disabledContainerColor = colors.brand.copy(alpha = 0.4f),
-                    disabledContentColor = colors.paper
-                ),
-                contentPadding = PaddingValues(vertical = 15.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = colors.paper
-                    )
-                } else {
-                    Text(
-                        if (state.isEmailMode) "Sign In" else "Send OTP",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
+@Composable
+private fun EmailForm(state: LoginUiState, vm: LoginViewModel, onForgotPassword: () -> Unit) {
+    var showPassword by remember { mutableStateOf(false) }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+            value = state.email,
+            onValueChange = vm::onEmailChange,
+            label = { Text("Email address") },
+            leadingIcon = { Icon(NitiIcons.Mail, contentDescription = null, modifier = Modifier.size(22.dp)) },
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            colors = nitiTextFieldColors(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = state.password,
+            onValueChange = vm::onPasswordChange,
+            label = { Text("Password") },
+            leadingIcon = { Icon(NitiIcons.Lock, contentDescription = null, modifier = Modifier.size(22.dp)) },
+            trailingIcon = {
+                NitiIconButton(
+                    icon = if (showPassword) NitiIcons.EyeOff else NitiIcons.Eye,
+                    contentDescription = if (showPassword) "Hide password" else "Show password",
+                    onClick = { showPassword = !showPassword },
+                    tint = Niti.colors.onSurfaceVariant
+                )
+            },
+            singleLine = true,
+            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            shape = RoundedCornerShape(16.dp),
+            colors = nitiTextFieldColors(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { vm.onSubmit() }),
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+        )
+        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+            NitiTextButton(text = "Forgot password?", onClick = onForgotPassword)
         }
     }
+}
+
+@Composable
+private fun PhoneForm(state: LoginUiState, vm: LoginViewModel) {
+    OutlinedTextField(
+        value = state.phone,
+        onValueChange = vm::onPhoneChange,
+        label = { Text("WhatsApp number") },
+        placeholder = { Text("98765 43210") },
+        prefix = { Text("+91", style = NitiType.body.copy(fontWeight = FontWeight.Medium)) },
+        supportingText = { Text("We will send a 6-digit code to this number on WhatsApp.") },
+        singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        colors = nitiTextFieldColors(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { vm.onSubmit() }),
+        modifier = Modifier.fillMaxWidth()
+    )
 }

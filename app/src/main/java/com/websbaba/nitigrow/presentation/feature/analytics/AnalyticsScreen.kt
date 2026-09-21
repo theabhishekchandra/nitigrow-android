@@ -50,9 +50,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.text.NumberFormat
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle as DateTextStyle
 import java.util.Locale
@@ -518,7 +519,7 @@ private fun AnalyticsScreenPreview() {
                 range = DateRange.WEEK,
                 timeSeries = listOf(38, 52, 61, 44, 70, 58, 66).mapIndexed { index, sent ->
                     DailyPoint(
-                        day = java.time.LocalDate.now().minusDays((6 - index).toLong()),
+                        day = LocalDate.now().minusDays((6 - index).toLong()),
                         sent = sent,
                         delivered = (sent * 0.96f).roundToInt(),
                         read = (sent * 0.70f).roundToInt(),

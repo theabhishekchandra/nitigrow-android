@@ -7,8 +7,8 @@ import com.websbaba.nitigrow.domain.model.BillingStatus
 import com.websbaba.nitigrow.domain.model.Usage
 import com.websbaba.nitigrow.domain.model.UsageMeter
 import com.websbaba.nitigrow.domain.repository.BillingRepository
-import com.websbaba.nitigrow.ui.theme.AppTheme
-import com.websbaba.nitigrow.ui.theme.PlanTier
+import com.websbaba.nitigrow.core.ui.theme.AppTheme
+import com.websbaba.nitigrow.core.ui.theme.PlanTier
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify

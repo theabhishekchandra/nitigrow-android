@@ -1,13 +1,12 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -15,26 +14,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.AttachFile
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.websbaba.nitigrow.ui.theme.Theme
+import androidx.compose.ui.unit.sp
+import com.websbaba.nitigrow.presentation.components.NitiIconButton
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiIcons
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 
 /**
- * Chat composer — paper surface with a top hairline, attachment button,
- * pill text field and a 42dp brand circular send button.
+ * Chat composer — a tonal pill holding the text field and attach button, with
+ * a 52dp round send button beside it. Send is muted until there is text.
  */
 @Composable
 fun MessageInput(
@@ -44,78 +41,71 @@ fun MessageInput(
     onAttachClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = Niti.colors
     val canSend = text.isNotBlank()
-    val pillShape = RoundedCornerShape(999.dp)
+    val textStyle = NitiType.body.copy(fontSize = 16.sp, color = colors.onSurface)
 
-    Column(modifier = modifier.fillMaxWidth().background(Theme.colors.paper).navigationBarsPadding().imePadding()) {
-        HorizontalDivider(thickness = 1.dp, color = Theme.colors.border)
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .background(colors.surface)
+            .navigationBarsPadding()
+            .imePadding()
+            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 16.dp)
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp)
+                .weight(1f)
+                .heightIn(min = 52.dp)
+                .clip(RoundedCornerShape(26.dp))
+                .background(colors.surfaceContainer)
+                .padding(start = 18.dp, end = 4.dp)
         ) {
-            IconButton(onClick = onAttachClick, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    Icons.Filled.AttachFile,
-                    contentDescription = "Attach",
-                    tint = Theme.colors.muted,
-                    modifier = Modifier.size(21.dp)
-                )
-            }
             BasicTextField(
                 value = text,
                 onValueChange = onTextChange,
                 maxLines = 5,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Theme.colors.ink),
-                cursorBrush = SolidColor(Theme.colors.brand),
-                decorationBox = { innerTextField ->
+                textStyle = textStyle,
+                cursorBrush = SolidColor(colors.primary),
+                decorationBox = { inner ->
                     Box(contentAlignment = Alignment.CenterStart) {
                         if (text.isEmpty()) {
                             Text(
                                 text = "Message",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Theme.colors.muted2,
+                                style = textStyle,
+                                color = colors.outline,
                                 maxLines = 1
                             )
                         }
-                        innerTextField()
+                        inner()
                     }
                 },
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(pillShape)
-                    .background(Theme.colors.card)
-                    .border(1.dp, Theme.colors.border, pillShape)
-                    .padding(horizontal = 16.dp, vertical = 11.dp)
+                modifier = Modifier.weight(1f).padding(vertical = 14.dp)
             )
-            val sendShadow = if (canSend) {
-                Modifier.shadow(
-                    elevation = 6.dp,
-                    shape = CircleShape,
-                    ambientColor = Theme.colors.brand,
-                    spotColor = Theme.colors.brand
-                )
-            } else {
-                Modifier
-            }
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .then(sendShadow)
-                    .clip(CircleShape)
-                    .background(if (canSend) Theme.colors.brand else Theme.colors.paper2)
-                    .clickable(enabled = canSend, onClick = onSend),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Send",
-                    tint = if (canSend) Theme.colors.paper else Theme.colors.muted2,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
+            NitiIconButton(
+                icon = NitiIcons.Attach,
+                contentDescription = "Attach file",
+                onClick = onAttachClick,
+                tint = colors.onSurfaceVariant
+            )
+        }
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(52.dp)
+                .clip(CircleShape)
+                .background(if (canSend) colors.primary else colors.surfaceHigh)
+                .clickable(enabled = canSend, role = Role.Button, onClick = onSend)
+        ) {
+            Icon(
+                imageVector = NitiIcons.Send,
+                contentDescription = "Send message",
+                tint = if (canSend) colors.onPrimary else colors.outline,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }

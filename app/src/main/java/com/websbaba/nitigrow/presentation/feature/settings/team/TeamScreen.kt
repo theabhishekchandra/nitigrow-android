@@ -55,7 +55,7 @@ import com.websbaba.nitigrow.presentation.feature.settings.components.PrimaryCta
 import com.websbaba.nitigrow.presentation.feature.settings.components.StatusPill
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
 import kotlinx.coroutines.flow.collectLatest
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TeamScreen — Settings ▸ Team.

@@ -8,7 +8,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -24,8 +23,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.websbaba.nitigrow.ui.theme.BubbleInShape
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.BubbleInShape
+import com.websbaba.nitigrow.core.ui.theme.Niti
 
 private val DotSize = 7.dp
 private const val BLINK_MILLIS = 600
@@ -40,13 +39,12 @@ fun TypingIndicator(name: String, modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "typing")
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
         modifier = modifier
-            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .padding(horizontal = 8.dp, vertical = 5.dp)
             .clip(BubbleInShape)
-            .background(Theme.colors.bubbleIn)
-            .border(1.dp, Theme.colors.bubbleInBorder, BubbleInShape)
-            .padding(horizontal = 14.dp, vertical = 12.dp)
+            .background(Niti.colors.bubbleIn)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
             .semantics { contentDescription = "$name is typing" }
     ) {
         repeat(3) { index ->
@@ -65,7 +63,7 @@ fun TypingIndicator(name: String, modifier: Modifier = Modifier) {
                     .size(DotSize)
                     .alpha(dotAlpha)
                     .clip(CircleShape)
-                    .background(Theme.colors.muted)
+                    .background(Niti.colors.outline)
             )
         }
     }

@@ -1,11 +1,11 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -35,17 +34,16 @@ import coil.compose.AsyncImage
 import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
-import com.websbaba.nitigrow.ui.theme.BubbleInShape
-import com.websbaba.nitigrow.ui.theme.BubbleOutShape
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.BubbleInShape
+import com.websbaba.nitigrow.core.ui.theme.BubbleOutShape
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 private val BubbleMaxWidth = 280.dp
-private val ThumbHeight = 200.dp
-private val InnerPadding = 4.dp
+private val ThumbHeight = 150.dp
+private val InnerPadding = 6.dp
 private val CaptionPadding = 8.dp
 private val MetaSpacing = 4.dp
 private val PlayBadgeSize = 56.dp
@@ -61,8 +59,9 @@ fun VideoMessageBubble(
     modifier: Modifier = Modifier,
 ) {
     val shape = if (isOutbound) BubbleOutShape else BubbleInShape
-    val bg = if (isOutbound) Theme.colors.bubbleOut else Theme.colors.bubbleIn
-    val ink = if (isOutbound) Theme.colors.bubbleOutInk else Theme.colors.bubbleInInk
+    val bubble = bubbleColors(isOutbound)
+    val bg = bubble.container
+    val ink = bubble.content
     val metaColor = bubbleMetaColor(isOutbound = isOutbound)
     val align = if (isOutbound) Alignment.End else Alignment.Start
 
@@ -73,7 +72,7 @@ fun VideoMessageBubble(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         horizontalAlignment = align,
     ) {
         Column(
@@ -81,7 +80,6 @@ fun VideoMessageBubble(
                 .widthIn(max = BubbleMaxWidth)
                 .clip(shape)
                 .background(bg)
-                .border(1.dp, if (isOutbound) bg else Theme.colors.bubbleInBorder, shape)
                 .padding(InnerPadding),
         ) {
             Box(
@@ -145,7 +143,7 @@ fun VideoMessageBubble(
                 Spacer(Modifier.height(MetaSpacing))
                 Text(
                     text = message.text,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = NitiType.body,
                     color = ink,
                     modifier = Modifier.padding(horizontal = CaptionPadding),
                 )

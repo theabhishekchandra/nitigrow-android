@@ -15,6 +15,7 @@ import com.websbaba.nitigrow.presentation.feature.analytics.AnalyticsScreen
 import com.websbaba.nitigrow.presentation.feature.auth.login.LoginScreen
 import com.websbaba.nitigrow.presentation.feature.auth.otp.OtpScreen
 import com.websbaba.nitigrow.presentation.feature.billing.BillingScreen
+import com.websbaba.nitigrow.presentation.feature.auth.forgot.ForgotPasswordScreen
 import com.websbaba.nitigrow.presentation.feature.campaigns.create.CreateCampaignScreen
 import com.websbaba.nitigrow.presentation.feature.campaigns.detail.CampaignDetailScreen
 import com.websbaba.nitigrow.presentation.feature.conflicts.ConflictsScreen
@@ -94,12 +95,26 @@ fun NitiGrowNavGraph(
             FlowsScreen(onBack = { navController.popBackStack() })
         }
         composable(NavRoutes.LEADS) {
-            LeadsScreen(onBack = { navController.popBackStack() })
+            LeadsScreen(
+                onBack = { navController.popBackStack() },
+                onLeadClick = { leadId -> navController.navigate(leadDetailRoute(leadId)) },
+                // The list and the board are two views of one feature: swap, don't stack.
+                onOpenBoard = {
+                    navController.navigate(NavRoutes.LEADS_KANBAN) {
+                        popUpTo(NavRoutes.LEADS) { inclusive = true }
+                    }
+                }
+            )
         }
         composable(NavRoutes.LEADS_KANBAN) {
             LeadsKanbanScreen(
                 onLeadClick = { leadId -> navController.navigate(leadDetailRoute(leadId)) },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onOpenList = {
+                    navController.navigate(NavRoutes.LEADS) {
+                        popUpTo(NavRoutes.LEADS_KANBAN) { inclusive = true }
+                    }
+                }
             )
         }
         composable(
@@ -188,7 +203,14 @@ private fun NavGraphBuilder.authGraph(nav: NavHostController) {
                         popUpTo(NavRoutes.GRAPH_AUTH) { inclusive = true }
                     }
                 },
-                onOtpRequested = { phone -> nav.navigate(NavRoutes.otp(phone)) }
+                onOtpRequested = { phone -> nav.navigate(NavRoutes.otp(phone)) },
+                onForgotPassword = { nav.navigate(NavRoutes.FORGOT_PASSWORD) }
+            )
+        }
+        composable(NavRoutes.FORGOT_PASSWORD) {
+            ForgotPasswordScreen(
+                onBack = { nav.popBackStack() },
+                onComplete = { nav.popBackStack(NavRoutes.LOGIN, inclusive = false) }
             )
         }
         composable(

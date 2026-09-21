@@ -27,10 +27,14 @@ data class CreateCampaignUiState(
 ) {
     val selectedTemplate: Template? get() = templates.firstOrNull { it.id == selectedTemplateId }
 
-    val canNext: Boolean get() = when (step) {
-        WizardStep.AUDIENCE -> selectedTags.isNotEmpty() && (audienceEstimate ?: 0) > 0
-        WizardStep.TEMPLATE -> name.isNotBlank() && selectedTemplateId != null
-        WizardStep.SCHEDULE -> sendNow || scheduledAt != null
+    val canNext: Boolean get() = canProceed(Instant.now())
+
+    /** Whether the current step is complete. A schedule must still be in the future. */
+    fun canProceed(now: Instant): Boolean = when (step) {
+        WizardStep.AUDIENCE ->
+            name.isNotBlank() && selectedTags.isNotEmpty() && (audienceEstimate ?: 0) > 0
+        WizardStep.TEMPLATE -> selectedTemplateId != null
+        WizardStep.SCHEDULE -> sendNow || (scheduledAt != null && scheduledAt.isAfter(now))
         WizardStep.REVIEW -> true
     }
 }

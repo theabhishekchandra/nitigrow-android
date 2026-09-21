@@ -1,39 +1,27 @@
 package com.websbaba.nitigrow.presentation.feature.auth.forgot
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,29 +30,37 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.websbaba.nitigrow.presentation.components.ErrorBanner
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.presentation.components.NitiIconButton
+import com.websbaba.nitigrow.presentation.components.NitiPrimaryButton
+import com.websbaba.nitigrow.presentation.components.NitiTextButton
+import com.websbaba.nitigrow.presentation.components.NitiTonalButton
+import com.websbaba.nitigrow.presentation.components.nitiTextFieldColors
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.NitiIcons
+import com.websbaba.nitigrow.core.ui.theme.NitiStatusBar
+import com.websbaba.nitigrow.core.ui.theme.NitiTone
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ForgotPasswordScreen — 2-step email-link reset flow.
 //
-//   STEP 1: ENTER_EMAIL
-//     "Enter your account email — we'll send you a reset link."
-//     [OutlinedTextField] → [Send reset link]
-//
-//   STEP 2: LINK_SENT
-//     ✓  "Check your email" — a reset link was sent to {email}; open it within
-//        30 minutes to set a new password.   [Back to login]   Resend email
+//   STEP 1: ENTER_EMAIL  key tile · "Forgot your password?" · email field · [Send reset link]
+//   STEP 2: LINK_SENT    mail tile · "Check your email" · [Resend email] · Back to login
 //
 // The password change itself happens on the web page the emailed link opens, so
 // the app never handles the reset token. Mirrors POST /auth/forgot-password.
@@ -72,7 +68,6 @@ import kotlinx.coroutines.launch
 // Spec: docs/phase-3-mobile.md §1.2 "Forgot password screen"
 // ─────────────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordScreen(
     onBack: () -> Unit,
@@ -92,7 +87,7 @@ fun ForgotPasswordScreen(
         }
     }
 
-    ForgotPasswordScaffold(
+    ForgotPasswordContent(
         state = state,
         snackbar = snackbar,
         onBack = onBack,
@@ -102,9 +97,8 @@ fun ForgotPasswordScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ForgotPasswordScaffold(
+private fun ForgotPasswordContent(
     state: ForgotPasswordUiState,
     snackbar: SnackbarHostState,
     onBack: () -> Unit,
@@ -112,226 +106,155 @@ private fun ForgotPasswordScaffold(
     onPrimaryAction: () -> Unit,
     onResend: () -> Unit,
 ) {
-    val colors = Theme.colors
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Reset password", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.paper,
-                    titleContentColor = colors.ink,
-                    navigationIconContentColor = colors.ink,
-                )
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbar) },
-        containerColor = colors.paper,
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-        ) {
-            AnimatedContent(
-                targetState = state.step,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "forgot-step",
-            ) { step ->
-                when (step) {
-                    ForgotStep.ENTER_EMAIL -> EnterEmailStep(
-                        state = state,
-                        onEmailChange = onEmailChange,
-                        onPrimaryAction = onPrimaryAction,
-                    )
-                    ForgotStep.LINK_SENT -> LinkSentStep(
-                        state = state,
-                        onPrimaryAction = onPrimaryAction,
-                        onResend = onResend,
-                    )
-                }
+    val colors = Niti.colors
+    NitiStatusBar(color = colors.surface, darkIcons = colors.isLight)
+
+    Box(modifier = Modifier.fillMaxSize().background(colors.surface).statusBarsPadding().navigationBarsPadding().imePadding()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 8.dp, bottom = 8.dp)) {
+                NitiIconButton(icon = NitiIcons.Back, contentDescription = "Back", onClick = onBack)
+            }
+            when (state.step) {
+                ForgotStep.ENTER_EMAIL -> EnterEmailStep(state, onEmailChange, onPrimaryAction)
+                ForgotStep.LINK_SENT -> LinkSentStep(state, onPrimaryAction, onResend)
             }
         }
+        SnackbarHost(snackbar, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp))
     }
 }
 
-// ── Step 1 — email ──────────────────────────────────────────────────────────
-
+/** Shared frame: a tinted icon tile, a large title and a supporting line. */
 @Composable
-private fun EnterEmailStep(
-    state: ForgotPasswordUiState,
-    onEmailChange: (String) -> Unit,
-    onPrimaryAction: () -> Unit,
-) {
-    val colors = Theme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            "Forgot your password?",
-            style = MaterialTheme.typography.headlineSmall,
-            color = colors.ink,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            "Enter your account email — we'll send you a link to reset your password.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.ink3,
-        )
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = state.email,
-            onValueChange = onEmailChange,
-            label = { Text("Email") },
-            placeholder = { Text("you@example.com") },
-            singleLine = true,
-            isError = state.error != null,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        state.error?.let { ErrorBanner(message = it) }
-        Spacer(Modifier.height(8.dp))
-        PrimaryAction(
-            text = "Send reset link",
-            loading = state.isSubmitting,
-            enabled = state.email.isNotBlank(),
-            onClick = onPrimaryAction,
-        )
-    }
-}
-
-// ── Step 2 — link sent ────────────────────────────────────────────────────────
-
-@Composable
-private fun LinkSentStep(
-    state: ForgotPasswordUiState,
-    onPrimaryAction: () -> Unit,
-    onResend: () -> Unit,
-) {
-    val colors = Theme.colors
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Spacer(Modifier.height(24.dp))
+private fun StepHeader(icon: ImageVector, tone: NitiTone, title: String, body: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(28.dp)) {
         Box(
-            modifier = Modifier
-                .size(72.dp)
-                .clip(CircleShape)
-                .background(colors.success.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
+            modifier = Modifier.size(64.dp).background(tone.container, RoundedCornerShape(22.dp))
         ) {
-            Icon(
-                Icons.Filled.Check,
-                contentDescription = null,
-                tint = colors.success,
-                modifier = Modifier.size(40.dp),
-            )
+            Icon(icon, contentDescription = null, tint = tone.onContainer, modifier = Modifier.size(30.dp))
         }
-        Text(
-            "Check your email",
-            style = MaterialTheme.typography.headlineSmall,
-            color = colors.ink,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            "If an account exists for ${state.email.trim()}, we've sent a password " +
-                "reset link. Open it within 30 minutes to set a new password — " +
-                "remember to check your spam folder.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.ink3,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(8.dp))
-        PrimaryAction(
-            text = "Back to login",
-            loading = false,
-            enabled = true,
-            onClick = onPrimaryAction,
-        )
-        TextButton(
-            onClick = onResend,
-            enabled = !state.isSubmitting,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-        ) {
-            Text("Resend email")
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = title,
+                style = NitiType.display.copy(fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.9).sp),
+                color = Niti.colors.onSurface
+            )
+            body()
         }
     }
 }
-
-// ── Shared primary action button ────────────────────────────────────────────
 
 @Composable
-private fun PrimaryAction(
-    text: String,
-    loading: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    val colors = Theme.colors
-    FilledTonalButton(
-        onClick = onClick,
-        enabled = enabled && !loading,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        if (loading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp,
-                color = colors.brand,
+private fun EnterEmailStep(state: ForgotPasswordUiState, onEmailChange: (String) -> Unit, onSubmit: () -> Unit) {
+    val colors = Niti.colors
+    Column(modifier = Modifier.fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp)) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(28.dp),
+            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
+        ) {
+            StepHeader(NitiIcons.Key, colors.primaryTone, "Forgot your password?") {
+                Text(
+                    text = "Enter your account email — we'll send you a reset link.",
+                    style = NitiType.body.copy(fontSize = 16.sp, lineHeight = 24.sp),
+                    color = colors.onSurfaceVariant
+                )
+            }
+            OutlinedTextField(
+                value = state.email,
+                onValueChange = onEmailChange,
+                label = { Text("Email") },
+                placeholder = { Text("you@example.com") },
+                leadingIcon = { Icon(NitiIcons.Mail, contentDescription = null, modifier = Modifier.size(22.dp)) },
+                singleLine = true,
+                isError = state.error != null,
+                shape = RoundedCornerShape(16.dp),
+                colors = nitiTextFieldColors(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+                modifier = Modifier.fillMaxWidth()
             )
-        } else {
-            Text(
-                text,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
-            )
+            state.error?.let {
+                Text(
+                    text = it,
+                    style = NitiType.label,
+                    color = colors.error,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(colors.error.copy(alpha = 0.12f))
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                )
+            }
+        }
+        NitiPrimaryButton(
+            text = "Send reset link",
+            onClick = onSubmit,
+            enabled = state.email.isNotBlank(),
+            loading = state.isSubmitting,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun LinkSentStep(state: ForgotPasswordUiState, onBackToLogin: () -> Unit, onResend: () -> Unit) {
+    val colors = Niti.colors
+    Column(modifier = Modifier.fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp)) {
+        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            StepHeader(NitiIcons.Mail, colors.secondaryTone, "Check your email") {
+                Text(
+                    text = buildAnnotatedString {
+                        append("We sent a reset link to ")
+                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = colors.onSurface)) { append(state.email.trim()) }
+                        append(". It expires in 30 minutes.")
+                    },
+                    style = NitiType.body.copy(fontSize = 16.sp, lineHeight = 24.sp),
+                    color = colors.onSurfaceVariant
+                )
+            }
+            state.error?.let {
+                Text(
+                    text = it,
+                    style = NitiType.label,
+                    color = colors.error,
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(colors.error.copy(alpha = 0.12f))
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                )
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            NitiTonalButton(text = "Resend email", onClick = onResend, loading = state.isSubmitting, modifier = Modifier.fillMaxWidth())
+            NitiTextButton(text = "Back to login", onClick = onBackToLogin, modifier = Modifier.fillMaxWidth())
         }
     }
 }
 
-// ── Previews ────────────────────────────────────────────────────────────────
+// ── Previews ─────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, name = "Forgot — Enter email")
+@Preview(name = "Forgot — enter email", showBackground = true, widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewForgotEnterEmail() {
-    NitiGrowTheme {
-        ForgotPasswordScaffold(
-            state = ForgotPasswordUiState(email = "owner@websbaba.in"),
-            snackbar = remember { SnackbarHostState() },
-            onBack = {},
-            onEmailChange = {},
-            onPrimaryAction = {},
-            onResend = {},
+    NitiGrowTheme(darkTheme = false) {
+        ForgotPasswordContent(
+            state = ForgotPasswordUiState(email = "anita@sharmasweets.in"),
+            snackbar = SnackbarHostState(),
+            onBack = {}, onEmailChange = {}, onPrimaryAction = {}, onResend = {}
         )
     }
 }
 
-@Preview(showBackground = true, name = "Forgot — Link sent")
+@Preview(name = "Forgot — link sent", showBackground = true, widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewForgotLinkSent() {
-    NitiGrowTheme {
-        ForgotPasswordScaffold(
-            state = ForgotPasswordUiState(
-                step = ForgotStep.LINK_SENT,
-                email = "owner@websbaba.in",
-            ),
-            snackbar = remember { SnackbarHostState() },
-            onBack = {},
-            onEmailChange = {},
-            onPrimaryAction = {},
-            onResend = {},
+    NitiGrowTheme(darkTheme = false) {
+        ForgotPasswordContent(
+            state = ForgotPasswordUiState(email = "anita@sharmasweets.in", step = ForgotStep.LINK_SENT),
+            snackbar = SnackbarHostState(),
+            onBack = {}, onEmailChange = {}, onPrimaryAction = {}, onResend = {}
         )
     }
 }

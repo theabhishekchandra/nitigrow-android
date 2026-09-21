@@ -30,8 +30,8 @@ import com.websbaba.nitigrow.presentation.feature.templates.Template
 import com.websbaba.nitigrow.presentation.feature.templates.TemplateCategory
 import com.websbaba.nitigrow.presentation.feature.templates.TemplateLanguage
 import com.websbaba.nitigrow.presentation.feature.templates.TemplateStatus
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 
 // ─────────────────────────────────────────────────────────────────────────────

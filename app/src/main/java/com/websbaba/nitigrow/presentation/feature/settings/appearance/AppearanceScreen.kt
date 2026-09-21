@@ -40,14 +40,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.presentation.feature.settings.components.PillShape
 import com.websbaba.nitigrow.presentation.feature.settings.components.StatusPill
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
-import com.websbaba.nitigrow.ui.theme.AppTheme
-import com.websbaba.nitigrow.ui.theme.BrandForwardColors
-import com.websbaba.nitigrow.ui.theme.EspressoPremiumColors
-import com.websbaba.nitigrow.ui.theme.NitiGrowColors
-import com.websbaba.nitigrow.ui.theme.NitiGrowLightColors
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.PlanTier
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.AppTheme
+import com.websbaba.nitigrow.core.ui.theme.BrandForwardColors
+import com.websbaba.nitigrow.core.ui.theme.EspressoPremiumColors
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowColors
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowLightColors
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.PlanTier
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 
 // ─────────────────────────────────────────────────────────────────────────────

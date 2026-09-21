@@ -4,15 +4,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -29,17 +33,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.websbaba.nitigrow.core.realtime.RealtimeClient
+import com.websbaba.nitigrow.domain.usecase.inbox.ObserveConversationsUseCase
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import com.websbaba.nitigrow.presentation.RealtimeLifecycle
 import com.websbaba.nitigrow.presentation.components.NotificationPermissionEffect
 import com.websbaba.nitigrow.presentation.components.OfflineBanner
@@ -49,14 +63,21 @@ import com.websbaba.nitigrow.presentation.feature.contacts.list.ContactsScreen
 import com.websbaba.nitigrow.presentation.feature.dashboard.DashboardScreen
 import com.websbaba.nitigrow.presentation.feature.inbox.list.InboxScreen
 import com.websbaba.nitigrow.presentation.feature.settings.SettingsHubScreen
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class MainScaffoldViewModel @Inject constructor(
-    val realtime: RealtimeClient
-) : ViewModel()
+    val realtime: RealtimeClient,
+    observeConversations: ObserveConversationsUseCase
+) : ViewModel() {
+    /** Conversations with unread customer messages — badge on the Inbox tab. */
+    val unreadConversations: StateFlow<Int> = observeConversations("")
+        .map { list -> list.count { it.unreadCount > 0 } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+}
 
 @Composable
 fun MainScaffold(
@@ -71,11 +92,15 @@ fun MainScaffold(
     val backEntry by tabNav.currentBackStackEntryAsState()
     val currentTab = MainTab.fromRoute(backEntry?.destination?.route) ?: MainTab.DASHBOARD
 
+    val unreadConversations by vm.unreadConversations.collectAsStateWithLifecycle()
+
     val isCompact = widthSizeClass == WindowWidthSizeClass.Compact
 
     if (isCompact) {
         Scaffold(
-            bottomBar = { BottomNav(currentTab) { tab -> tabNav.navigateToTab(tab) } }
+            bottomBar = {
+                BottomNav(currentTab, unreadConversations) { tab -> tabNav.navigateToTab(tab) }
+            }
         ) { padding ->
             Column(modifier = Modifier.fillMaxSize().padding(padding)) {
                 OfflineBanner()
@@ -84,7 +109,7 @@ fun MainScaffold(
         }
     } else {
         Row(modifier = Modifier.fillMaxSize()) {
-            SideRail(currentTab) { tab -> tabNav.navigateToTab(tab) }
+            SideRail(currentTab, unreadConversations) { tab -> tabNav.navigateToTab(tab) }
             Column(modifier = Modifier.fillMaxSize()) {
                 OfflineBanner()
                 Box(modifier = Modifier.fillMaxSize()) { TabHost(tabNav, rootNav) }
@@ -94,24 +119,25 @@ fun MainScaffold(
 }
 
 @Composable
-private fun BottomNav(current: MainTab, onSelect: (MainTab) -> Unit) {
+private fun BottomNav(current: MainTab, unread: Int, onSelect: (MainTab) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Theme.colors.card)
+            .background(Niti.colors.navigationBar)
     ) {
-        HorizontalDivider(thickness = 1.dp, color = Theme.colors.border)
+        HorizontalDivider(thickness = 1.dp, color = Niti.colors.outlineVariant)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(NavigationBarDefaults.windowInsets)
-                .padding(start = 4.dp, top = 6.dp, end = 4.dp, bottom = 8.dp)
+                .padding(start = 4.dp, top = 12.dp, end = 4.dp, bottom = 16.dp)
                 .selectableGroup()
         ) {
             MainTab.entries.forEach { tab ->
                 PillTabItem(
                     tab = tab,
                     selected = current == tab,
+                    badgeCount = if (tab == MainTab.INBOX) unread else 0,
                     onClick = { onSelect(tab) },
                     modifier = Modifier.weight(1f)
                 )
@@ -121,12 +147,12 @@ private fun BottomNav(current: MainTab, onSelect: (MainTab) -> Unit) {
 }
 
 @Composable
-private fun SideRail(current: MainTab, onSelect: (MainTab) -> Unit) {
+private fun SideRail(current: MainTab, unread: Int, onSelect: (MainTab) -> Unit) {
     Row(modifier = Modifier.fillMaxHeight()) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .background(Theme.colors.card)
+                .background(Niti.colors.navigationBar)
                 .windowInsetsPadding(NavigationRailDefaults.windowInsets)
                 .width(80.dp)
                 .padding(horizontal = 4.dp, vertical = 12.dp)
@@ -137,55 +163,77 @@ private fun SideRail(current: MainTab, onSelect: (MainTab) -> Unit) {
                 PillTabItem(
                     tab = tab,
                     selected = current == tab,
+                    badgeCount = if (tab == MainTab.INBOX) unread else 0,
                     onClick = { onSelect(tab) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
-        VerticalDivider(thickness = 1.dp, color = Theme.colors.border)
+        VerticalDivider(thickness = 1.dp, color = Niti.colors.outlineVariant)
     }
 }
 
-// One tab of the M3-pill nav: 52×28dp pill (brandSoft when active) holding a
-// 20dp icon, with a 10.5sp label below. Shared by the bottom bar and the
-// tablet side rail so both get identical active/inactive treatment.
+// One tab of the M3 navigation bar: a 64×32dp indicator pill (primary container
+// when active) holding a 24dp icon, with a 12sp label below. Shared by the
+// bottom bar and the tablet side rail so both get identical treatment.
 @Composable
 private fun PillTabItem(
     tab: MainTab,
     selected: Boolean,
+    badgeCount: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val tint = if (selected) Theme.colors.brand else Theme.colors.muted
+    val colors = Niti.colors
+    val iconTint = if (selected) colors.primaryTone.onContainer else colors.onSurfaceVariant
+    val labelTint = if (selected) colors.onSurface else colors.onSurfaceVariant
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
+            .heightIn(min = 48.dp)
+            .clip(RoundedCornerShape(16.dp))
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
-            .padding(vertical = 4.dp),
+            .semantics {
+                if (badgeCount > 0) stateDescription = "$badgeCount unread"
+            },
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(width = 52.dp, height = 28.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (selected) Theme.colors.brandSoft else Color.Transparent),
+                .size(width = 64.dp, height = 32.dp)
+                .background(
+                    if (selected) colors.primaryTone.container else Color.Transparent,
+                    RoundedCornerShape(16.dp)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = tab.icon,
-                contentDescription = tab.label,
-                tint = tint,
-                modifier = Modifier.size(20.dp)
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(24.dp)
             )
+            if (badgeCount > 0) {
+                Text(
+                    text = if (badgeCount > 99) "99+" else badgeCount.toString(),
+                    color = colors.onBadge,
+                    style = NitiType.caption.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = (-8).dp, y = (-2).dp)
+                        .defaultMinSize(minWidth = 18.dp, minHeight = 18.dp)
+                        .background(colors.badge, CircleShape)
+                        .padding(horizontal = 5.dp)
+                )
+            }
         }
         Text(
             text = tab.label,
-            color = tint,
-            fontSize = 10.5.sp,
-            lineHeight = 13.sp,
-            fontWeight = if (selected) FontWeight.W700 else FontWeight.W500,
-            letterSpacing = 0.2.sp,
+            color = labelTint,
+            style = NitiType.caption.copy(
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+            ),
             maxLines = 1
         )
     }

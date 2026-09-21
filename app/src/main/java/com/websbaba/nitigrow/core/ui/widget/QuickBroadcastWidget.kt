@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.widget
+package com.websbaba.nitigrow.core.ui.widget
 
 import android.content.Context
 import android.content.Intent

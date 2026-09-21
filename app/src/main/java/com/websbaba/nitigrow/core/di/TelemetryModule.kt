@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.di
+package com.websbaba.nitigrow.core.di
 
 import com.websbaba.nitigrow.core.telemetry.FirebaseTelemetry
 import com.websbaba.nitigrow.core.telemetry.Telemetry

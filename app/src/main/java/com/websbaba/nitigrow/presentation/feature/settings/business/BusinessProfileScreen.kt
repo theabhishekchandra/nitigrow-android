@@ -42,8 +42,8 @@ import com.websbaba.nitigrow.presentation.feature.settings.components.FieldLabel
 import com.websbaba.nitigrow.presentation.feature.settings.components.NgTextField
 import com.websbaba.nitigrow.presentation.feature.settings.components.PrimaryCta
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 
 // ─────────────────────────────────────────────────────────────────────────────

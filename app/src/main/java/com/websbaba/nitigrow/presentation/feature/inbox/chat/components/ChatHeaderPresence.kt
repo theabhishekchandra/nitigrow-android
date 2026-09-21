@@ -1,26 +1,18 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -54,9 +46,9 @@ fun ChatHeaderPresence(
     modifier: Modifier = Modifier,
     fallback: String = ""
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val locale = LocalConfiguration.current.locales.get(0) ?: Locale.getDefault()
-    val subtextStyle = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp)
+    val subtextStyle = NitiType.label.copy(fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.Normal)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -64,12 +56,10 @@ fun ChatHeaderPresence(
     ) {
         when {
             typing -> {
-                TypingDot(color = colors.brand)
-                Spacer(Modifier.size(6.dp))
                 Text(
-                    text = "Typing…",
+                    text = "typing…",
                     style = subtextStyle,
-                    color = colors.brand,
+                    color = colors.primary,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -77,7 +67,7 @@ fun ChatHeaderPresence(
                 Text(
                     text = formatLastSeen(lastSeen, locale),
                     style = subtextStyle,
-                    color = colors.muted,
+                    color = colors.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -90,23 +80,13 @@ fun ChatHeaderPresence(
                 Text(
                     text = fallback,
                     style = subtextStyle,
-                    color = colors.muted,
+                    color = colors.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
         }
     }
-}
-
-@Composable
-private fun TypingDot(color: Color) {
-    Box(
-        modifier = Modifier
-            .size(6.dp)
-            .clip(CircleShape)
-            .background(color)
-    )
 }
 
 private const val ONLINE_THRESHOLD_MINUTES = 2L

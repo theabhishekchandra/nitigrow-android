@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.ui.theme
+package com.websbaba.nitigrow.core.ui.theme
 
 /**
  * The three visual themes from the design explorations, gated by plan tier:

@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.websbaba.nitigrow.domain.model.MessageStatus
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 
 /**
  * Outbound delivery ticks: ✓ sent, ✓✓ delivered (muted), ✓✓ read (info blue).

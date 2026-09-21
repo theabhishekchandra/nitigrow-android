@@ -51,7 +51,7 @@ import com.websbaba.nitigrow.presentation.components.ErrorBanner
 import com.websbaba.nitigrow.presentation.feature.inbox.list.components.Avatar
 import com.websbaba.nitigrow.presentation.feature.settings.components.NgToggle
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale

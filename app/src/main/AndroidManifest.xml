@@ -92,7 +92,7 @@
 
         <!-- Home-screen widgets (Glance). -->
         <receiver
-            android:name=".widget.QuickBroadcastReceiver"
+            android:name=".core.ui.widget.QuickBroadcastReceiver"
             android:exported="true"
             android:label="@string/widget_quick_broadcast_title">
             <intent-filter>
@@ -103,7 +103,7 @@
                 android:resource="@xml/quick_broadcast_widget_info" />
         </receiver>
         <receiver
-            android:name=".widget.FestivalSendReceiver"
+            android:name=".core.ui.widget.FestivalSendReceiver"
             android:exported="true"
             android:label="@string/widget_festival_send_title">
             <intent-filter>

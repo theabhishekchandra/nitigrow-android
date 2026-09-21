@@ -2,36 +2,32 @@ package com.websbaba.nitigrow.presentation.feature.auth.otp
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.border
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,10 +38,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -60,8 +58,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.core.biometric.BiometricAuthenticator
 import com.websbaba.nitigrow.core.biometric.BiometricResult
-import com.websbaba.nitigrow.presentation.components.ErrorBanner
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.presentation.components.NitiIconButton
+import com.websbaba.nitigrow.presentation.components.NitiPrimaryButton
+import com.websbaba.nitigrow.presentation.components.NitiTextButton
+import com.websbaba.nitigrow.core.ui.theme.Bricolage
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiIcons
+import com.websbaba.nitigrow.core.ui.theme.NitiStatusBar
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -77,6 +81,8 @@ fun OtpScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var biometricOptIn by remember { mutableStateOf(false) }
+    val colors = Niti.colors
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     LaunchedEffect(Unit) {
         viewModel.effects.collectLatest { effect ->
@@ -96,136 +102,136 @@ fun OtpScreen(
         }
     }
 
-    val colors = Theme.colors
-    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    NitiStatusBar(color = colors.surface, darkIcons = colors.isLight)
 
-    Scaffold(
-        containerColor = colors.paper,
-        snackbarHost = { SnackbarHost(snackbar) }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp, vertical = 18.dp)
-        ) {
-            IconButton(
-                onClick = { backDispatcher?.onBackPressed() },
-                modifier = Modifier.offset(x = (-12).dp)
+    Box(modifier = Modifier.fillMaxSize().background(colors.surface).statusBarsPadding().navigationBarsPadding().imePadding()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 8.dp, bottom = 8.dp)) {
+                NitiIconButton(icon = NitiIcons.Back, contentDescription = "Back", onClick = { backDispatcher?.onBackPressed() })
+            }
+            Column(
+                verticalArrangement = Arrangement.spacedBy(28.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp)
             ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = colors.ink
-                )
-            }
-            Spacer(Modifier.height(18.dp))
-            Text(
-                "Verify your number",
-                style = MaterialTheme.typography.displayMedium,
-                color = colors.ink
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                buildAnnotatedString {
-                    append("Enter the 6-digit code sent on WhatsApp to ")
-                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = colors.ink)) {
-                        append(formatPhone(state.phone))
-                    }
-                },
-                style = MaterialTheme.typography.bodyLarge,
-                color = colors.ink3
-            )
-
-            Spacer(Modifier.height(28.dp))
-            OtpCodeField(
-                code = state.code,
-                onCodeChange = viewModel::onCodeChange
-            )
-
-            state.error?.let {
-                Spacer(Modifier.height(12.dp))
-                ErrorBanner(message = it)
-            }
-
-            Spacer(Modifier.height(16.dp))
-            if (state.resendSeconds > 0) {
-                Text(
-                    buildAnnotatedString {
-                        append("Resend code in ")
-                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = colors.ink)) {
-                            append("0:%02d".format(state.resendSeconds))
-                        }
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.muted,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            } else {
-                TextButton(
-                    onClick = viewModel::onResend,
-                    enabled = state.canResend,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(64.dp).background(colors.primaryTone.container, RoundedCornerShape(22.dp))
                 ) {
+                    Icon(NitiIcons.Chat, contentDescription = null, tint = colors.primaryTone.onContainer, modifier = Modifier.size(30.dp))
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "Resend code",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = colors.brand
+                        text = "Verify your number",
+                        style = NitiType.display.copy(fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.9).sp),
+                        color = colors.onSurface
+                    )
+                    Text(
+                        text = buildAnnotatedString {
+                            append("Enter the 6-digit code sent on WhatsApp to ")
+                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = colors.onSurface)) {
+                                append(formatPhone(state.phone))
+                            }
+                        },
+                        style = NitiType.body.copy(fontSize = 16.sp, lineHeight = 24.sp),
+                        color = colors.onSurfaceVariant
                     )
                 }
+
+                OtpCodeField(code = state.code, onCodeChange = viewModel::onCodeChange)
+
+                state.error?.let {
+                    Text(
+                        text = it,
+                        style = NitiType.label,
+                        color = colors.error,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(colors.error.copy(alpha = 0.12f))
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    )
+                }
+
+                if (state.resendSeconds > 0) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(NitiIcons.Clock, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                        Text(
+                            text = "Resend code in ${resendLabel(state.resendSeconds)}",
+                            style = NitiType.bodyCompact.copy(fontWeight = FontWeight.Medium),
+                            color = colors.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    NitiTextButton(text = "Resend code", onClick = viewModel::onResend, enabled = state.canResend)
+                }
+
+                BiometricCard(checked = biometricOptIn, onChange = { biometricOptIn = it })
             }
 
-            Spacer(Modifier.height(12.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Checkbox(checked = biometricOptIn, onCheckedChange = { biometricOptIn = it })
-                Text(
-                    "Enable biometric unlock",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.ink3
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-            Button(
+            NitiPrimaryButton(
+                text = "Verify & continue",
                 onClick = viewModel::onSubmit,
                 enabled = state.canSubmit,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.brand,
-                    contentColor = colors.paper,
-                    disabledContainerColor = colors.brand.copy(alpha = 0.4f),
-                    disabledContentColor = colors.paper
-                ),
-                contentPadding = PaddingValues(vertical = 15.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = colors.paper
-                    )
-                } else {
-                    Text("Verify & continue", style = MaterialTheme.typography.titleMedium)
-                }
-            }
+                loading = state.isLoading,
+                modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
+            )
         }
+        SnackbarHost(snackbar, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp))
+    }
+}
+
+@Composable
+private fun BiometricCard(checked: Boolean, onChange: (Boolean) -> Unit) {
+    val colors = Niti.colors
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(colors.surfaceLow)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
+            .padding(14.dp)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(40.dp).background(colors.secondaryTone.container, CircleShape)
+        ) {
+            Icon(NitiIcons.Fingerprint, contentDescription = null, tint = colors.secondaryTone.onContainer, modifier = Modifier.size(22.dp))
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "Enable biometric unlock", style = NitiType.bodyStrong, color = colors.onSurface)
+            Text(
+                text = "Skip the code next time on this device",
+                style = NitiType.label.copy(fontWeight = FontWeight.Normal),
+                color = colors.onSurfaceVariant
+            )
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = colors.onPrimary,
+                checkedTrackColor = colors.primary,
+                checkedBorderColor = colors.primary,
+                uncheckedThumbColor = colors.outline,
+                uncheckedTrackColor = colors.surfaceHigh,
+                uncheckedBorderColor = colors.outline
+            )
+        )
     }
 }
 
 /**
- * Six 54dp digit boxes backed by a single invisible text field. The next empty
- * box gets the active treatment (2dp brand border + brandRing glow) while the
- * field is focused.
+ * Six digit boxes backed by a single invisible text field (the IME target).
+ * Filled boxes are tinted, and the next empty box gets a 2dp primary border
+ * while the field is focused.
  */
 @Composable
-private fun OtpCodeField(
-    code: String,
-    onCodeChange: (String) -> Unit
-) {
+private fun OtpCodeField(code: String, onCodeChange: (String) -> Unit) {
     var focused by remember { mutableStateOf(false) }
 
     BasicTextField(
@@ -240,25 +246,11 @@ private fun OtpCodeField(
             .semantics { contentDescription = "6-digit code" },
         decorationBox = { innerTextField ->
             Box {
-                // Keep the real field in the tree (IME target) but visually hidden.
-                Box(
-                    modifier = Modifier
-                        .size(1.dp)
-                        .alpha(0f)
-                ) { innerTextField() }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Box(Modifier.size(1.dp).alpha(0f)) { innerTextField() }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     repeat(OTP_LENGTH) { index ->
-                        val isActive = focused &&
-                            index == code.length.coerceAtMost(OTP_LENGTH - 1) &&
-                            code.length < OTP_LENGTH
-                        OtpDigitCell(
-                            digit = code.getOrNull(index),
-                            isActive = isActive,
-                            modifier = Modifier.weight(1f)
-                        )
+                        val isActive = focused && index == code.length.coerceAtMost(OTP_LENGTH - 1) && code.length < OTP_LENGTH
+                        OtpDigitCell(digit = code.getOrNull(index), isActive = isActive, modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -267,61 +259,40 @@ private fun OtpCodeField(
 }
 
 @Composable
-private fun OtpDigitCell(
-    digit: Char?,
-    isActive: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val colors = Theme.colors
-    val cellShape = RoundedCornerShape(12.dp)
-    // Outer 3dp gutter renders the brandRing glow of the active cell, mirroring
-    // the design's `box-shadow: 0 0 0 4px brandRing` without resizing the cell.
+private fun OtpDigitCell(digit: Char?, isActive: Boolean, modifier: Modifier = Modifier) {
+    val colors = Niti.colors
+    val shape = RoundedCornerShape(16.dp)
     Box(
+        contentAlignment = Alignment.Center,
         modifier = modifier
             .height(60.dp)
-            .background(
-                if (isActive) colors.brandRing else Color.Transparent,
-                RoundedCornerShape(15.dp)
-            )
-            .padding(3.dp)
+            .clip(shape)
+            .background(if (digit != null) colors.surfaceLow else Color.Transparent)
+            .border(if (isActive) 2.dp else 1.dp, if (isActive) colors.primary else colors.outline, shape)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colors.card, cellShape)
-                .border(
-                    width = if (isActive) 2.dp else 1.dp,
-                    color = if (isActive) colors.brand else colors.border,
-                    shape = cellShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            digit?.let {
-                Text(
-                    it.toString(),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = colors.ink
-                )
-            }
+        digit?.let {
+            Text(
+                text = it.toString(),
+                style = NitiType.headline.copy(fontFamily = Bricolage, fontSize = 26.sp, lineHeight = 32.sp, letterSpacing = 0.sp),
+                color = colors.onSurface
+            )
         }
     }
 }
+
+/** "0:24" — the resend countdown in minutes:seconds. */
+internal fun resendLabel(seconds: Int): String = "%d:%02d".format(seconds / 60, seconds % 60)
 
 /**
  * "9876543210" / "919876543210" → "+91 98765 43210" (+91 is fixed at login);
  * anything else falls back to "+<digits>".
  */
-private fun formatPhone(raw: String): String {
+internal fun formatPhone(raw: String): String {
     val digits = raw.filter { it.isDigit() }
     return when {
         digits.isEmpty() -> "your WhatsApp number"
-        digits.length == 10 ->
-            "+91 ${digits.substring(0, 5)} ${digits.substring(5)}"
-        digits.length == 12 && digits.startsWith("91") ->
-            "+91 ${digits.substring(2, 7)} ${digits.substring(7)}"
+        digits.length == 10 -> "+91 ${digits.substring(0, 5)} ${digits.substring(5)}"
+        digits.length == 12 && digits.startsWith("91") -> "+91 ${digits.substring(2, 7)} ${digits.substring(7)}"
         else -> "+$digits"
     }
 }

@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.widget
+package com.websbaba.nitigrow.core.ui.widget
 
 import androidx.compose.ui.graphics.Color
 import androidx.glance.unit.ColorProvider

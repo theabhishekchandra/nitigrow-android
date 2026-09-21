@@ -1,11 +1,13 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.list
 
 import com.websbaba.nitigrow.domain.model.Conversation
+import com.websbaba.nitigrow.core.util.isToday
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 
 /** Client-side quick filters shown as chips under the Inbox header. */
-enum class InboxFilter { ALL, UNREAD, EXPIRING }
+enum class InboxFilter { ALL, UNREAD, EXPIRING, PINNED }
 
 data class InboxUiState(
     val query: String = "",
@@ -26,6 +28,13 @@ data class InboxUiState(
     /** Conversations with at least one unread message (chip count). */
     val unreadCount: Int get() = items.count { it.unreadCount > 0 }
 
+    /** Conversations pinned to the top of the list. */
+    val pinnedCount: Int get() = items.count { it.isPinned }
+
+    /** Conversations whose latest message landed today (subtitle under the title). */
+    fun todayCount(today: LocalDate = LocalDate.now()): Int =
+        items.count { it.lastMessageAt.isToday(today) }
+
     /** Conversations whose 24h service window closes soon (chip count). */
     fun expiringCount(now: Instant = Instant.now()): Int =
         items.count { it.windowExpiryLabel(now) != null }
@@ -35,6 +44,7 @@ data class InboxUiState(
         InboxFilter.ALL -> items
         InboxFilter.UNREAD -> items.filter { it.unreadCount > 0 }
         InboxFilter.EXPIRING -> items.filter { it.windowExpiryLabel(now) != null }
+        InboxFilter.PINNED -> items.filter { it.isPinned }
     }
 
     companion object {

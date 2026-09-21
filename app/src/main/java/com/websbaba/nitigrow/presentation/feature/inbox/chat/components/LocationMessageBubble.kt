@@ -1,8 +1,9 @@
 package com.websbaba.nitigrow.presentation.feature.inbox.chat.components
 
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiType
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,17 +32,16 @@ import androidx.compose.ui.unit.dp
 import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
-import com.websbaba.nitigrow.ui.theme.BubbleInShape
-import com.websbaba.nitigrow.ui.theme.BubbleOutShape
-import com.websbaba.nitigrow.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.BubbleInShape
+import com.websbaba.nitigrow.core.ui.theme.BubbleOutShape
+import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 private val BubbleMaxWidth = 280.dp
-private val ThumbHeight = 140.dp
-private val InnerPadding = 4.dp
+private val ThumbHeight = 130.dp
+private val InnerPadding = 6.dp
 private val CaptionPaddingH = 10.dp
 private val CaptionPaddingV = 8.dp
 private val PinBadgeSize = 36.dp
@@ -71,8 +70,9 @@ fun LocationMessageBubble(
     modifier: Modifier = Modifier,
 ) {
     val shape = if (isOutbound) BubbleOutShape else BubbleInShape
-    val bg = if (isOutbound) Theme.colors.bubbleOut else Theme.colors.bubbleIn
-    val ink = if (isOutbound) Theme.colors.bubbleOutInk else Theme.colors.bubbleInInk
+    val bubble = bubbleColors(isOutbound)
+    val bg = bubble.container
+    val ink = bubble.content
     val metaColor = bubbleMetaColor(isOutbound = isOutbound)
     val align = if (isOutbound) Alignment.End else Alignment.Start
 
@@ -80,12 +80,12 @@ fun LocationMessageBubble(
     val caption = coords?.let { "%.4f, %.4f".format(it.first, it.second) } ?: message.text
 
     val gridColor = ink.copy(alpha = 0.18f)
-    val landColor = Theme.colors.paper3
+    val landColor = Niti.colors.secondaryTone.container
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         horizontalAlignment = align,
     ) {
         Column(
@@ -93,7 +93,6 @@ fun LocationMessageBubble(
                 .widthIn(max = BubbleMaxWidth)
                 .clip(shape)
                 .background(bg)
-                .border(1.dp, if (isOutbound) bg else Theme.colors.bubbleInBorder, shape)
                 .clickable { onOpenMaps() }
                 .padding(InnerPadding),
         ) {
@@ -132,7 +131,7 @@ fun LocationMessageBubble(
                     modifier = Modifier
                         .size(PinBadgeSize)
                         .clip(CircleShape)
-                        .background(Theme.colors.brand),
+                        .background(Niti.colors.primary),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -154,7 +153,7 @@ fun LocationMessageBubble(
             ) {
                 Text(
                     text = caption.ifBlank { "Shared location" },
-                    style = MaterialTheme.typography.labelSmall,
+                    style = NitiType.caption,
                     color = ink,
                     modifier = Modifier.weight(1f),
                 )

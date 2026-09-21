@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.di
+package com.websbaba.nitigrow.core.di
 
 import com.websbaba.nitigrow.core.util.DefaultDispatcherProvider
 import com.websbaba.nitigrow.core.util.DispatcherProvider

@@ -1,4 +1,4 @@
-package com.websbaba.nitigrow.ui.theme
+package com.websbaba.nitigrow.core.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
@@ -17,19 +17,18 @@ val NitiGrowShapes = Shapes(
     extraLarge = RoundedCornerShape(28.dp),
 )
 
-// Bubble shapes used by the inbox chat. Outbound (visitor) sits on the
-// right with a flattened bottom-right; inbound (agent) on the left with a
-// flattened bottom-left. Mirrors the app's --r-lg pattern.
+// Chat bubble shapes: 20dp corners with a 6dp tail corner — outbound flattens
+// bottom-right, inbound bottom-left.
 val BubbleOutShape = RoundedCornerShape(
-    topStart = 16.dp,
-    topEnd = 16.dp,
-    bottomEnd = 4.dp,
-    bottomStart = 16.dp,
+    topStart = 20.dp,
+    topEnd = 20.dp,
+    bottomEnd = 6.dp,
+    bottomStart = 20.dp,
 )
 
 val BubbleInShape = RoundedCornerShape(
-    topStart = 16.dp,
-    topEnd = 16.dp,
-    bottomEnd = 16.dp,
-    bottomStart = 4.dp,
+    topStart = 20.dp,
+    topEnd = 20.dp,
+    bottomEnd = 20.dp,
+    bottomStart = 6.dp,
 )
