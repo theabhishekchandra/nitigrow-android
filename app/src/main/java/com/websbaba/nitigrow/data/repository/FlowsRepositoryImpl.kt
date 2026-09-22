@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.util.DispatcherProvider
 import com.websbaba.nitigrow.data.remote.api.FlowsApi
@@ -48,22 +49,19 @@ class FlowsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getFlows(): ApiResult<List<WaFlow>> =
-        when (val r = safeApiCall(dispatchers.io) { api.listFlows() }) {
-            is ApiResult.Success -> ApiResult.Success(r.data.data.orEmpty().map { it.toDomain() })
-            is ApiResult.Error -> r
+        safeApiCall(dispatchers.io) { api.listFlows() }.andThen { r ->
+            ApiResult.Success(r.data.orEmpty().map { it.toDomain() })
         }
 
     override suspend fun sendFlow(flowId: String, to: String, bodyText: String?): ApiResult<Unit> =
-        when (val r = safeApiCall(dispatchers.io) {
+        safeApiCall(dispatchers.io) {
             api.sendFlow(flowId, SendFlowRequest(to = to, cta = "Open form", bodyText = bodyText))
-        }) {
-            is ApiResult.Success -> ApiResult.Success(Unit)
-            is ApiResult.Error -> r
+        }.andThen { r ->
+            ApiResult.Success(Unit)
         }
 
     override suspend fun getSubmissions(flowId: String): ApiResult<List<FlowSubmission>> =
-        when (val r = safeApiCall(dispatchers.io) { api.submissions(flowId) }) {
-            is ApiResult.Success -> ApiResult.Success(r.data.data.orEmpty().map { it.toDomain() })
-            is ApiResult.Error -> r
+        safeApiCall(dispatchers.io) { api.submissions(flowId) }.andThen { r ->
+            ApiResult.Success(r.data.orEmpty().map { it.toDomain() })
         }
 }

@@ -35,9 +35,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.websbaba.nitigrow.core.util.collapseWhitespace
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.domain.model.Template
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -86,7 +87,7 @@ fun TemplatePickerSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Theme.colors.card
+        containerColor = Niti.colors.surfaceLow
     ) {
         TemplatePickerContent(
             templates = templates,
@@ -118,14 +119,14 @@ private fun TemplatePickerContent(
         Text(
             text = "Send a Template",
             style = MaterialTheme.typography.titleLarge,
-            color = Theme.colors.ink,
+            color = Niti.colors.onSurface,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(Modifier.padding(top = 4.dp))
         Text(
             text = "Re-open the conversation window by sending an approved template.",
             style = MaterialTheme.typography.bodyMedium,
-            color = Theme.colors.ink3
+            color = Niti.colors.onSurfaceVariant
         )
 
         Spacer(Modifier.padding(top = 12.dp))
@@ -176,10 +177,10 @@ private fun CategoryChipRow(selected: String, onSelect: (String) -> Unit) {
 
 @Composable
 private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    val colors = Theme.colors
-    val bg = if (selected) colors.brand else colors.paper2
-    val ink = if (selected) colors.paper else colors.ink2
-    val borderColor = if (selected) colors.brand else colors.border
+    val colors = Niti.colors
+    val bg = if (selected) colors.primary else colors.surfaceLow
+    val ink = if (selected) colors.surface else colors.onSurface
+    val borderColor = if (selected) colors.primary else colors.outlineVariant
 
     Box(
         modifier = Modifier
@@ -200,13 +201,13 @@ private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit) 
 
 @Composable
 private fun TemplateCard(template: Template, onSend: () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(colors.paper)
-            .border(width = 1.dp, color = colors.border, shape = RoundedCornerShape(12.dp))
+            .background(colors.surface)
+            .border(width = 1.dp, color = colors.outlineVariant, shape = RoundedCornerShape(12.dp))
             .padding(14.dp)
     ) {
         // Header row: name + language + category badge.
@@ -217,7 +218,7 @@ private fun TemplateCard(template: Template, onSend: () -> Unit) {
             Text(
                 text = template.name,
                 style = MaterialTheme.typography.titleSmall,
-                color = colors.ink,
+                color = colors.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -231,9 +232,9 @@ private fun TemplateCard(template: Template, onSend: () -> Unit) {
 
         // Body preview — collapsed to two lines, ellipsised.
         Text(
-            text = template.body,
+            text = template.body.collapseWhitespace(),
             style = MaterialTheme.typography.bodyMedium,
-            color = colors.ink2,
+            color = colors.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -243,7 +244,7 @@ private fun TemplateCard(template: Template, onSend: () -> Unit) {
             Text(
                 text = "${template.variableCount} variable(s) to fill",
                 style = MaterialTheme.typography.labelSmall,
-                color = colors.muted
+                color = colors.onSurfaceVariant
             )
         }
 
@@ -260,8 +261,8 @@ private fun TemplateCard(template: Template, onSend: () -> Unit) {
                 onClick = onSend,
                 enabled = template.status.equals("APPROVED", ignoreCase = true),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.brand,
-                    contentColor = colors.paper
+                    containerColor = colors.primary,
+                    contentColor = colors.surface
                 )
             ) {
                 Text("Send", style = MaterialTheme.typography.labelLarge)
@@ -272,17 +273,17 @@ private fun TemplateCard(template: Template, onSend: () -> Unit) {
 
 @Composable
 private fun LanguagePill(language: String) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(colors.paper2)
+            .background(colors.surfaceLow)
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
         Text(
             text = language,
             style = MaterialTheme.typography.labelSmall,
-            color = colors.ink3,
+            color = colors.onSurfaceVariant,
             fontWeight = FontWeight.Medium
         )
     }
@@ -290,12 +291,12 @@ private fun LanguagePill(language: String) {
 
 @Composable
 private fun CategoryBadge(category: String) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val (bg, ink) = when (category.uppercase()) {
-        "MARKETING" -> colors.accentSoft to colors.accent
-        "UTILITY" -> colors.brandSoft to colors.brand
-        "AUTHENTICATION" -> colors.turmericSoft to colors.warning
-        else -> colors.paper2 to colors.ink3
+        "MARKETING" -> colors.tertiaryTone.container to colors.tertiaryTone.onContainer
+        "UTILITY" -> colors.primaryTone.container to colors.primary
+        "AUTHENTICATION" -> colors.secondaryTone.container to colors.warning
+        else -> colors.surfaceLow to colors.onSurfaceVariant
     }
     Box(
         modifier = Modifier
@@ -314,12 +315,12 @@ private fun CategoryBadge(category: String) {
 
 @Composable
 private fun StatusBadge(status: String) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val (bg, ink) = when (status.uppercase()) {
-        "APPROVED" -> colors.brandSoft to colors.brand
-        "PENDING" -> colors.turmericSoft to colors.warning
-        "REJECTED" -> colors.accentSoft to colors.danger
-        else -> colors.paper2 to colors.muted
+        "APPROVED" -> colors.primaryTone.container to colors.primary
+        "PENDING" -> colors.secondaryTone.container to colors.warning
+        "REJECTED" -> colors.tertiaryTone.container to colors.error
+        else -> colors.surfaceLow to colors.onSurfaceVariant
     }
     Box(
         modifier = Modifier
@@ -347,7 +348,7 @@ private fun EmptyState() {
         Text(
             text = "No templates in this category",
             style = MaterialTheme.typography.bodyMedium,
-            color = Theme.colors.muted
+            color = Niti.colors.onSurfaceVariant
         )
     }
 }

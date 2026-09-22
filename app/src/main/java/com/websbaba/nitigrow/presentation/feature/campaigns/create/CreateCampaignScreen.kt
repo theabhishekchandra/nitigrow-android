@@ -1,5 +1,8 @@
 package com.websbaba.nitigrow.presentation.feature.campaigns.create
 
+import com.websbaba.nitigrow.core.util.TimeOfDayFormat
+import com.websbaba.nitigrow.core.util.DayFormat
+import com.websbaba.nitigrow.core.util.formatIndian
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -52,10 +55,6 @@ import com.websbaba.nitigrow.core.ui.theme.NitiIcons
 import com.websbaba.nitigrow.core.ui.theme.NitiStatusBar
 import com.websbaba.nitigrow.core.ui.theme.NitiType
 import kotlinx.coroutines.flow.collectLatest
-import java.text.NumberFormat
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CreateCampaignScreen — 4-step "New broadcast" wizard.
@@ -71,9 +70,6 @@ import java.util.Locale
 //   Queued      — success state with "View live report"
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val nf: NumberFormat = NumberFormat.getInstance(Locale("en", "IN"))
-private val DayFormat = DateTimeFormatter.ofPattern("EEE, d MMM", Locale.ENGLISH).withZone(ZoneId.systemDefault())
-private val TimeFormat = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH).withZone(ZoneId.systemDefault())
 
 private val StepNames = listOf("Audience", "Template", "Schedule", "Review")
 
@@ -188,7 +184,7 @@ private fun WizardFooter(state: CreateCampaignUiState, onBack: () -> Unit, onNex
     val colors = Niti.colors
     val label = when {
         state.step != WizardStep.REVIEW -> "Continue"
-        state.sendNow -> "Send to ${nf.format(state.audienceEstimate ?: 0)} contacts"
+        state.sendNow -> "Send to ${formatIndian(state.audienceEstimate ?: 0)} contacts"
         else -> "Schedule broadcast"
     }
     val enabled = state.canNext && !state.isSubmitting
@@ -261,11 +257,11 @@ private fun QueuedSuccess(
         animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
         label = "queued-pulse-scale"
     )
-    val contacts = nf.format(state.audienceEstimate ?: 0)
+    val contacts = formatIndian(state.audienceEstimate ?: 0)
     val summary = when {
         state.sendNow -> "${state.name} is now going out to $contacts contacts."
         state.scheduledAt != null ->
-            "${state.name} will go out to $contacts contacts on ${DayFormat.format(state.scheduledAt)} at ${TimeFormat.format(state.scheduledAt)}."
+            "${state.name} will go out to $contacts contacts on ${DayFormat.format(state.scheduledAt)} at ${TimeOfDayFormat.format(state.scheduledAt)}."
         else -> "${state.name} is queued for $contacts contacts."
     }
 

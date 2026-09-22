@@ -8,6 +8,7 @@ import com.websbaba.nitigrow.data.remote.dto.RegisterTokenRequest
 import com.websbaba.nitigrow.domain.repository.PushTokenRepository
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,10 +35,18 @@ class PushTokenRepositoryImpl @Inject constructor(
         }
 
     override suspend fun unregisterCurrentToken(): ApiResult<Unit> {
-        val token = runCatching { FirebaseMessaging.getInstance().token.await() }
-            .getOrNull() ?: return ApiResult.Success(Unit)
+        // Firebase can leave this Task pending forever (no Play services, no network,
+        // an unconfigured project). Sign-out awaits this call, so an unbounded wait
+        // would make it impossible to log out — give up after a few seconds instead.
+        val token = runCatching {
+            withTimeoutOrNull(TOKEN_TIMEOUT_MS) { FirebaseMessaging.getInstance().token.await() }
+        }.getOrNull() ?: return ApiResult.Success(Unit)
         return safeApiCall(dispatchers.io) {
             api.unregister(token); Unit
         }
+    }
+
+    private companion object {
+        const val TOKEN_TIMEOUT_MS = 3_000L
     }
 }

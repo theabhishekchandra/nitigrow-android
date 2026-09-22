@@ -1,5 +1,7 @@
 package com.websbaba.nitigrow.presentation.feature.conflicts.components
 
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.util.relativeTime
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -42,7 +44,6 @@ import com.websbaba.nitigrow.presentation.feature.conflicts.ConflictAction
 import com.websbaba.nitigrow.presentation.feature.conflicts.ConflictRule
 import com.websbaba.nitigrow.presentation.feature.conflicts.SyncConflict
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -52,7 +53,7 @@ import java.time.temporal.ChronoUnit
 //   • Header: entity-type icon + entity name + relative time
 //   • Description line
 //   • Two side-by-side preview boxes ("Yours (offline)" / "Server"), with the
-//     recommended side outlined in Theme.colors.brand based on rule
+//     recommended side outlined in Niti.colors.primary based on rule
 //   • Action row: Use yours / Use server / Dismiss
 //
 // Accessibility:
@@ -83,7 +84,7 @@ fun ConflictCard(
 
     Card(
         shape = CardShape,
-        colors = CardDefaults.cardColors(containerColor = Theme.colors.card),
+        colors = CardDefaults.cardColors(containerColor = Niti.colors.surfaceLow),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = modifier
             .fillMaxWidth()
@@ -102,14 +103,14 @@ fun ConflictCard(
                         text = conflict.entityName,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Theme.colors.ink,
+                        color = Niti.colors.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = "${conflict.entityType.replaceFirstChar { it.uppercaseChar() }} · ${relativeTime(conflict.detectedAt)}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Theme.colors.muted,
+                        color = Niti.colors.onSurfaceVariant,
                     )
                 }
                 RuleChip(rule = conflict.rule)
@@ -121,7 +122,7 @@ fun ConflictCard(
             Text(
                 text = conflict.description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Theme.colors.ink2,
+                color = Niti.colors.onSurface,
             )
 
             Box(modifier = Modifier.height(SectionGap))
@@ -161,8 +162,8 @@ fun ConflictCard(
                     onClick = { onResolve(ConflictAction.UseServer) },
                     enabled = !isResolving,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Theme.colors.brand,
-                        contentColor = Theme.colors.paper,
+                        containerColor = Niti.colors.primary,
+                        contentColor = Niti.colors.surface,
                     ),
                     modifier = Modifier.weight(1f),
                 ) { Text("Use server") }
@@ -188,12 +189,12 @@ private fun EntityIcon(entityType: String) {
         modifier = Modifier
             .size(EntityIconSize)
             .clip(RoundedCornerShape(10.dp))
-            .background(Theme.colors.brandSoft),
+            .background(Niti.colors.primaryTone.container),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null, // decorative — entity name already in header
-            tint = Theme.colors.brandInk,
+            tint = Niti.colors.primaryTone.onContainer,
         )
     }
 }
@@ -205,7 +206,7 @@ private fun PreviewBox(
     recommended: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val borderColor = if (recommended) Theme.colors.brand else Theme.colors.border
+    val borderColor = if (recommended) Niti.colors.primary else Niti.colors.outlineVariant
     val borderWidth = if (recommended) RecommendedBorderWidth else 1.dp
 
     // Recommended state must be conveyed without colour alone (a11y rule):
@@ -215,21 +216,21 @@ private fun PreviewBox(
     Column(
         modifier = modifier
             .clip(PreviewBoxShape)
-            .background(Theme.colors.paper2)
+            .background(Niti.colors.surfaceLow)
             .border(BorderStroke(borderWidth, borderColor), PreviewBoxShape)
             .padding(PreviewBoxPadding),
     ) {
         Text(
             text = labelText,
             style = MaterialTheme.typography.labelSmall,
-            color = if (recommended) Theme.colors.brand else Theme.colors.muted,
+            color = if (recommended) Niti.colors.primary else Niti.colors.onSurfaceVariant,
             fontWeight = if (recommended) FontWeight.Bold else FontWeight.Normal,
         )
         Box(modifier = Modifier.height(4.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
-            color = Theme.colors.ink,
+            color = Niti.colors.onSurface,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightAtLeast(PreviewBoxMinHeight),
@@ -244,9 +245,9 @@ private fun Modifier.heightAtLeast(min: androidx.compose.ui.unit.Dp): Modifier =
 @Composable
 private fun RuleChip(rule: ConflictRule) {
     val (label, bg, fg) = when (rule) {
-        ConflictRule.SERVER_WINS -> Triple("Server wins", Theme.colors.brandSoft, Theme.colors.brand)
-        ConflictRule.LOCAL_WINS  -> Triple("Yours wins",  Theme.colors.turmericSoft, Theme.colors.warning)
-        ConflictRule.ASK_USER    -> Triple("Needs you",   Theme.colors.accentSoft, Theme.colors.accent)
+        ConflictRule.SERVER_WINS -> Triple("Server wins", Niti.colors.primaryTone.container, Niti.colors.primary)
+        ConflictRule.LOCAL_WINS  -> Triple("Yours wins",  Niti.colors.secondaryTone.container, Niti.colors.warning)
+        ConflictRule.ASK_USER    -> Triple("Needs you",   Niti.colors.tertiaryTone.container, Niti.colors.tertiaryTone.onContainer)
     }
     Text(
         text = label,
@@ -275,27 +276,13 @@ private fun buildA11yText(c: SyncConflict): String = buildString {
     )
 }
 
-internal fun relativeTime(then: Instant, now: Instant = Instant.now()): String {
-    val seconds = ChronoUnit.SECONDS.between(then, now).coerceAtLeast(0)
-    val minutes = seconds / 60
-    val hours = minutes / 60
-    val days = hours / 24
-    return when {
-        seconds < 45  -> "just now"
-        minutes < 60  -> "${minutes}m ago"
-        hours   < 24  -> "${hours}h ago"
-        days    < 30  -> "${days}d ago"
-        else          -> "${days / 30}mo ago"
-    }
-}
-
 // ─── Previews ──────────────────────────────────────────────────────────────
 
 @Preview(showBackground = true, name = "ConflictCard — server wins")
 @Composable
 private fun ConflictCardPreview() {
     NitiGrowTheme {
-        Box(modifier = Modifier.background(Theme.colors.paper).padding(16.dp)) {
+        Box(modifier = Modifier.background(Niti.colors.surface).padding(16.dp)) {
             ConflictCard(
                 conflict = SyncConflict(
                     id = "p-1",
@@ -318,7 +305,7 @@ private fun ConflictCardPreview() {
 @Composable
 private fun ConflictCardAskPreview() {
     NitiGrowTheme {
-        Box(modifier = Modifier.background(Theme.colors.paper).padding(16.dp)) {
+        Box(modifier = Modifier.background(Niti.colors.surface).padding(16.dp)) {
             ConflictCard(
                 conflict = SyncConflict(
                     id = "p-2",

@@ -34,7 +34,7 @@ import com.websbaba.nitigrow.presentation.feature.settings.components.FieldLabel
 import com.websbaba.nitigrow.presentation.feature.settings.components.NgTextField
 import com.websbaba.nitigrow.presentation.feature.settings.components.PrimaryCta
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
-import com.websbaba.nitigrow.core.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import kotlinx.coroutines.flow.collectLatest
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ fun ProfileEditScreen(
     viewModel: ProfileEditViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val colors = Theme.colors
+    val colors = Niti.colors
     val context = LocalContext.current
 
     val pickImage = rememberLauncherForActivityResult(
@@ -72,7 +72,7 @@ fun ProfileEditScreen(
     }
 
     Scaffold(
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         topBar = { SubScreenHeader(title = "Profile", onBack = onBack) }
     ) { padding ->
         Column(
@@ -98,7 +98,7 @@ fun ProfileEditScreen(
             Text(
                 "Tap photo to change",
                 fontSize = 11.5.sp,
-                color = colors.muted,
+                color = colors.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp)
             )
             Spacer(Modifier.height(20.dp))

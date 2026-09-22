@@ -41,13 +41,13 @@ import com.websbaba.nitigrow.presentation.feature.settings.components.PillShape
 import com.websbaba.nitigrow.presentation.feature.settings.components.StatusPill
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
 import com.websbaba.nitigrow.core.ui.theme.AppTheme
-import com.websbaba.nitigrow.core.ui.theme.BrandForwardColors
-import com.websbaba.nitigrow.core.ui.theme.EspressoPremiumColors
-import com.websbaba.nitigrow.core.ui.theme.NitiGrowColors
-import com.websbaba.nitigrow.core.ui.theme.NitiGrowLightColors
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.ui.theme.NitiBrandForwardColors
+import com.websbaba.nitigrow.core.ui.theme.NitiColors
+import com.websbaba.nitigrow.core.ui.theme.NitiDarkColors
+import com.websbaba.nitigrow.core.ui.theme.NitiLightColors
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import com.websbaba.nitigrow.core.ui.theme.PlanTier
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ fun AppearanceScreen(
     viewModel: AppearanceViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val colors = Theme.colors
+    val colors = Niti.colors
     var upgradeTheme by remember { mutableStateOf<AppTheme?>(null) }
 
     LaunchedEffect(Unit) {
@@ -85,7 +85,7 @@ fun AppearanceScreen(
     }
 
     Scaffold(
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         topBar = {
             SubScreenHeader(
                 title = "Appearance",
@@ -115,7 +115,7 @@ fun AppearanceScreen(
                         upgradeTheme = null
                         onUpgrade()
                     }
-                ) { Text("View plans", color = Theme.colors.brand) }
+                ) { Text("View plans", color = Niti.colors.primary) }
             },
             dismissButton = {
                 TextButton(onClick = { upgradeTheme = null }) { Text("Not now") }
@@ -156,16 +156,16 @@ private fun ThemeCard(
     locked: Boolean,
     onClick: () -> Unit
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val shape = RoundedCornerShape(16.dp)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(colors.card)
+            .background(colors.surfaceLow)
             .border(
                 width = if (selected) 1.5.dp else 1.dp,
-                color = if (selected) colors.brand else colors.border,
+                color = if (selected) colors.primary else colors.outlineVariant,
                 shape = shape
             )
             .clickable(onClick = onClick)
@@ -184,20 +184,20 @@ private fun ThemeCard(
                     theme.displayName,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.ink
+                    color = colors.onSurface
                 )
                 Text(
                     theme.tagline,
                     fontSize = 11.5.sp,
-                    color = colors.muted,
+                    color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
             if (locked) {
                 StatusPill(
                     "${planLabel(theme.minTier)} plan",
-                    bg = colors.turmericSoft,
-                    fg = colors.turmericInk
+                    bg = colors.secondaryTone.container,
+                    fg = colors.secondaryTone.onContainer
                 )
             }
             SelectedIndicator(selected)
@@ -207,18 +207,18 @@ private fun ThemeCard(
 
 @Composable
 private fun SelectedIndicator(selected: Boolean) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     if (selected) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(22.dp)
-                .background(colors.brand, CircleShape)
+                .background(colors.primary, CircleShape)
         ) {
             Icon(
                 Icons.Filled.Check,
                 contentDescription = "Selected",
-                tint = if (colors.isLight) colors.paper else colors.brandInk,
+                tint = if (colors.isLight) colors.surface else colors.primaryTone.onContainer,
                 modifier = Modifier.size(14.dp)
             )
         }
@@ -226,7 +226,7 @@ private fun SelectedIndicator(selected: Boolean) {
         Box(
             modifier = Modifier
                 .size(22.dp)
-                .border(1.5.dp, colors.border3, CircleShape)
+                .border(1.5.dp, colors.outlineVariant, CircleShape)
         )
     }
 }
@@ -235,23 +235,22 @@ private fun SelectedIndicator(selected: Boolean) {
 
 /**
  * Band strip + heading line + stat-card row + CTA pill, drawn entirely from
- * [palette] (never the active [Theme.colors]) so each card is a faithful
- * preview of that theme. Brand Forward shows its cream hero surface (paper2)
+ * [palette] (never the active [Niti.colors]) so each card is a faithful
+ * preview of that theme. Brand Forward shows its cream hero surface
  * and deep-green heading ink; Espresso shows turmeric promoted to the CTA.
  */
 @Composable
-private fun ThemeMock(theme: AppTheme, palette: NitiGrowColors) {
-    val mockBg = if (theme == AppTheme.BRAND_FORWARD) palette.paper2 else palette.paper
-    val headingInk = if (theme == AppTheme.BRAND_FORWARD) palette.brandInk else palette.ink
-    // Matches PrimaryCta's on-brand ink: paper in light palettes, brandInk in dark.
-    val onBrand = if (palette.isLight) palette.paper else palette.brandInk
+private fun ThemeMock(theme: AppTheme, palette: NitiColors) {
+    val mockBg = if (theme == AppTheme.BRAND_FORWARD) palette.surfaceLow else palette.surface
+    val headingInk = if (theme == AppTheme.BRAND_FORWARD) palette.primaryTone.onContainer else palette.onSurface
+    val onBrand = palette.onPrimary
     val shape = RoundedCornerShape(12.dp)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
             .background(mockBg)
-            .border(1.dp, palette.border, shape)
+            .border(1.dp, palette.outlineVariant, shape)
     ) {
         // Status-bar / band header strip.
         Row(
@@ -259,7 +258,7 @@ private fun ThemeMock(theme: AppTheme, palette: NitiGrowColors) {
             horizontalArrangement = Arrangement.spacedBy(3.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .background(palette.brand)
+                .background(palette.primary)
                 .padding(horizontal = 10.dp, vertical = 5.dp)
         ) {
             repeat(3) {
@@ -285,20 +284,20 @@ private fun ThemeMock(theme: AppTheme, palette: NitiGrowColors) {
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(7.dp))
-                            .background(palette.card)
-                            .border(1.dp, palette.border, RoundedCornerShape(7.dp))
+                            .background(palette.surfaceLow)
+                            .border(1.dp, palette.outlineVariant, RoundedCornerShape(7.dp))
                             .padding(6.dp)
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(width = 22.dp, height = 7.dp)
-                                .background(palette.ink, RoundedCornerShape(3.dp))
+                                .background(palette.onSurface, RoundedCornerShape(3.dp))
                         )
                         Box(
                             modifier = Modifier
                                 .padding(top = 4.dp)
                                 .size(width = 30.dp, height = 5.dp)
-                                .background(palette.muted, RoundedCornerShape(3.dp))
+                                .background(palette.onSurfaceVariant, RoundedCornerShape(3.dp))
                         )
                     }
                 }
@@ -309,7 +308,7 @@ private fun ThemeMock(theme: AppTheme, palette: NitiGrowColors) {
                 modifier = Modifier
                     .padding(top = 10.dp)
                     .size(width = 86.dp, height = 20.dp)
-                    .background(palette.brand, PillShape)
+                    .background(palette.primary, PillShape)
             ) {
                 Box(
                     modifier = Modifier
@@ -323,10 +322,10 @@ private fun ThemeMock(theme: AppTheme, palette: NitiGrowColors) {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-private fun paletteFor(theme: AppTheme): NitiGrowColors = when (theme) {
-    AppTheme.SOFT_PAPER -> NitiGrowLightColors
-    AppTheme.BRAND_FORWARD -> BrandForwardColors
-    AppTheme.ESPRESSO_PREMIUM -> EspressoPremiumColors
+private fun paletteFor(theme: AppTheme): NitiColors = when (theme) {
+    AppTheme.SOFT_PAPER -> NitiLightColors
+    AppTheme.BRAND_FORWARD -> NitiBrandForwardColors
+    AppTheme.ESPRESSO_PREMIUM -> NitiDarkColors
 }
 
 private fun planLabel(tier: PlanTier): String = when (tier) {

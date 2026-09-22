@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.util.DispatcherProvider
 import com.websbaba.nitigrow.data.local.dao.DashboardDao
@@ -25,11 +26,8 @@ class DashboardRepositoryImpl @Inject constructor(
         dao.observe().map { it?.toDomain() }
 
     override suspend fun refresh(): ApiResult<Unit> =
-        when (val res = safeApiCall(dispatchers.io) { api.getStats() }) {
-            is ApiResult.Success -> {
-                dao.upsert(res.data.toEntity())
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.getOverview() }.andThen { res ->
+            dao.upsert(res.toStats().toEntity())
+            ApiResult.Success(Unit)
         }
 }

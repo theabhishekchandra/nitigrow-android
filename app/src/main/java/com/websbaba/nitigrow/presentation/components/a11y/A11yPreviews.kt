@@ -18,8 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 
 // ─────────────────────────────────────────────────────────────────────────────
 // A11yPreviews — design-review surface for the a11y helpers. These previews
@@ -35,21 +35,21 @@ private fun A11ySamplerPreview() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Theme.colors.paper)
+                .background(Niti.colors.surface)
                 .padding(16.dp),
         ) {
             Text(
                 text = "Accessibility helpers",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = Theme.colors.ink,
+                color = Niti.colors.onSurface,
                 modifier = Modifier.semanticHeading(),
             )
 
             Text(
                 text = "1. A11yIconButton — enforced contentDescription + 48dp touch target",
                 style = MaterialTheme.typography.titleSmall,
-                color = Theme.colors.ink2,
+                color = Niti.colors.onSurface,
                 modifier = Modifier.semanticHeading(),
             )
             Row(
@@ -57,32 +57,32 @@ private fun A11ySamplerPreview() {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 A11yIconButton(onClick = {}, contentDescription = "Send message") {
-                    Icon(Icons.Filled.Send, contentDescription = null, tint = Theme.colors.brand)
+                    Icon(Icons.Filled.Send, contentDescription = null, tint = Niti.colors.primary)
                 }
                 A11yIconButton(onClick = {}, contentDescription = "Open notifications") {
-                    Icon(Icons.Filled.Notifications, contentDescription = null, tint = Theme.colors.accent)
+                    Icon(Icons.Filled.Notifications, contentDescription = null, tint = Niti.colors.tertiaryTone.onContainer)
                 }
             }
 
             Text(
                 text = "2. A11yStatusDot — colour + spoken label",
                 style = MaterialTheme.typography.titleSmall,
-                color = Theme.colors.ink2,
+                color = Niti.colors.onSurface,
                 modifier = Modifier.semanticHeading(),
             )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                LabeledDot(color = Theme.colors.success, text = "Delivered")
-                LabeledDot(color = Theme.colors.warning, text = "Pending")
-                LabeledDot(color = Theme.colors.danger,  text = "Failed")
+                LabeledDot(color = Niti.colors.success, text = "Delivered")
+                LabeledDot(color = Niti.colors.warning, text = "Pending")
+                LabeledDot(color = Niti.colors.error,  text = "Failed")
             }
 
             Text(
                 text = "3. Modifier.minTouchTarget() — visible 24dp, tappable 48dp",
                 style = MaterialTheme.typography.titleSmall,
-                color = Theme.colors.ink2,
+                color = Niti.colors.onSurface,
                 modifier = Modifier.semanticHeading(),
             )
             Row(
@@ -94,12 +94,12 @@ private fun A11ySamplerPreview() {
                     contentDescription = "Demo action",
                     modifier = Modifier.minTouchTarget(),
                 ) {
-                    Icon(Icons.Filled.Send, contentDescription = null, tint = Theme.colors.brand)
+                    Icon(Icons.Filled.Send, contentDescription = null, tint = Niti.colors.primary)
                 }
                 Text(
                     text = "Min 48dp via Modifier.minTouchTarget()",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Theme.colors.muted,
+                    color = Niti.colors.onSurfaceVariant,
                 )
             }
         }
@@ -113,6 +113,6 @@ private fun LabeledDot(color: androidx.compose.ui.graphics.Color, text: String) 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         A11yStatusDot(color = color, label = text)
-        Text(text = text, style = MaterialTheme.typography.bodySmall, color = Theme.colors.ink2)
+        Text(text = text, style = MaterialTheme.typography.bodySmall, color = Niti.colors.onSurface)
     }
 }

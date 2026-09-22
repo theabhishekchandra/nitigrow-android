@@ -24,4 +24,11 @@ interface CampaignRepository {
     ): ApiResult<Campaign>
 
     suspend fun cancel(id: String): ApiResult<Unit>
+
+    /**
+     * Starts sending a `draft`/`scheduled` campaign now. Creating a campaign never sends
+     * it by itself — only a *scheduled* one is auto-enqueued by the backend — so a "send
+     * now" campaign must call this right after [create] or it silently never sends.
+     */
+    suspend fun launch(id: String): ApiResult<Unit>
 }

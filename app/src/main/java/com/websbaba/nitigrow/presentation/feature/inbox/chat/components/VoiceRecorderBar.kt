@@ -43,8 +43,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlin.math.abs
 import kotlin.math.sin
 
@@ -84,11 +84,11 @@ fun VoiceRecorderBar(
     onCancel: () -> Unit,
     onSend: () -> Unit
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
 
     Surface(
         tonalElevation = 2.dp,
-        color = colors.card,
+        color = colors.surfaceLow,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -104,7 +104,7 @@ fun VoiceRecorderBar(
                     Icon(
                         imageVector = Icons.Filled.Delete,
                         contentDescription = "Cancel recording",
-                        tint = colors.danger
+                        tint = colors.error
                     )
                 } else {
                     RecordDot()
@@ -115,7 +115,7 @@ fun VoiceRecorderBar(
             Text(
                 text = formatElapsed(elapsedMs),
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (cancelled) colors.muted else colors.ink,
+                color = if (cancelled) colors.onSurfaceVariant else colors.onSurface,
                 fontWeight = FontWeight.Medium
             )
 
@@ -132,12 +132,12 @@ fun VoiceRecorderBar(
                     Text(
                         text = "Cancelling…",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = colors.danger,
+                        color = colors.error,
                         fontWeight = FontWeight.Medium
                     )
                 } else {
                     Waveform(
-                        color = colors.brand,
+                        color = colors.primary,
                         modifier = Modifier.fillMaxWidth().height(36.dp)
                     )
                 }
@@ -158,7 +158,7 @@ fun VoiceRecorderBar(
                 Icon(
                     imageVector = if (locked) Icons.Filled.Lock else Icons.Filled.LockOpen,
                     contentDescription = if (locked) "Recording locked" else "Lock recording",
-                    tint = if (locked) colors.brand else colors.ink3
+                    tint = if (locked) colors.primary else colors.onSurfaceVariant
                 )
             }
 
@@ -169,7 +169,7 @@ fun VoiceRecorderBar(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(colors.brand)
+                    .background(colors.primary)
             ) {
                 IconButton(
                     onClick = onSend,
@@ -179,7 +179,7 @@ fun VoiceRecorderBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send voice note",
-                        tint = colors.paper
+                        tint = colors.surface
                     )
                 }
             }
@@ -189,7 +189,7 @@ fun VoiceRecorderBar(
 
 @Composable
 private fun RecordDot() {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val transition = rememberInfiniteTransition(label = "record-dot")
     val alpha by transition.animateFloat(
         initialValue = 0.35f,
@@ -204,7 +204,7 @@ private fun RecordDot() {
         modifier = Modifier
             .size(14.dp)
             .clip(CircleShape)
-            .background(colors.danger.copy(alpha = alpha))
+            .background(colors.error.copy(alpha = alpha))
     )
 }
 
@@ -269,14 +269,14 @@ private fun SlideToCancelHint(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
             contentDescription = null,
-            tint = Theme.colors.muted,
+            tint = Niti.colors.onSurfaceVariant,
             modifier = Modifier.size(14.dp)
         )
         Spacer(Modifier.padding(start = 4.dp))
         Text(
             text = "Slide to cancel",
             style = MaterialTheme.typography.labelMedium,
-            color = Theme.colors.muted
+            color = Niti.colors.onSurfaceVariant
         )
     }
 }

@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.util.DispatcherProvider
 import com.websbaba.nitigrow.data.remote.api.PaymentLinksApi
@@ -21,14 +22,12 @@ class PaymentLinksRepositoryImpl @Inject constructor(
         PaymentLink(id = id, contactName = contactName, amount = amount, status = status, linkUrl = linkUrl, sentAt = sentAt)
 
     override suspend fun create(contactId: String, amount: Long, description: String?): ApiResult<PaymentLink> =
-        when (val r = safeApiCall(dispatchers.io) { api.create(CreatePaymentLinkRequest(contactId, amount, description)) }) {
-            is ApiResult.Success -> ApiResult.Success(r.data.toDomain())
-            is ApiResult.Error -> r
+        safeApiCall(dispatchers.io) { api.create(CreatePaymentLinkRequest(contactId, amount, description)) }.andThen { r ->
+            ApiResult.Success(r.toDomain())
         }
 
     override suspend fun list(): ApiResult<List<PaymentLink>> =
-        when (val r = safeApiCall(dispatchers.io) { api.list() }) {
-            is ApiResult.Success -> ApiResult.Success((r.data.data ?: emptyList()).map { it.toDomain() })
-            is ApiResult.Error -> r
+        safeApiCall(dispatchers.io) { api.list() }.andThen { r ->
+            ApiResult.Success((r.data ?: emptyList()).map { it.toDomain() })
         }
 }

@@ -1,5 +1,6 @@
 package com.websbaba.nitigrow.presentation.feature.dashboard
 
+import com.websbaba.nitigrow.core.util.formatIndian
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -63,9 +64,7 @@ import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import com.websbaba.nitigrow.core.ui.theme.NitiIcons
 import com.websbaba.nitigrow.core.ui.theme.NitiStatusBar
 import com.websbaba.nitigrow.core.ui.theme.NitiType
-import java.text.NumberFormat
 import java.time.Instant
-import java.util.Locale
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -151,7 +150,6 @@ private fun DashboardContent(
     onAddContact: () -> Unit
 ) {
     val colors = Niti.colors
-    val nf = remember { NumberFormat.getInstance(Locale("en", "IN")) }
 
     val summaryRows = listOf(
         SummaryRow(
@@ -159,14 +157,14 @@ private fun DashboardContent(
             subtitle = if (stats.messagesSent > 0) {
                 "${(stats.deliveryRate * 100).roundToInt()}% delivered"
             } else "No messages yet",
-            value = nf.format(stats.messagesSent),
+            value = formatIndian(stats.messagesSent),
             icon = NitiIcons.Send,
             tone = colors.primaryTone
         ),
         SummaryRow(
             title = "Leads",
-            subtitle = if (stats.leadsNew > 0) "${nf.format(stats.leadsNew)} new" else "No new leads",
-            value = nf.format(stats.leadsTotal),
+            subtitle = if (stats.leadsNew > 0) "${formatIndian(stats.leadsNew)} new" else "No new leads",
+            value = formatIndian(stats.leadsTotal),
             icon = NitiIcons.Leads,
             tone = colors.tertiaryTone
         ),
@@ -201,14 +199,14 @@ private fun DashboardContent(
         }
         item {
             RevenueHero(
-                amount = "₹${nf.format(stats.revenueInr)}",
+                amount = "₹${formatIndian(stats.revenueInr)}",
                 onSendPaymentLink = onPayLink
             )
         }
         item {
             SnapshotTiles(
-                conversationsToday = nf.format(conversationsToday),
-                pendingReplies = nf.format(pendingReplies),
+                conversationsToday = formatIndian(conversationsToday),
+                pendingReplies = formatIndian(pendingReplies),
                 onOpenInbox = onOpenInbox
             )
         }

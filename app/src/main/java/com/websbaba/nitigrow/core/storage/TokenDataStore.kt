@@ -106,7 +106,19 @@ class TokenDataStore @Inject constructor(
         }
     }
 
+    /**
+     * Ends the session: drops the tokens, the user/tenant ids and the biometric
+     * opt-in (which belongs to the account that just left). Device preferences —
+     * the onboarding flag, notification toggles and language — are kept, so signing
+     * out or an expired session doesn't replay onboarding or reset settings.
+     */
     suspend fun clear() {
-        context.dataStore.edit { it.clear() }
+        context.dataStore.edit {
+            it.remove(keyAccess)
+            it.remove(keyRefresh)
+            it.remove(keyUserId)
+            it.remove(keyTenantId)
+            it.remove(keyBiometricEnabled)
+        }
     }
 }

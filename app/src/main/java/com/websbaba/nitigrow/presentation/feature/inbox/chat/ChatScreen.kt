@@ -43,6 +43,8 @@ import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.MessageI
 import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.RichMessageBubble
 import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.TypingIndicator
 import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.WindowStatusBanner
+import com.websbaba.nitigrow.presentation.feature.inbox.chat.components.rememberWindowOpen
+import com.websbaba.nitigrow.presentation.components.NitiStateView
 import com.websbaba.nitigrow.presentation.feature.inbox.list.components.Avatar
 import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.core.ui.theme.NitiIcons
@@ -102,11 +104,22 @@ fun ChatScreen(
                     viewModel.onSend()
                     scope.launch { listState.animateScrollToItem(0) }
                 },
-                onAttachClick = { /* Step 4c */ }
+                onAttachClick = { /* Step 4c */ },
+                enabled = rememberWindowOpen(state.windowExpiresAt)
             )
         },
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
+        val isEmpty = items.itemCount == 0 && items.loadState.refresh !is LoadState.Loading
+        if (isEmpty) {
+            NitiStateView(
+                icon = NitiIcons.Chat,
+                tone = colors.infoTone,
+                title = "No messages yet",
+                body = "Say hello, or send an approved template to start the conversation.",
+                modifier = Modifier.fillMaxSize().padding(padding)
+            )
+        }
         LazyColumn(
             state = listState,
             reverseLayout = true,

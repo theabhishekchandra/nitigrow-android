@@ -13,6 +13,10 @@
 -dontwarn javax.annotation.**
 -dontwarn kotlin.Unit
 
+# Retrofit builds each API through java.lang.reflect.Proxy. Keep the interfaces whole so
+# R8 can neither merge/strip them nor drop members it can't see being called.
+-keep interface com.websbaba.nitigrow.data.remote.api.** { *; }
+
 # --- Gson ---
 -keepattributes RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations
 -keep class com.google.gson.reflect.TypeToken { *; }

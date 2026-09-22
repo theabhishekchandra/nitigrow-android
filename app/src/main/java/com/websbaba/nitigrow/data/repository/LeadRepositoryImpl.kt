@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.util.DispatcherProvider
 import com.websbaba.nitigrow.data.local.dao.LeadDao
@@ -28,37 +29,42 @@ class LeadRepositoryImpl @Inject constructor(
         dao.observeAll().map { rows -> rows.map { it.toDomain() } }
 
     override suspend fun refresh(): ApiResult<Unit> =
-        when (val res = safeApiCall(dispatchers.io) { api.list() }) {
-            is ApiResult.Success -> {
-                dao.upsertAll((res.data.data ?: emptyList()).map { it.toEntity() })
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.list() }.andThen { res ->
+            dao.upsertAll((res.data ?: emptyList()).map { it.toEntity() })
+            ApiResult.Success(Unit)
         }
 
     override suspend fun moveStage(leadId: String, stage: LeadStage): ApiResult<Unit> {
+        val previousStage = dao.get(leadId)?.stage
         val now = System.currentTimeMillis()
+        // Local column stores the enum's own name (see LeadMapper); the wire body
+        // needs the backend's 5-value vocabulary — see LeadStage.toBackend().
         dao.setStage(leadId, stage.name, now)  // optimistic
-        return safeApiCall(dispatchers.io) {
-            api.moveStage(leadId, MoveLeadStageRequest(stage.name)); Unit
+        val result = safeApiCall(dispatchers.io) {
+            api.moveStage(leadId, MoveLeadStageRequest(stage.toBackend())); Unit
         }
+        // A rejected move (offline, permission, a stage the backend refuses) must not leave
+        // the card sitting on a column the server never agreed to — put it back so the
+        // board reflects reality instead of a card that silently snaps back on next refresh.
+        if (result is ApiResult.Error && previousStage != null) {
+            dao.setStage(leadId, previousStage, now)
+        }
+        return result
     }
 
     override suspend fun create(
         contactId: String,
+        name: String,
         source: String,
         stage: LeadStage,
         valueInr: Long,
         notes: String?
     ): ApiResult<Lead> =
-        when (val res = safeApiCall(dispatchers.io) {
-            api.create(CreateLeadRequest(contactId, source, stage.name, valueInr, notes))
-        }) {
-            is ApiResult.Success -> {
-                val entity = res.data.toEntity()
-                dao.upsert(entity)
-                ApiResult.Success(entity.toDomain())
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) {
+            api.create(CreateLeadRequest(contactId, name, source, stage.toBackend(), valueInr, notes))
+        }.andThen { res ->
+            val entity = res.toEntity()
+            dao.upsert(entity)
+            ApiResult.Success(entity.toDomain())
         }
 }

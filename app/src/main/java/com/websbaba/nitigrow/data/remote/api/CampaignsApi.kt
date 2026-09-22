@@ -20,6 +20,13 @@ interface CampaignsApi {
     @POST("campaigns")
     suspend fun create(@Body body: CreateCampaignRequest): CampaignDto
 
+    // Creating a campaign only ever leaves it `draft` (or `scheduled`, if scheduledAt was
+    // given — the backend enqueues that one itself). A "send now" campaign has no
+    // scheduledAt, so it stays a draft forever unless this is called right after create.
+    // Backend responds `{ message, total }`, not the campaign document.
+    @POST("campaigns/{id}/launch")
+    suspend fun launch(@Path("id") id: String): GenericMessageDto
+
     @POST("campaigns/{id}/cancel")
     suspend fun cancel(@Path("id") id: String): GenericMessageDto
 

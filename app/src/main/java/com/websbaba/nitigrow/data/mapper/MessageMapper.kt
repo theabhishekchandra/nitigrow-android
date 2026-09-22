@@ -3,19 +3,8 @@ package com.websbaba.nitigrow.data.mapper
 import com.websbaba.nitigrow.data.local.entity.MessageEntity
 import com.websbaba.nitigrow.data.remote.dto.MessageDto
 import com.websbaba.nitigrow.domain.model.Message
-import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
 import java.time.Instant
-import java.time.format.DateTimeParseException
-
-private fun parseInstantSafe(iso: String?): Long =
-    if (iso.isNullOrBlank()) System.currentTimeMillis()
-    else try { Instant.parse(iso).toEpochMilli() }
-    catch (_: DateTimeParseException) { System.currentTimeMillis() }
-
-private fun statusFromString(value: String): MessageStatus =
-    runCatching { MessageStatus.valueOf(value.uppercase()) }
-        .getOrDefault(MessageStatus.SENT)
 
 private fun typeFromString(value: String): MessageType =
     runCatching { MessageType.valueOf(value.uppercase()) }
@@ -37,7 +26,7 @@ fun MessageDto.toEntity(): MessageEntity = MessageEntity(
     clientId = null,
     conversationId = contactId,
     text = text,
-    sentAtEpochMs = parseInstantSafe(createdAt),
+    sentAtEpochMs = parseInstant(createdAt),
     outbound = outbound,
     status = status.uppercase(),
     type = type.uppercase(),
@@ -54,7 +43,7 @@ fun MessageEntity.toDomain(): Message = Message(
     text = text,
     sentAt = Instant.ofEpochMilli(sentAtEpochMs),
     outbound = outbound,
-    status = statusFromString(status),
+    status = messageStatusOf(status),
     type = typeFromString(type),
     mediaUrl = mediaUrl,
     mediaMimeType = mediaMimeType,

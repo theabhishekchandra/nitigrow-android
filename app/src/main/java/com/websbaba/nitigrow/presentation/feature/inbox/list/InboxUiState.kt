@@ -66,10 +66,23 @@ private val EXPIRING_SOON: Duration = Duration.ofHours(3)
  * not derivable, already closed, or comfortably open.
  */
 fun Conversation.windowExpiryLabel(now: Instant = Instant.now()): String? {
-    if (lastMessageOutbound) return null
-    val remaining = Duration.between(now, lastMessageAt.plus(SERVICE_WINDOW))
+    val expiresAt = replyWindowExpiresAt() ?: return null
+    val remaining = Duration.between(now, expiresAt)
     if (remaining.isNegative || remaining.isZero || remaining > EXPIRING_SOON) return null
     val hours = remaining.toHours()
     return if (hours >= 1) "${hours}h left"
     else "${remaining.toMinutes().coerceAtLeast(1)}m left"
+}
+
+/**
+ * When this chat's 24h reply window closes. The server's own figure wins (it knows about
+ * business-initiated windows and closed ones); an [Instant.EPOCH] value means it reports no
+ * open window. Only for rows cached before that field existed do we fall back to deriving it
+ * from the last message — and never for a chat that has no messages, or whose last message
+ * was ours, since neither says anything about the customer's window.
+ */
+fun Conversation.replyWindowExpiresAt(): Instant? = when {
+    windowExpiresAt != null -> windowExpiresAt
+    lastMessageOutbound || !hasMessages -> null
+    else -> lastMessageAt.plus(SERVICE_WINDOW)
 }

@@ -13,16 +13,11 @@ import com.websbaba.nitigrow.domain.model.SubscriptionInfo
 import com.websbaba.nitigrow.domain.model.Usage
 import com.websbaba.nitigrow.domain.model.UsageMeter
 import java.time.Instant
-import java.time.format.DateTimeParseException
 
 private val gson = Gson()
 private val pricesType = object : TypeToken<Map<String, Int>>() {}.type
 
 // Subscription dates are ISO-8601 strings (Mongo dates). Invoice timestamps are unix seconds.
-private fun parseIso(iso: String?): Long? = iso?.let {
-    try { Instant.parse(it).toEpochMilli() } catch (_: DateTimeParseException) { null }
-}
-
 private fun UsageMeterDto?.usedOr0(): Int = this?.used ?: 0
 private fun UsageMeterDto?.limitOr0(): Int = this?.limit ?: 0
 
@@ -34,9 +29,9 @@ fun BillingStatusDto.toEntity(): BillingStatusEntity {
         plan = plan ?: "trial",
         accountStatus = status,
         subStatus = sub?.status,
-        trialEndsAtEpochMs = parseIso(sub?.trialEndsAt),
-        periodStartEpochMs = parseIso(sub?.currentPeriodStart),
-        periodEndEpochMs = parseIso(sub?.currentPeriodEnd),
+        trialEndsAtEpochMs = parseInstantOrNull(sub?.trialEndsAt),
+        periodStartEpochMs = parseInstantOrNull(sub?.currentPeriodStart),
+        periodEndEpochMs = parseInstantOrNull(sub?.currentPeriodEnd),
         gatewaySubscriptionId = sub?.gatewaySubscriptionId,
         cancelAtPeriodEnd = sub?.cancelAtPeriodEnd ?: false,
         billingCycle = sub?.billingCycle,

@@ -16,12 +16,13 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import com.websbaba.nitigrow.core.ui.theme.NitiAvatarTones
 import com.websbaba.nitigrow.core.ui.theme.NitiType
-import com.websbaba.nitigrow.core.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Niti
 
 /**
  * Circular initials avatar. Colour pair comes from the warm 7-way rotation in
- * Theme.colors.avatars, picked by a stable hash of the name so a contact keeps
+ * NitiAvatarTones, picked by a stable hash of the name so a contact keeps
  * the same colour everywhere.
  */
 @Composable
@@ -38,9 +39,8 @@ fun Avatar(
             .joinToString("")
             .ifBlank { "?" }
     }
-    val palette = Theme.colors.avatars
-    val (bg, fg) = remember(name, palette) {
-        palette[(name.hashCode().toLong() and 0x7fffffff).rem(palette.size).toInt()]
+    val (bg, fg) = remember(name) {
+        NitiAvatarTones[(name.hashCode().toLong() and 0x7fffffff).rem(NitiAvatarTones.size).toInt()]
     }
 
     Box(

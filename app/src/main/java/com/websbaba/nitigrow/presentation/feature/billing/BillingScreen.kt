@@ -1,5 +1,7 @@
 package com.websbaba.nitigrow.presentation.feature.billing
 
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.util.formatIndian
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -45,13 +47,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.domain.model.BillingStatus
 import com.websbaba.nitigrow.domain.model.Invoice
 import com.websbaba.nitigrow.domain.model.UsageMeter
-import com.websbaba.nitigrow.core.ui.theme.Theme
-import java.text.NumberFormat
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private val nf = NumberFormat.getInstance(Locale("en", "IN"))
 private val dateFmt =
     DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH).withZone(ZoneId.systemDefault())
 
@@ -64,7 +63,7 @@ fun BillingScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     var confirmCancel by remember { mutableStateOf(false) }
-    val colors = Theme.colors
+    val colors = Niti.colors
 
     LaunchedEffect(state.message) {
         state.message?.let {
@@ -74,7 +73,7 @@ fun BillingScreen(
     }
 
     Scaffold(
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Column(
@@ -118,7 +117,7 @@ fun BillingScreen(
                                 Text(
                                     text = "Your plan is set to cancel at the end of the current period.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = colors.muted,
+                                    color = colors.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
                                 )
                             } else {
@@ -148,7 +147,7 @@ fun BillingScreen(
                 TextButton(onClick = {
                     confirmCancel = false
                     viewModel.cancel()
-                }) { Text("Cancel plan", color = colors.danger) }
+                }) { Text("Cancel plan", color = colors.error) }
             },
             dismissButton = {
                 TextButton(onClick = { confirmCancel = false }) { Text("Keep plan") }
@@ -159,7 +158,7 @@ fun BillingScreen(
 
 @Composable
 private fun BillingHeader(onBack: () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -168,13 +167,13 @@ private fun BillingHeader(onBack: () -> Unit) {
             .padding(start = 6.dp, end = 14.dp, top = 12.dp, bottom = 8.dp),
     ) {
         IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = colors.ink)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = colors.onSurface)
         }
         Text(
             text = "Billing & plan",
             style = MaterialTheme.typography.headlineMedium,
             fontSize = 21.sp,
-            color = colors.ink,
+            color = colors.onSurface,
             modifier = Modifier.weight(1f),
         )
     }
@@ -182,21 +181,21 @@ private fun BillingHeader(onBack: () -> Unit) {
 
 @Composable
 private fun CurrentPlanCard(status: BillingStatus) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val price = status.prices[status.plan] ?: 0
     val sub = status.subscription
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(colors.sidebarBg)
+            .background(colors.hero)
             .padding(18.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "${status.planLabel.uppercase()} PLAN",
                 style = MaterialTheme.typography.labelSmall,
-                color = colors.sidebarTextActive,
+                color = colors.onHero,
                 modifier = Modifier.weight(1f),
             )
             StatusPill(text = (sub?.status ?: status.accountStatus ?: "—").uppercase())
@@ -209,14 +208,14 @@ private fun CurrentPlanCard(status: BillingStatus) {
                 modifier = Modifier.padding(top = 10.dp),
             ) {
                 Text(
-                    text = "₹${nf.format(price)}",
+                    text = "₹${formatIndian(price)}",
                     style = MaterialTheme.typography.displayLarge.copy(fontSize = 34.sp, lineHeight = 38.sp),
-                    color = colors.sidebarInk,
+                    color = colors.onHero,
                 )
                 Text(
                     text = if (sub?.billingCycle == "annual") "/ year" else "/ month",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = colors.sidebarInk.copy(alpha = 0.55f),
+                    color = colors.onHero.copy(alpha = 0.55f),
                     modifier = Modifier.padding(bottom = 6.dp),
                 )
             }
@@ -233,7 +232,7 @@ private fun CurrentPlanCard(status: BillingStatus) {
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
-                color = colors.sidebarInk.copy(alpha = 0.7f),
+                color = colors.onHero.copy(alpha = 0.7f),
                 modifier = Modifier.padding(top = 8.dp),
             )
         }
@@ -242,10 +241,10 @@ private fun CurrentPlanCard(status: BillingStatus) {
 
 @Composable
 private fun StatusPill(text: String) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val active = text == "ACTIVE" || text == "TRIAL"
-    val bg = if (active) colors.turmericSoft else colors.sidebarInk.copy(alpha = 0.14f)
-    val fg = if (active) colors.turmericInk else colors.sidebarInk.copy(alpha = 0.7f)
+    val bg = if (active) colors.secondaryTone.container else colors.onHero.copy(alpha = 0.14f)
+    val fg = if (active) colors.secondaryTone.onContainer else colors.onHero.copy(alpha = 0.7f)
     Text(
         text = text,
         fontSize = 10.sp,
@@ -260,19 +259,19 @@ private fun StatusPill(text: String) {
 
 @Composable
 private fun UsageCard(status: BillingStatus) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(16.dp))
             .padding(16.dp),
     ) {
         Text(
             text = "THIS MONTH'S USAGE",
             style = MaterialTheme.typography.labelSmall,
-            color = colors.muted,
+            color = colors.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 12.dp),
         )
         UsageMeterRow("Conversations", status.usage.messages)
@@ -287,11 +286,11 @@ private fun UsageCard(status: BillingStatus) {
 
 @Composable
 private fun UsageMeterRow(label: String, meter: UsageMeter) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val valueText = if (meter.isUnlimited) {
-        "${nf.format(meter.used)} / Unlimited"
+        "${formatIndian(meter.used)} / Unlimited"
     } else {
-        "${nf.format(meter.used)} / ${nf.format(meter.limit)}"
+        "${formatIndian(meter.used)} / ${formatIndian(meter.limit)}"
     }
     val over = !meter.isUnlimited && meter.limit > 0 && meter.used >= meter.limit
     Column {
@@ -299,14 +298,14 @@ private fun UsageMeterRow(label: String, meter: UsageMeter) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = colors.ink,
+                color = colors.onSurface,
                 modifier = Modifier.weight(1f),
             )
             Text(
                 text = valueText,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = if (over) colors.danger else colors.muted,
+                color = if (over) colors.error else colors.onSurfaceVariant,
             )
         }
         Spacer(Modifier.height(6.dp))
@@ -315,7 +314,7 @@ private fun UsageMeterRow(label: String, meter: UsageMeter) {
                 .fillMaxWidth()
                 .height(6.dp)
                 .clip(RoundedCornerShape(999.dp))
-                .background(colors.border2),
+                .background(colors.outlineVariant),
         ) {
             if (meter.fraction > 0f) {
                 Box(
@@ -323,7 +322,7 @@ private fun UsageMeterRow(label: String, meter: UsageMeter) {
                         .fillMaxWidth(meter.fraction)
                         .height(6.dp)
                         .clip(RoundedCornerShape(999.dp))
-                        .background(if (over) colors.danger else colors.brand),
+                        .background(if (over) colors.error else colors.primary),
                 )
             }
         }
@@ -332,23 +331,23 @@ private fun UsageMeterRow(label: String, meter: UsageMeter) {
 
 @Composable
 private fun InvoicesCard(invoices: List<Invoice>) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp),
     ) {
         Text(
             text = "PAYMENT HISTORY",
             style = MaterialTheme.typography.labelSmall,
-            color = colors.muted,
+            color = colors.onSurfaceVariant,
             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
         )
         invoices.forEach { inv ->
-            HorizontalDivider(thickness = 1.dp, color = colors.border2)
+            HorizontalDivider(thickness = 1.dp, color = colors.outlineVariant)
             InvoiceRow(inv)
         }
     }
@@ -356,7 +355,7 @@ private fun InvoicesCard(invoices: List<Invoice>) {
 
 @Composable
 private fun InvoiceRow(inv: Invoice) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val rupees = inv.amountPaise / 100
     Row(
         modifier = Modifier
@@ -370,17 +369,17 @@ private fun InvoiceRow(inv: Invoice) {
                 text = inv.paidAt?.let { dateFmt.format(it) } ?: (inv.number ?: "Invoice"),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.ink,
+                color = colors.onSurface,
             )
             inv.number?.let {
-                Text(text = it, fontSize = 11.sp, color = colors.muted)
+                Text(text = it, fontSize = 11.sp, color = colors.onSurfaceVariant)
             }
         }
         Text(
-            text = "₹${nf.format(rupees)}",
+            text = "₹${formatIndian(rupees)}",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            color = colors.ink,
+            color = colors.onSurface,
         )
         StatusPill(text = (inv.status ?: "PAID").uppercase())
     }
@@ -388,34 +387,34 @@ private fun InvoiceRow(inv: Invoice) {
 
 @Composable
 private fun CancelRow(enabled: Boolean, onCancel: () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .border(1.dp, colors.danger.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+            .border(1.dp, colors.error.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
             .then(if (enabled) Modifier else Modifier)
             .padding(vertical = 11.dp),
         contentAlignment = Alignment.Center,
     ) {
         TextButton(onClick = onCancel, enabled = enabled) {
-            Text("Cancel subscription", color = colors.danger, fontWeight = FontWeight.SemiBold)
+            Text("Cancel subscription", color = colors.error, fontWeight = FontWeight.SemiBold)
         }
     }
 }
 
 @Composable
 private fun BannerCard(message: String, danger: Boolean) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Text(
         text = message,
         style = MaterialTheme.typography.bodySmall,
-        color = if (danger) colors.danger else colors.muted,
+        color = if (danger) colors.error else colors.onSurfaceVariant,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(if (danger) colors.danger.copy(alpha = 0.12f) else colors.card)
-            .border(1.dp, if (danger) colors.danger.copy(alpha = 0.2f) else colors.border, RoundedCornerShape(12.dp))
+            .background(if (danger) colors.error.copy(alpha = 0.12f) else colors.surfaceLow)
+            .border(1.dp, if (danger) colors.error.copy(alpha = 0.2f) else colors.outlineVariant, RoundedCornerShape(12.dp))
             .padding(12.dp),
     )
 }

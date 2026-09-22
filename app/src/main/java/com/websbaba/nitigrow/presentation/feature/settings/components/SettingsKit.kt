@@ -37,7 +37,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.websbaba.nitigrow.core.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Niti
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SettingsKit — shared design primitives for the Settings hub + sub-screens,
@@ -56,7 +56,7 @@ fun SubScreenHeader(
     subtitle: String? = null,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -68,7 +68,7 @@ fun SubScreenHeader(
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = colors.ink,
+                tint = colors.onSurface,
                 modifier = Modifier.size(21.dp)
             )
         }
@@ -76,13 +76,13 @@ fun SubScreenHeader(
             Text(
                 title,
                 style = MaterialTheme.typography.headlineMedium.copy(fontSize = 21.sp),
-                color = colors.ink
+                color = colors.onSurface
             )
             if (subtitle != null) {
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
-                    color = colors.muted
+                    color = colors.onSurfaceVariant
                 )
             }
         }
@@ -101,9 +101,9 @@ fun NgToggle(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val track by animateColorAsState(
-        targetValue = if (checked) colors.brand else colors.muted3,
+        targetValue = if (checked) colors.primary else colors.outlineVariant,
         label = "toggleTrack"
     )
     val thumbX by animateDpAsState(
@@ -127,7 +127,7 @@ fun NgToggle(
                 .offset(x = thumbX, y = 3.dp)
                 .size(20.dp)
                 .shadow(2.dp, CircleShape)
-                .background(if (colors.isLight) colors.card else colors.ink, CircleShape)
+                .background(if (colors.isLight) colors.surfaceLow else colors.onSurface, CircleShape)
         )
     }
 }
@@ -139,7 +139,7 @@ fun FieldLabel(text: String) {
         text,
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.SemiBold,
-        color = Theme.colors.ink3,
+        color = Niti.colors.onSurfaceVariant,
         modifier = Modifier.padding(bottom = 6.dp)
     )
 }
@@ -154,7 +154,7 @@ fun NgTextField(
     singleLine: Boolean = true,
     minLines: Int = 1
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -162,15 +162,15 @@ fun NgTextField(
         singleLine = singleLine,
         minLines = minLines,
         textStyle = MaterialTheme.typography.bodyLarge.copy(
-            color = if (enabled) colors.ink else colors.muted
+            color = if (enabled) colors.onSurface else colors.onSurfaceVariant
         ),
-        cursorBrush = SolidColor(colors.brand),
+        cursorBrush = SolidColor(colors.primary),
         decorationBox = { inner ->
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(colors.card, RoundedCornerShape(12.dp))
-                    .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+                    .background(colors.surfaceLow, RoundedCornerShape(12.dp))
+                    .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp))
                     .padding(horizontal = 14.dp, vertical = 13.dp)
             ) { inner() }
         },
@@ -199,9 +199,9 @@ fun PrimaryCta(
     enabled: Boolean = true,
     loading: Boolean = false
 ) {
-    val colors = Theme.colors
-    val bg = if (enabled && !loading) colors.brand else colors.brand.copy(alpha = 0.5f)
-    val fg = if (colors.isLight) colors.paper else colors.brandInk
+    val colors = Niti.colors
+    val bg = if (enabled && !loading) colors.primary else colors.primary.copy(alpha = 0.5f)
+    val fg = if (colors.isLight) colors.surface else colors.primaryTone.onContainer
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier

@@ -8,30 +8,21 @@ import com.websbaba.nitigrow.domain.model.Campaign
 import com.websbaba.nitigrow.domain.model.CampaignStatus
 import com.websbaba.nitigrow.domain.model.Template
 import java.time.Instant
-import java.time.format.DateTimeParseException
-
-private fun parseInstantOpt(iso: String?): Long? = iso?.let {
-    try { Instant.parse(it).toEpochMilli() } catch (_: DateTimeParseException) { null }
-}
-
-private fun parseInstant(iso: String): Long =
-    try { Instant.parse(iso).toEpochMilli() }
-    catch (_: DateTimeParseException) { System.currentTimeMillis() }
 
 fun CampaignDto.toEntity(): CampaignEntity = CampaignEntity(
     id = id,
-    name = name,
-    templateId = templateId,
-    templateName = templateName,
-    audienceTagsCsv = audienceTags.joinToString("|"),
-    audienceSize = audienceSize,
-    status = status.uppercase(),
-    scheduledAtEpochMs = parseInstantOpt(scheduledAt),
-    sentCount = sentCount,
-    deliveredCount = deliveredCount,
-    readCount = readCount,
-    failedCount = failedCount,
-    createdAtEpochMs = parseInstant(createdAt)
+    name = name.orEmpty(),
+    templateId = templateId.orEmpty(),
+    templateName = templateName.orEmpty(),
+    audienceTagsCsv = (audienceTags ?: audience?.tags).orEmpty().joinToString("|"),
+    audienceSize = audienceSize ?: stats?.total?.toInt() ?: audience?.contactIds?.size ?: 0,
+    status = status.orEmpty().uppercase(),
+    scheduledAtEpochMs = parseInstantOrNull(scheduledAt),
+    sentCount = sentCount ?: stats?.sent ?: 0L,
+    deliveredCount = deliveredCount ?: stats?.delivered ?: 0L,
+    readCount = readCount ?: stats?.read ?: 0L,
+    failedCount = failedCount ?: stats?.failed ?: 0L,
+    createdAtEpochMs = createdAt?.let(::parseInstant) ?: System.currentTimeMillis()
 )
 
 fun CampaignEntity.toDomain(): Campaign = Campaign(

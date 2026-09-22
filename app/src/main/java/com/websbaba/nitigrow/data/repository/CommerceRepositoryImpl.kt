@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.util.DispatcherProvider
 import com.websbaba.nitigrow.data.remote.api.CommerceApi
@@ -31,9 +32,8 @@ class CommerceRepositoryImpl @Inject constructor(
     )
 
     override suspend fun getProducts(): ApiResult<List<Product>> =
-        when (val r = safeApiCall(dispatchers.io) { api.listProducts() }) {
-            is ApiResult.Success -> ApiResult.Success(r.data.orEmpty().map { it.toDomain() })
-            is ApiResult.Error -> r
+        safeApiCall(dispatchers.io) { api.listProducts() }.andThen { r ->
+            ApiResult.Success(r.orEmpty().map { it.toDomain() })
         }
 
     override suspend fun getCatalogId(): String? =
@@ -43,10 +43,9 @@ class CommerceRepositoryImpl @Inject constructor(
     override suspend fun sendProduct(
         to: String, catalogId: String, productRetailerId: String, body: String?,
     ): ApiResult<Unit> =
-        when (val r = safeApiCall(dispatchers.io) {
+        safeApiCall(dispatchers.io) {
             api.sendProduct(SendProductRequest(to, catalogId, productRetailerId, body))
-        }) {
-            is ApiResult.Success -> ApiResult.Success(Unit)
-            is ApiResult.Error -> r
+        }.andThen { r ->
+            ApiResult.Success(Unit)
         }
 }

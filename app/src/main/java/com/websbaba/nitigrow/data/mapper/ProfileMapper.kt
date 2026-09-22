@@ -11,12 +11,6 @@ import com.websbaba.nitigrow.domain.model.Tenant
 import com.websbaba.nitigrow.domain.model.User
 import com.websbaba.nitigrow.domain.model.UserRole
 import com.websbaba.nitigrow.domain.model.WabaStatus
-import java.time.Instant
-import java.time.format.DateTimeParseException
-
-private fun parseInstant(iso: String): Long =
-    try { Instant.parse(iso).toEpochMilli() }
-    catch (_: DateTimeParseException) { System.currentTimeMillis() }
 
 fun UserDto.toProfileEntity(avatarUrl: String? = null) = ProfileEntity(
     id = 0,
@@ -59,10 +53,10 @@ fun TenantEntity.toDomain(): Tenant = Tenant(
 
 fun TeamMemberDto.toEntity() = TeamMemberEntity(
     id = id,
-    name = name,
-    email = email,
-    role = role.uppercase(),
-    isOwner = isOwner,
+    name = name.orEmpty(),
+    email = email.orEmpty(),
+    role = (role ?: "agent").uppercase(),
+    isOwner = isOwner ?: role.equals("owner", ignoreCase = true),
     joinedAtEpochMs = parseInstant(joinedAt)
 )
 

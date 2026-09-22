@@ -21,6 +21,22 @@ class CreateCampaignUseCase @Inject constructor(
         if (scheduledAt != null && scheduledAt.isBefore(Instant.now().plusSeconds(60))) {
             return ApiResult.Error(message = "Schedule at least 1 minute ahead")
         }
-        return repo.create(name.trim(), templateId, audienceTags, scheduledAt)
+        val created = repo.create(name.trim(), templateId, audienceTags, scheduledAt)
+        if (created !is ApiResult.Success) return created
+
+        // Creating a campaign never sends it — only a *scheduled* one is auto-enqueued by
+        // the backend. "Send now" means no scheduledAt, so without this call it would sit
+        // as an unsent draft forever with no error or indication anything is wrong.
+        if (scheduledAt == null) {
+            when (val launched = repo.launch(created.data.id)) {
+                is ApiResult.Error -> return ApiResult.Error(
+                    message = "Saved as a draft, but couldn't send: ${launched.message}",
+                    code = launched.code,
+                    type = launched.type
+                )
+                is ApiResult.Success -> Unit
+            }
+        }
+        return created
     }
 }

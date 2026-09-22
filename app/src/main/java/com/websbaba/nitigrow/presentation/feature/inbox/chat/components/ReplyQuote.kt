@@ -26,11 +26,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -55,13 +55,13 @@ fun ReplyQuote(
     onClear: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(colors.paper2)
+            .background(colors.surfaceLow)
             .padding(start = 0.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -72,7 +72,7 @@ fun ReplyQuote(
                 .width(3.dp)
                 .height(40.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(colors.brand)
+                .background(colors.primary)
         )
 
         Column(
@@ -83,14 +83,14 @@ fun ReplyQuote(
             Text(
                 text = authorLabel(quoted),
                 style = MaterialTheme.typography.labelMedium,
-                color = colors.brand,
+                color = colors.primary,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.padding(top = 2.dp))
             Text(
                 text = quotePreview(quoted),
                 style = MaterialTheme.typography.bodyMedium,
-                color = colors.ink2,
+                color = colors.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -100,7 +100,7 @@ fun ReplyQuote(
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = "Cancel reply",
-                tint = colors.ink3
+                tint = colors.onSurfaceVariant
             )
         }
     }
@@ -116,18 +116,18 @@ fun ReplyEcho(
     isParentOutbound: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     // When the parent bubble is outbound (brand-coloured background), use a
     // translucent overlay so the chip still reads as "quoted" but stays
     // anchored visually inside the bubble.
     val chipBg = if (isParentOutbound) {
-        colors.paper.copy(alpha = 0.18f)
+        colors.surface.copy(alpha = 0.18f)
     } else {
-        colors.paper2
+        colors.surfaceLow
     }
-    val barColor = if (isParentOutbound) colors.paper else colors.brand
-    val authorColor = if (isParentOutbound) colors.paper else colors.brand
-    val bodyColor = if (isParentOutbound) colors.paper.copy(alpha = 0.85f) else colors.ink2
+    val barColor = if (isParentOutbound) colors.surface else colors.primary
+    val authorColor = if (isParentOutbound) colors.surface else colors.primary
+    val bodyColor = if (isParentOutbound) colors.surface.copy(alpha = 0.85f) else colors.onSurface
 
     Row(
         modifier = modifier
@@ -219,7 +219,7 @@ private fun PreviewReplyEchoInsideInbound() {
             modifier = Modifier
                 .padding(8.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(Theme.colors.bubbleIn)
+                .background(Niti.colors.bubbleIn)
                 .padding(8.dp)
         ) {
             Column {
@@ -230,7 +230,7 @@ private fun PreviewReplyEchoInsideInbound() {
                 Text(
                     "Sure — I'll send it now.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Theme.colors.bubbleInInk
+                    color = Niti.colors.onBubbleIn
                 )
             }
         }
@@ -245,7 +245,7 @@ private fun PreviewReplyEchoInsideOutbound() {
             modifier = Modifier
                 .padding(8.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(Theme.colors.bubbleOut)
+                .background(Niti.colors.bubbleOut)
                 .padding(8.dp)
         ) {
             Column {
@@ -256,7 +256,7 @@ private fun PreviewReplyEchoInsideOutbound() {
                 Text(
                     "Got it — shipping today.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Theme.colors.bubbleOutInk
+                    color = Niti.colors.onBubbleOut
                 )
             }
         }

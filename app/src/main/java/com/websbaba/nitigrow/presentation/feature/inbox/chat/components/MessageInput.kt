@@ -32,6 +32,10 @@ import com.websbaba.nitigrow.core.ui.theme.NitiType
 /**
  * Chat composer — a tonal pill holding the text field and attach button, with
  * a 52dp round send button beside it. Send is muted until there is text.
+ *
+ * [enabled] false means a confirmed-closed 24h window: WhatsApp will not deliver a
+ * free-text message here, so typing and attaching are blocked rather than letting the
+ * user compose something that looks sent but was never going anywhere.
  */
 @Composable
 fun MessageInput(
@@ -39,10 +43,11 @@ fun MessageInput(
     onTextChange: (String) -> Unit,
     onSend: () -> Unit,
     onAttachClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     val colors = Niti.colors
-    val canSend = text.isNotBlank()
+    val canSend = enabled && text.isNotBlank()
     val textStyle = NitiType.body.copy(fontSize = 16.sp, color = colors.onSurface)
 
     Row(
@@ -67,6 +72,7 @@ fun MessageInput(
             BasicTextField(
                 value = text,
                 onValueChange = onTextChange,
+                enabled = enabled,
                 maxLines = 5,
                 textStyle = textStyle,
                 cursorBrush = SolidColor(colors.primary),
@@ -74,7 +80,7 @@ fun MessageInput(
                     Box(contentAlignment = Alignment.CenterStart) {
                         if (text.isEmpty()) {
                             Text(
-                                text = "Message",
+                                text = if (enabled) "Message" else "Send a template to reply",
                                 style = textStyle,
                                 color = colors.outline,
                                 maxLines = 1
@@ -89,7 +95,8 @@ fun MessageInput(
                 icon = NitiIcons.Attach,
                 contentDescription = "Attach file",
                 onClick = onAttachClick,
-                tint = colors.onSurfaceVariant
+                enabled = enabled,
+                tint = if (enabled) colors.onSurfaceVariant else colors.outline
             )
         }
         Box(

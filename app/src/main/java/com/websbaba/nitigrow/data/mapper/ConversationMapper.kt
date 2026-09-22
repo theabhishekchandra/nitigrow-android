@@ -5,15 +5,6 @@ import com.websbaba.nitigrow.data.remote.dto.ConversationDto
 import com.websbaba.nitigrow.domain.model.Conversation
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import java.time.Instant
-import java.time.format.DateTimeParseException
-
-private fun parseInstant(iso: String): Long =
-    try { Instant.parse(iso).toEpochMilli() }
-    catch (_: DateTimeParseException) { System.currentTimeMillis() }
-
-private fun statusFromString(value: String): MessageStatus =
-    runCatching { MessageStatus.valueOf(value.uppercase()) }
-        .getOrDefault(MessageStatus.SENT)
 
 fun ConversationDto.toEntity(): ConversationEntity = ConversationEntity(
     id = id,
@@ -27,7 +18,8 @@ fun ConversationDto.toEntity(): ConversationEntity = ConversationEntity(
     lastMessageOutbound = lastMessageOutbound,
     unreadCount = unreadCount,
     isPinned = isPinned,
-    isMuted = isMuted
+    isMuted = isMuted,
+    windowExpiresAtEpochMs = windowExpiresAt?.let(::parseInstant) ?: 0L
 )
 
 fun ConversationEntity.toDomain(): Conversation = Conversation(
@@ -38,9 +30,13 @@ fun ConversationEntity.toDomain(): Conversation = Conversation(
     avatarUrl = avatarUrl,
     lastMessage = lastMessage,
     lastMessageAt = Instant.ofEpochMilli(lastMessageAtEpochMs),
-    lastMessageStatus = statusFromString(lastMessageStatus),
+    lastMessageStatus = messageStatusOf(lastMessageStatus),
     lastMessageOutbound = lastMessageOutbound,
     unreadCount = unreadCount,
     isPinned = isPinned,
-    isMuted = isMuted
+    isMuted = isMuted,
+    windowExpiresAt = when (windowExpiresAtEpochMs) {
+        ConversationEntity.WINDOW_UNKNOWN -> null
+        else -> Instant.ofEpochMilli(windowExpiresAtEpochMs)
+    }
 )

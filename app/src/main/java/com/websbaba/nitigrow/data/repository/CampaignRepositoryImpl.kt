@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.realtime.RealtimeClient
 import com.websbaba.nitigrow.core.realtime.RealtimeEvent
@@ -11,6 +12,7 @@ import com.websbaba.nitigrow.data.mapper.toDomain
 import com.websbaba.nitigrow.data.mapper.toEntity
 import com.websbaba.nitigrow.data.remote.api.CampaignsApi
 import com.websbaba.nitigrow.data.remote.dto.AudienceEstimateRequest
+import com.websbaba.nitigrow.data.remote.dto.CampaignAudienceRequest
 import com.websbaba.nitigrow.data.remote.dto.CreateCampaignRequest
 import com.websbaba.nitigrow.domain.model.Campaign
 import com.websbaba.nitigrow.domain.model.Template
@@ -57,29 +59,22 @@ class CampaignRepositoryImpl @Inject constructor(
         templateDao.observeAll().map { rows -> rows.map { it.toDomain() } }
 
     override suspend fun refreshCampaigns(): ApiResult<Unit> =
-        when (val res = safeApiCall(dispatchers.io) { api.list() }) {
-            is ApiResult.Success -> {
-                dao.upsertAll((res.data.data ?: emptyList()).map { it.toEntity() })
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.list() }.andThen { res ->
+            dao.upsertAll((res.data ?: emptyList()).map { it.toEntity() })
+            ApiResult.Success(Unit)
         }
 
     override suspend fun refreshTemplates(): ApiResult<Unit> =
-        when (val res = safeApiCall(dispatchers.io) { api.listTemplates() }) {
-            is ApiResult.Success -> {
-                templateDao.upsertAll(res.data.map { it.toEntity() })
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.listTemplates() }.andThen { res ->
+            templateDao.upsertAll(res.map { it.toEntity() })
+            ApiResult.Success(Unit)
         }
 
     override suspend fun estimateAudience(tags: List<String>): ApiResult<Int> =
-        when (val res = safeApiCall(dispatchers.io) {
+        safeApiCall(dispatchers.io) {
             api.estimate(AudienceEstimateRequest(tags))
-        }) {
-            is ApiResult.Success -> ApiResult.Success(res.data.count)
-            is ApiResult.Error -> res
+        }.andThen { res ->
+            ApiResult.Success(res.count)
         }
 
     override suspend fun create(
@@ -88,26 +83,33 @@ class CampaignRepositoryImpl @Inject constructor(
         audienceTags: List<String>,
         scheduledAt: Instant?
     ): ApiResult<Campaign> =
-        when (val res = safeApiCall(dispatchers.io) {
+        safeApiCall(dispatchers.io) {
             api.create(
                 CreateCampaignRequest(
                     name = name,
                     templateId = templateId,
-                    audienceTags = audienceTags,
+                    // The backend's Joi schema requires this nested shape and silently
+                    // drops any other top-level key — a flat `audienceTags` field was
+                    // ignored, so every campaign defaulted to audience "all" instead of
+                    // the tags picked here.
+                    audience = CampaignAudienceRequest(type = "tag", tags = audienceTags),
                     scheduledAt = scheduledAt?.toString()
                 )
             )
-        }) {
-            is ApiResult.Success -> {
-                val entity = res.data.toEntity()
-                dao.upsert(entity)
-                ApiResult.Success(entity.toDomain())
-            }
-            is ApiResult.Error -> res
+        }.andThen { res ->
+            val entity = res.toEntity()
+            dao.upsert(entity)
+            ApiResult.Success(entity.toDomain())
         }
 
     override suspend fun cancel(id: String): ApiResult<Unit> {
         dao.setStatus(id, "CANCELLED")  // optimistic
         return safeApiCall(dispatchers.io) { api.cancel(id); Unit }
     }
+
+    override suspend fun launch(id: String): ApiResult<Unit> =
+        safeApiCall(dispatchers.io) { api.launch(id) }.andThen {
+            dao.setStatus(id, "RUNNING")
+            ApiResult.Success(Unit)
+        }
 }

@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.domain.model.TeamMember
 import com.websbaba.nitigrow.domain.model.UserRole
 import com.websbaba.nitigrow.presentation.components.ErrorBanner
@@ -55,7 +56,6 @@ import com.websbaba.nitigrow.presentation.feature.settings.components.PrimaryCta
 import com.websbaba.nitigrow.presentation.feature.settings.components.StatusPill
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
 import kotlinx.coroutines.flow.collectLatest
-import com.websbaba.nitigrow.core.ui.theme.Theme
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TeamScreen — Settings ▸ Team.
@@ -74,7 +74,7 @@ fun TeamScreen(
     viewModel: TeamViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val colors = Theme.colors
+    val colors = Niti.colors
     val snackbar = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -84,7 +84,7 @@ fun TeamScreen(
     }
 
     Scaffold(
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         topBar = {
             SubScreenHeader(
                 title = "Team",
@@ -125,14 +125,14 @@ fun TeamScreen(
 
 @Composable
 private fun MemberCard(member: TeamMember, onRemove: () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(15.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(15.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(15.dp))
             .padding(14.dp)
     ) {
         Avatar(name = member.name, url = null, sizeDp = 44)
@@ -142,13 +142,13 @@ private fun MemberCard(member: TeamMember, onRemove: () -> Unit) {
                 member.name,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.ink,
+                color = colors.onSurface,
                 maxLines = 1
             )
             Text(
                 member.email,
                 fontSize = 11.5.sp,
-                color = colors.muted,
+                color = colors.onSurfaceVariant,
                 maxLines = 1
             )
         }
@@ -158,7 +158,7 @@ private fun MemberCard(member: TeamMember, onRemove: () -> Unit) {
                 Icon(
                     Icons.Filled.Delete,
                     contentDescription = "Remove ${member.name}",
-                    tint = colors.danger,
+                    tint = colors.error,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -168,26 +168,26 @@ private fun MemberCard(member: TeamMember, onRemove: () -> Unit) {
 
 @Composable
 private fun RolePill(role: UserRole) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val (bg, fg) = when (role) {
-        UserRole.OWNER -> colors.brandSoft to colors.brand
-        UserRole.ADMIN -> colors.turmericSoft to colors.turmericInk
-        UserRole.AGENT -> colors.paper2 to colors.ink3
+        UserRole.OWNER -> colors.primaryTone.container to colors.primary
+        UserRole.ADMIN -> colors.secondaryTone.container to colors.secondaryTone.onContainer
+        UserRole.AGENT -> colors.surfaceLow to colors.onSurfaceVariant
     }
     StatusPill(role.name, bg = bg, fg = fg)
 }
 
 @Composable
 private fun InviteButton(onClick: () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 4.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(colors.brandSoft)
-            .border(1.dp, colors.brand.copy(alpha = 0.22f), RoundedCornerShape(14.dp))
+            .background(colors.primaryTone.container)
+            .border(1.dp, colors.primary.copy(alpha = 0.22f), RoundedCornerShape(14.dp))
             .clickable(role = Role.Button, onClick = onClick)
             .padding(vertical = 14.dp)
     ) {
@@ -195,7 +195,7 @@ private fun InviteButton(onClick: () -> Unit) {
             "Invite teammate",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = colors.brand
+            color = colors.primary
         )
     }
 }
@@ -206,24 +206,25 @@ private fun InviteSheet(
     saving: Boolean,
     error: String?,
     onDismiss: () -> Unit,
-    onInvite: (String, String) -> Unit
+    onInvite: (String, String, String) -> Unit
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("AGENT") }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = {
             Box(
                 modifier = Modifier
                     .padding(top = 10.dp, bottom = 6.dp)
                     .size(width = 38.dp, height = 4.dp)
-                    .background(colors.muted3, PillShape)
+                    .background(colors.outlineVariant, PillShape)
             )
         }
     ) {
@@ -236,8 +237,12 @@ private fun InviteSheet(
             Text(
                 "Invite teammate",
                 style = MaterialTheme.typography.headlineSmall.copy(fontSize = 19.sp),
-                color = colors.ink
+                color = colors.onSurface
             )
+            Column {
+                FieldLabel("Name")
+                NgTextField(value = name, onValueChange = { name = it })
+            }
             Column {
                 FieldLabel("Email")
                 NgTextField(value = email, onValueChange = { email = it })
@@ -252,9 +257,9 @@ private fun InviteSheet(
             error?.let { ErrorBanner(message = it) }
             PrimaryCta(
                 text = "Send invite",
-                onClick = { onInvite(email, role) },
+                onClick = { onInvite(name, email, role) },
                 loading = saving,
-                enabled = email.isNotBlank()
+                enabled = name.isNotBlank() && email.isNotBlank()
             )
         }
     }
@@ -262,12 +267,12 @@ private fun InviteSheet(
 
 @Composable
 private fun RoleChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    val colors = Theme.colors
-    val bg = if (selected) colors.brand else colors.paper2
+    val colors = Niti.colors
+    val bg = if (selected) colors.primary else colors.surfaceLow
     val fg = when {
-        !selected -> colors.ink3
-        colors.isLight -> colors.paper
-        else -> colors.brandInk
+        !selected -> colors.onSurfaceVariant
+        colors.isLight -> colors.surface
+        else -> colors.primaryTone.onContainer
     }
     Box(
         modifier = Modifier

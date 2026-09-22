@@ -2,12 +2,12 @@ package com.websbaba.nitigrow.core.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
@@ -15,7 +15,7 @@ import androidx.core.view.WindowCompat
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NitiGrowTheme — single Compose entry-point for the whole app's visual layer.
-//   • Provides the warm-Indian-premium NitiGrowColors via CompositionLocal.
+//   • Provides the warm-Indian-premium NitiColors via CompositionLocal.
 //   • Mirrors a minimal Material 3 ColorScheme so stock components (Snackbar,
 //     TextField, etc.) inherit the right brand colours without per-site work.
 //   • Locks status bar tint + light/dark appearance to the brand top bar so
@@ -28,71 +28,66 @@ import androidx.core.view.WindowCompat
 // every device.
 // ─────────────────────────────────────────────────────────────────────────────
 
-private fun buildLightScheme(c: NitiGrowColors) = lightColorScheme(
-    primary           = c.brand,
-    onPrimary         = c.paper,
-    primaryContainer  = c.brandSoft,
-    onPrimaryContainer= c.brandInk,
-
-    secondary         = c.accent,
-    onSecondary       = c.paper,
-    secondaryContainer= c.accentSoft,
-    onSecondaryContainer = c.accent,
-
-    tertiary          = c.turmeric,
-    onTertiary        = c.brandInk,
-    tertiaryContainer = c.turmericSoft,
-    onTertiaryContainer = c.ink2,
-
-    background        = c.paper,
-    onBackground      = c.ink,
-    surface           = c.card,
-    onSurface         = c.ink,
-    surfaceVariant    = c.paper2,
-    onSurfaceVariant  = c.ink3,
-    surfaceTint       = c.brand,
-
-    error             = c.danger,
-    onError           = c.paper,
-    errorContainer    = c.accentSoft,
-    onErrorContainer  = c.danger,
-
-    outline           = c.border,
-    outlineVariant    = c.border2,
-)
-
-private fun buildDarkScheme(c: NitiGrowColors) = darkColorScheme(
-    primary           = c.brand,
-    onPrimary         = c.brandInk,
-    primaryContainer  = c.brandSoft,
-    onPrimaryContainer= c.brandInk,
-
-    secondary         = c.accent,
-    onSecondary       = c.paper,
-    secondaryContainer= c.accentSoft,
-    onSecondaryContainer = c.accent,
-
-    tertiary          = c.turmeric,
-    onTertiary        = c.brandInk,
-    tertiaryContainer = c.turmericSoft,
-    onTertiaryContainer = c.ink,
-
-    background        = c.paper,
-    onBackground      = c.ink,
-    surface           = c.card,
-    onSurface         = c.ink,
-    surfaceVariant    = c.paper2,
-    onSurfaceVariant  = c.ink3,
-    surfaceTint       = c.brand,
-
-    error             = c.danger,
-    onError           = c.paper,
-    errorContainer    = c.accentSoft,
-    onErrorContainer  = c.danger,
-
-    outline           = c.border,
-    outlineVariant    = c.border2,
-)
+private fun buildColorScheme(c: NitiColors): ColorScheme {
+    val tones = c.errorTone
+    return if (c.isLight) {
+        lightColorScheme(
+            primary = c.primary,
+            onPrimary = c.onPrimary,
+            primaryContainer = c.primaryTone.container,
+            onPrimaryContainer = c.primaryTone.onContainer,
+            secondary = c.secondaryTone.onContainer,
+            onSecondary = c.surface,
+            secondaryContainer = c.secondaryTone.container,
+            onSecondaryContainer = c.secondaryTone.onContainer,
+            tertiary = c.tertiaryTone.onContainer,
+            onTertiary = c.surface,
+            tertiaryContainer = c.tertiaryTone.container,
+            onTertiaryContainer = c.tertiaryTone.onContainer,
+            background = c.surface,
+            onBackground = c.onSurface,
+            surface = c.surface,
+            onSurface = c.onSurface,
+            surfaceVariant = c.surfaceContainer,
+            onSurfaceVariant = c.onSurfaceVariant,
+            surfaceTint = c.primary,
+            error = c.error,
+            onError = c.surface,
+            errorContainer = tones.container,
+            onErrorContainer = tones.onContainer,
+            outline = c.outline,
+            outlineVariant = c.outlineVariant,
+        )
+    } else {
+        darkColorScheme(
+            primary = c.primary,
+            onPrimary = c.onPrimary,
+            primaryContainer = c.primaryTone.container,
+            onPrimaryContainer = c.primaryTone.onContainer,
+            secondary = c.secondaryTone.onContainer,
+            onSecondary = c.surface,
+            secondaryContainer = c.secondaryTone.container,
+            onSecondaryContainer = c.secondaryTone.onContainer,
+            tertiary = c.tertiaryTone.onContainer,
+            onTertiary = c.surface,
+            tertiaryContainer = c.tertiaryTone.container,
+            onTertiaryContainer = c.tertiaryTone.onContainer,
+            background = c.surface,
+            onBackground = c.onSurface,
+            surface = c.surface,
+            onSurface = c.onSurface,
+            surfaceVariant = c.surfaceContainer,
+            onSurfaceVariant = c.onSurfaceVariant,
+            surfaceTint = c.primary,
+            error = c.error,
+            onError = tones.container,
+            errorContainer = tones.container,
+            onErrorContainer = tones.onContainer,
+            outline = c.outline,
+            outlineVariant = c.outlineVariant,
+        )
+    }
+}
 
 @Composable
 fun NitiGrowTheme(
@@ -101,26 +96,20 @@ fun NitiGrowTheme(
     content: @Composable () -> Unit,
 ) {
     // Palette per exploration theme:
-    //  • SOFT_PAPER follows the system light/dark toggle (classic behaviour).
-    //  • BRAND_FORWARD is a light-theme variant; in system dark it falls back
-    //    to the standard dark palette so text stays readable.
+    //  • SOFT_PAPER follows the system light/dark toggle.
+    //  • BRAND_FORWARD is a light variant; in system dark it falls back to the dark palette.
     //  • ESPRESSO_PREMIUM is inherently dark and ignores the system toggle.
-    val niti = when (appTheme) {
-        AppTheme.SOFT_PAPER ->
-            if (darkTheme) NitiGrowDarkColors else NitiGrowLightColors
-        AppTheme.BRAND_FORWARD ->
-            if (darkTheme) NitiGrowDarkColors else BrandForwardColors
-        AppTheme.ESPRESSO_PREMIUM -> EspressoPremiumColors
+    val colors = when (appTheme) {
+        AppTheme.SOFT_PAPER -> if (darkTheme) NitiDarkColors else NitiLightColors
+        AppTheme.BRAND_FORWARD -> if (darkTheme) NitiDarkColors else NitiBrandForwardColors
+        AppTheme.ESPRESSO_PREMIUM -> NitiDarkColors
     }
-    val m3 = if (niti.isLight) buildLightScheme(niti) else buildDarkScheme(niti)
 
-    // Status bar: brand tint as before — except Espresso Premium, whose brand
-    // is bright turmeric (illegible behind light icons, jarring above dark
-    // surfaces), so it uses the palette's paper instead. Navigation-bar
-    // appearance keys off the *palette's* lightness (not the system toggle)
-    // so Espresso Premium always gets light nav icons even when the device is
-    // in light mode.
-    val statusBar = if (appTheme == AppTheme.ESPRESSO_PREMIUM) niti.paper else niti.brand
+    // Baseline status bar: viridian behind light icons in light palettes, the surface in
+    // dark ones (bright turmeric would be illegible behind light icons). Screens refine it
+    // through NitiStatusBar. Navigation-bar icons follow the *palette's* lightness so
+    // Espresso Premium gets light icons even when the device is in light mode.
+    val statusBar = if (colors.isLight) colors.primary else colors.surface
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -129,32 +118,16 @@ fun NitiGrowTheme(
             WindowCompat.getInsetsController(window, view)
                 .isAppearanceLightStatusBars = false
             WindowCompat.getInsetsController(window, view)
-                .isAppearanceLightNavigationBars = niti.isLight
+                .isAppearanceLightNavigationBars = colors.isLight
         }
     }
 
-    // Redesign tokens follow the palette's lightness, so Espresso Premium
-    // (always dark) gets the dark tokens even when the device is in light mode.
-    val redesign = if (niti.isLight) NitiLightColors else NitiDarkColors
-
-    CompositionLocalProvider(
-        LocalNitiGrowColors provides niti,
-        LocalNitiColors provides redesign,
-    ) {
+    CompositionLocalProvider(LocalNitiColors provides colors) {
         MaterialTheme(
-            colorScheme = m3,
+            colorScheme = buildColorScheme(colors),
             typography = nitiGrowTypography(),
             shapes = NitiGrowShapes,
             content = content,
         )
     }
-}
-
-// Sugar so screens can write `Theme.colors.brand` / `Theme.shapes.medium`
-// instead of unwrapping the CompositionLocal every time.
-object Theme {
-    val colors: NitiGrowColors
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalNitiGrowColors.current
 }

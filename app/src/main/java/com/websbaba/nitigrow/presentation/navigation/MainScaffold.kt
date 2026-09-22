@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,8 +36,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -228,16 +231,25 @@ private fun PillTabItem(
                 )
             }
         }
-        Text(
-            text = tab.label,
-            color = labelTint,
-            style = NitiType.caption.copy(
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
-            ),
-            maxLines = 1
-        )
+        // Five equal-width tabs leave ~70dp per label, so cap font scaling here (M3
+        // navigation bars do the same) or "Broadcasts" clips at large system text sizes.
+        val density = LocalDensity.current
+        CompositionLocalProvider(
+            LocalDensity provides Density(density.density, fontScale = minOf(density.fontScale, MAX_NAV_FONT_SCALE))
+        ) {
+            Text(
+                text = tab.label,
+                color = labelTint,
+                style = NitiType.caption.copy(
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+                ),
+                maxLines = 1
+            )
+        }
     }
 }
+
+private const val MAX_NAV_FONT_SCALE = 1.2f
 
 @Composable
 private fun TabHost(tabNav: NavHostController, rootNav: NavHostController) {

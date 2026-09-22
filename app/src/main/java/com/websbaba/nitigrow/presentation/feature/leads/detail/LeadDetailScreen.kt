@@ -1,5 +1,6 @@
 package com.websbaba.nitigrow.presentation.feature.leads.detail
 
+import com.websbaba.nitigrow.presentation.components.NitiCard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,7 +52,7 @@ import com.websbaba.nitigrow.presentation.feature.leads.components.LeadStagePill
 import com.websbaba.nitigrow.presentation.feature.leads.components.PipelineStages
 import com.websbaba.nitigrow.presentation.feature.leads.components.StepState
 import com.websbaba.nitigrow.presentation.feature.leads.components.formatInr
-import com.websbaba.nitigrow.presentation.feature.leads.components.relativeTime
+import com.websbaba.nitigrow.core.util.relativeTime
 import com.websbaba.nitigrow.presentation.feature.leads.components.stageTone
 import com.websbaba.nitigrow.presentation.feature.leads.components.stepState
 import com.websbaba.nitigrow.core.ui.theme.Niti
@@ -365,14 +366,7 @@ private fun ActionButton(
 
 @Composable
 private fun DetailCard(title: String, content: @Composable () -> Unit) {
-    Column(
-        modifier = Modifier
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Niti.colors.surfaceLow)
-            .padding(18.dp)
-    ) {
+    NitiCard(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
         Text(text = title, style = NitiType.titleUi, color = Niti.colors.onSurface)
         content()
     }

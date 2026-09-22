@@ -14,6 +14,7 @@ import com.websbaba.nitigrow.domain.usecase.chat.RetryMessageUseCase
 import com.websbaba.nitigrow.domain.usecase.chat.SendMessageUseCase
 import com.websbaba.nitigrow.domain.usecase.inbox.ObserveConversationsUseCase
 import com.websbaba.nitigrow.presentation.base.BaseViewModel
+import com.websbaba.nitigrow.presentation.feature.inbox.list.replyWindowExpiresAt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -28,7 +29,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Duration
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
@@ -74,8 +74,7 @@ class ChatViewModel @Inject constructor(
                         contactName = conv.contactName,
                         contactPhone = conv.contactPhone,
                         avatarUrl = conv.avatarUrl,
-                        windowExpiresAt = if (conv.lastMessageOutbound) null
-                        else conv.lastMessageAt.plus(SERVICE_WINDOW)
+                        windowExpiresAt = conv.replyWindowExpiresAt()
                     )
                 }
             }
@@ -118,8 +117,4 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch { retryMessage(clientId) }
     }
 
-    companion object {
-        /** WhatsApp's 24h customer-service window after the last inbound message. */
-        private val SERVICE_WINDOW: Duration = Duration.ofHours(24)
-    }
 }

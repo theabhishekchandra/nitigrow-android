@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.util.DispatcherProvider
 import com.websbaba.nitigrow.data.local.dao.BillingStatusDao
@@ -31,32 +32,23 @@ class BillingRepositoryImpl @Inject constructor(
         invoiceDao.observeAll().map { rows -> rows.map { it.toDomain() } }
 
     override suspend fun refreshStatus(): ApiResult<Unit> =
-        when (val res = safeApiCall(dispatchers.io) { api.status() }) {
-            is ApiResult.Success -> {
-                statusDao.upsert(res.data.toEntity())
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.status() }.andThen { res ->
+            statusDao.upsert(res.toEntity())
+            ApiResult.Success(Unit)
         }
 
     override suspend fun refreshInvoices(): ApiResult<Unit> =
-        when (val res = safeApiCall(dispatchers.io) { api.invoices() }) {
-            is ApiResult.Success -> {
-                val rows = (res.data.invoices ?: emptyList())
-                    .mapIndexed { i, dto -> dto.toEntity(fallbackId = "inv_$i") }
-                invoiceDao.clear()
-                invoiceDao.upsertAll(rows)
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.invoices() }.andThen { res ->
+            val rows = (res.invoices ?: emptyList())
+                .mapIndexed { i, dto -> dto.toEntity(fallbackId = "inv_$i") }
+            invoiceDao.clear()
+            invoiceDao.upsertAll(rows)
+            ApiResult.Success(Unit)
         }
 
     override suspend fun cancel(): ApiResult<String?> =
-        when (val res = safeApiCall(dispatchers.io) { api.cancel() }) {
-            is ApiResult.Success -> {
-                refreshStatus()
-                ApiResult.Success(res.data.message)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.cancel() }.andThen { res ->
+            refreshStatus()
+            ApiResult.Success(res.message)
         }
 }

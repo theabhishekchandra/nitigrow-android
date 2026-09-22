@@ -33,11 +33,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ fun MessageActionsSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Theme.colors.card
+        containerColor = Niti.colors.surfaceLow
     ) {
         MessageActionsContent(
             message = message,
@@ -127,9 +127,9 @@ private data class ActionRowSpec(
 
 @Composable
 private fun ActionRow(spec: ActionRowSpec, onClick: () -> Unit) {
-    val colors = Theme.colors
-    val ink = if (spec.destructive) colors.danger else colors.ink
-    val tint = if (spec.destructive) colors.danger else colors.ink2
+    val colors = Niti.colors
+    val ink = if (spec.destructive) colors.error else colors.onSurface
+    val tint = if (spec.destructive) colors.error else colors.onSurface
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -157,8 +157,8 @@ private fun ActionRow(spec: ActionRowSpec, onClick: () -> Unit) {
 
 @Composable
 private fun MessagePreviewHeader(message: Message, isOutbound: Boolean) {
-    val colors = Theme.colors
-    val accentColor = if (isOutbound) colors.brand else colors.accent
+    val colors = Niti.colors
+    val accentColor = if (isOutbound) colors.primary else colors.tertiaryTone.onContainer
     val author = if (isOutbound) "You" else "Customer"
 
     Row(
@@ -167,7 +167,7 @@ private fun MessagePreviewHeader(message: Message, isOutbound: Boolean) {
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(colors.paper2)
+            .background(colors.surfaceLow)
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         // 4dp colour bar
@@ -188,7 +188,7 @@ private fun MessagePreviewHeader(message: Message, isOutbound: Boolean) {
             Text(
                 text = message.text.ifBlank { "[${message.type.name.lowercase()}]" },
                 style = MaterialTheme.typography.bodyMedium,
-                color = colors.ink2,
+                color = colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

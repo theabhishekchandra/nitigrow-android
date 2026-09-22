@@ -106,7 +106,7 @@ fun ConversationRow(
                         modifier = Modifier.size(14.dp)
                     )
                 }
-                Text(
+                if (conversation.hasMessages) Text(
                     text = TimeFormatter.listLabel(conversation.lastMessageAt),
                     style = NitiType.caption.copy(
                         fontWeight = if (unread) FontWeight.SemiBold else FontWeight.Medium

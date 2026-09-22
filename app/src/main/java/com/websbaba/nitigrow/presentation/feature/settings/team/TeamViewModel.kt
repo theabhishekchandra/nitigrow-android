@@ -62,10 +62,10 @@ class TeamViewModel @Inject constructor(
     fun openInviteSheet() = _state.update { it.copy(sheetOpen = true, error = null) }
     fun closeInviteSheet() = _state.update { it.copy(sheetOpen = false) }
 
-    fun inviteMember(email: String, role: String) {
+    fun inviteMember(name: String, email: String, role: String) {
         viewModelScope.launch {
             _state.update { it.copy(saving = true, error = null) }
-            when (val res = invite(email, role)) {
+            when (val res = invite(name, email, role)) {
                 is ApiResult.Success -> {
                     _state.update { it.copy(saving = false, sheetOpen = false) }
                     _effects.send(TeamEffect.Toast("Invite sent to $email"))

@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.websbaba.nitigrow.domain.model.MessageStatus
-import com.websbaba.nitigrow.core.ui.theme.Theme
+import com.websbaba.nitigrow.core.ui.theme.Niti
 
 /**
  * Outbound delivery ticks: ✓ sent, ✓✓ delivered (muted), ✓✓ read (info blue).
@@ -23,9 +23,9 @@ import com.websbaba.nitigrow.core.ui.theme.Theme
 fun StatusTicks(
     status: MessageStatus,
     modifier: Modifier = Modifier,
-    readTint: Color = Theme.colors.info,
-    neutralTint: Color = Theme.colors.muted2,
-    failedTint: Color = Theme.colors.danger,
+    readTint: Color = Niti.colors.info,
+    neutralTint: Color = Niti.colors.outline,
+    failedTint: Color = Niti.colors.error,
 ) {
     val tint = when (status) {
         MessageStatus.READ -> readTint

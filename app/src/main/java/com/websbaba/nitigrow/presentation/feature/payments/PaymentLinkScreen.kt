@@ -1,5 +1,7 @@
 package com.websbaba.nitigrow.presentation.feature.payments
 
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.util.formatIndian
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -65,9 +67,7 @@ import com.websbaba.nitigrow.presentation.feature.inbox.list.components.Avatar
 import com.websbaba.nitigrow.presentation.feature.payments.components.ContactPickerSheet
 import com.websbaba.nitigrow.presentation.feature.payments.components.PaymentLinkRow
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -86,7 +86,6 @@ import java.util.Locale
 // drive the same ViewModel form state as before — no data-layer changes.
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val InrFormat: NumberFormat = NumberFormat.getInstance(Locale("en", "IN"))
 private val MonthFmt = DateTimeFormatter.ofPattern("MMMM", Locale.ENGLISH)
 
 /** Which bottom sheet is showing. Presentation-only state. */
@@ -118,7 +117,7 @@ private fun PaymentLinkScreenContent(
     onDescriptionChange: (String) -> Unit,
     onSend: () -> Unit,
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboardManager.current
@@ -139,14 +138,14 @@ private fun PaymentLinkScreenContent(
     }
 
     Scaffold(
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { sheet = PaySheet.NEW_LINK },
                 shape = RoundedCornerShape(16.dp),
-                containerColor = colors.brand,
-                contentColor = if (colors.isLight) colors.paper else colors.brandInk,
+                containerColor = colors.primary,
+                contentColor = if (colors.isLight) colors.surface else colors.primaryTone.onContainer,
                 icon = {
                     Icon(
                         Icons.Filled.Add,
@@ -180,7 +179,7 @@ private fun PaymentLinkScreenContent(
                         Text(
                             text = "Links you send will appear here.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = colors.muted,
+                            color = colors.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -252,7 +251,7 @@ private fun PaymentLinkScreenContent(
 
 @Composable
 private fun PaymentsHeader(state: PaymentLinkUiState, onBack: () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -264,7 +263,7 @@ private fun PaymentsHeader(state: PaymentLinkUiState, onBack: () -> Unit) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = colors.ink,
+                tint = colors.onSurface,
             )
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -272,15 +271,15 @@ private fun PaymentsHeader(state: PaymentLinkUiState, onBack: () -> Unit) {
                 text = "Payment links",
                 style = MaterialTheme.typography.headlineMedium,
                 fontSize = 21.sp,
-                color = colors.ink,
+                color = colors.onSurface,
             )
             val collected = state.collectedThisMonthInr
             if (collected > 0L) {
                 Text(
-                    text = "₹${InrFormat.format(collected)} collected in ${MonthFmt.format(LocalDate.now())}",
+                    text = "₹${formatIndian(collected)} collected in ${MonthFmt.format(LocalDate.now())}",
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 11.5.sp,
-                    color = colors.muted,
+                    color = colors.onSurfaceVariant,
                 )
             }
         }
@@ -300,13 +299,13 @@ private fun NewLinkSheet(
     onPrimary: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = { SheetDragHandle() },
     ) {
@@ -320,7 +319,7 @@ private fun NewLinkSheet(
                 text = "New payment link",
                 style = MaterialTheme.typography.headlineMedium,
                 fontSize = 19.sp,
-                color = colors.ink,
+                color = colors.onSurface,
                 modifier = Modifier.padding(bottom = 2.dp),
             )
 
@@ -346,10 +345,10 @@ private fun NewLinkSheet(
                 enabled = state.isReadyToSend && !(onlineEnabled && state.isSending),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.brand,
-                    contentColor = if (colors.isLight) colors.paper else colors.brandInk,
-                    disabledContainerColor = colors.brand.copy(alpha = 0.4f),
-                    disabledContentColor = if (colors.isLight) colors.paper else colors.brandInk,
+                    containerColor = colors.primary,
+                    contentColor = if (colors.isLight) colors.surface else colors.primaryTone.onContainer,
+                    disabledContainerColor = colors.primary.copy(alpha = 0.4f),
+                    disabledContentColor = if (colors.isLight) colors.surface else colors.primaryTone.onContainer,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -360,7 +359,7 @@ private fun NewLinkSheet(
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
-                        color = if (colors.isLight) colors.paper else colors.brandInk,
+                        color = if (colors.isLight) colors.surface else colors.primaryTone.onContainer,
                     )
                 } else {
                     Text(
@@ -384,24 +383,24 @@ private fun ManualPaymentDialog(
     onCopy: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val who = contactName?.takeIf { it.isNotBlank() } ?: "your customer"
     val greetName = contactName?.takeIf { it.isNotBlank() } ?: "there"
-    val amountText = "₹${InrFormat.format(amountInr)}"
+    val amountText = "₹${formatIndian(amountInr)}"
     val reason = note.trim().takeIf { it.isNotEmpty() }?.let { " for $it" }.orEmpty()
     val message = "Hi $greetName, please pay $amountText$reason. " +
         "I'll share my UPI ID / bank details to complete the payment. Thank you!"
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         title = {
             Text(
                 "Online payments coming soon",
                 style = MaterialTheme.typography.headlineSmall,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.ink,
+                color = colors.onSurface,
             )
         },
         text = {
@@ -411,29 +410,29 @@ private fun ManualPaymentDialog(
                         "Until then, request this payment from $who manually — copy the " +
                         "message below and send it on WhatsApp with your UPI ID or bank details.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = colors.ink3,
+                    color = colors.onSurfaceVariant,
                 )
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = colors.ink,
+                    color = colors.onSurface,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(colors.card)
-                        .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+                        .background(colors.surfaceLow)
+                        .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp))
                         .padding(12.dp),
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = { onCopy(message) }) {
-                Text("Copy message", color = colors.brand, fontWeight = FontWeight.SemiBold)
+                Text("Copy message", color = colors.primary, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close", color = colors.muted)
+                Text("Close", color = colors.onSurfaceVariant)
             }
         },
     )
@@ -446,7 +445,7 @@ private fun SheetDragHandle() {
             .padding(top = 12.dp, bottom = 4.dp)
             .size(width = 38.dp, height = 4.dp)
             .clip(RoundedCornerShape(999.dp))
-            .background(Theme.colors.muted3)
+            .background(Niti.colors.outlineVariant)
     )
 }
 
@@ -456,20 +455,20 @@ private fun FieldLabel(text: String) {
         text = text,
         style = MaterialTheme.typography.bodySmall,
         fontWeight = FontWeight.SemiBold,
-        color = Theme.colors.ink3,
+        color = Niti.colors.onSurfaceVariant,
         modifier = Modifier.padding(bottom = 6.dp),
     )
 }
 
 @Composable
 private fun AmountField(value: String, onValueChange: (String) -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp))
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -477,7 +476,7 @@ private fun AmountField(value: String, onValueChange: (String) -> Unit) {
             text = "₹",
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            color = colors.muted,
+            color = colors.onSurfaceVariant,
         )
         BasicTextField(
             value = value,
@@ -487,9 +486,9 @@ private fun AmountField(value: String, onValueChange: (String) -> Unit) {
             textStyle = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
-                color = colors.ink,
+                color = colors.onSurface,
             ),
-            cursorBrush = SolidColor(colors.brand),
+            cursorBrush = SolidColor(colors.primary),
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 8.dp, top = 13.dp, bottom = 13.dp),
@@ -500,7 +499,7 @@ private fun AmountField(value: String, onValueChange: (String) -> Unit) {
                             text = "0",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
-                            color = colors.muted2,
+                            color = colors.outline,
                         )
                     }
                     inner()
@@ -512,14 +511,14 @@ private fun AmountField(value: String, onValueChange: (String) -> Unit) {
 
 @Composable
 private fun ContactSelectorRow(state: PaymentLinkUiState, onClick: () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val name = state.selectedContactName
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -530,27 +529,27 @@ private fun ContactSelectorRow(state: PaymentLinkUiState, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(colors.paper2),
+                    .background(colors.surfaceLow),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Filled.Person,
                     contentDescription = null,
-                    tint = colors.muted,
+                    tint = colors.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
             }
             Text(
                 text = "Pick a contact",
                 style = MaterialTheme.typography.bodyLarge,
-                color = colors.muted,
+                color = colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
             Text(
                 text = "Choose",
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.brand,
+                color = colors.primary,
             )
         } else {
             val avatarUrl = state.contacts.firstOrNull { it.id == state.selectedContactId }?.avatarUrl
@@ -559,7 +558,7 @@ private fun ContactSelectorRow(state: PaymentLinkUiState, onClick: () -> Unit) {
                 text = name,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.ink,
+                color = colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
@@ -568,7 +567,7 @@ private fun ContactSelectorRow(state: PaymentLinkUiState, onClick: () -> Unit) {
                 text = "Change",
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.brand,
+                color = colors.primary,
             )
         }
     }
@@ -576,28 +575,28 @@ private fun ContactSelectorRow(state: PaymentLinkUiState, onClick: () -> Unit) {
 
 @Composable
 private fun NoteField(value: String, onValueChange: (String) -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
-        textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.ink),
-        cursorBrush = SolidColor(colors.brand),
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
+        cursorBrush = SolidColor(colors.primary),
         modifier = Modifier.fillMaxWidth(),
         decorationBox = { inner ->
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(colors.card)
-                    .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+                    .background(colors.surfaceLow)
+                    .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp))
                     .padding(horizontal = 14.dp, vertical = 13.dp),
             ) {
                 if (value.isEmpty()) {
                     Text(
                         text = "e.g. Invoice #4821, advance payment",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = colors.muted2,
+                        color = colors.outline,
                     )
                 }
                 inner()
@@ -608,15 +607,15 @@ private fun NoteField(value: String, onValueChange: (String) -> Unit) {
 
 @Composable
 private fun SheetErrorBanner(message: String) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Text(
         text = message,
         style = MaterialTheme.typography.bodySmall,
-        color = colors.danger,
+        color = colors.error,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(colors.danger.copy(alpha = 0.12f))
+            .background(colors.error.copy(alpha = 0.12f))
             .padding(12.dp),
     )
 }

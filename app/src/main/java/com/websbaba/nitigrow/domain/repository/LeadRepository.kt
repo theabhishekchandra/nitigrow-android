@@ -11,6 +11,7 @@ interface LeadRepository {
     suspend fun moveStage(leadId: String, stage: LeadStage): ApiResult<Unit>
     suspend fun create(
         contactId: String,
+        name: String,
         source: String,
         stage: LeadStage,
         valueInr: Long,

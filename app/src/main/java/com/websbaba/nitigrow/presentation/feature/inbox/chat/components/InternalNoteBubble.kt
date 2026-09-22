@@ -23,11 +23,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.domain.model.Message
 import com.websbaba.nitigrow.domain.model.MessageStatus
 import com.websbaba.nitigrow.domain.model.MessageType
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -52,7 +52,7 @@ fun InternalNoteBubble(
     authorName: String,
     modifier: Modifier = Modifier
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val shape = RoundedCornerShape(12.dp)
 
     Column(
@@ -65,7 +65,7 @@ fun InternalNoteBubble(
             modifier = Modifier
                 .widthIn(max = 340.dp)
                 .clip(shape)
-                .background(colors.turmericSoft)
+                .background(colors.secondaryTone.container)
                 .border(width = 1.dp, color = colors.warning.copy(alpha = 0.45f), shape = shape)
                 .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
@@ -88,12 +88,12 @@ fun InternalNoteBubble(
                 Text(
                     text = "·",
                     style = MaterialTheme.typography.labelMedium,
-                    color = colors.muted
+                    color = colors.onSurfaceVariant
                 )
                 Text(
                     text = authorName,
                     style = MaterialTheme.typography.labelMedium,
-                    color = colors.ink3,
+                    color = colors.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -103,7 +103,7 @@ fun InternalNoteBubble(
             Text(
                 text = message.text,
                 style = MaterialTheme.typography.bodyLarge,
-                color = colors.ink
+                color = colors.onSurface
             )
 
             Spacer(Modifier.padding(top = 6.dp))
@@ -115,7 +115,7 @@ fun InternalNoteBubble(
                 Text(
                     text = "Visible to team only · ${NoteTimeFormatter.format(message.sentAt)}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = colors.muted
+                    color = colors.onSurfaceVariant
                 )
             }
         }

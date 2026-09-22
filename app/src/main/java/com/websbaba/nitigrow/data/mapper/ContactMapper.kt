@@ -4,11 +4,6 @@ import com.websbaba.nitigrow.data.local.entity.ContactEntity
 import com.websbaba.nitigrow.data.remote.dto.ContactDto
 import com.websbaba.nitigrow.domain.model.Contact
 import java.time.Instant
-import java.time.format.DateTimeParseException
-
-private fun parseInstant(iso: String): Long =
-    try { Instant.parse(iso).toEpochMilli() }
-    catch (_: DateTimeParseException) { System.currentTimeMillis() }
 
 fun ContactDto.toEntity(): ContactEntity = ContactEntity(
     id = id,

@@ -42,11 +42,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.presentation.feature.settings.components.NgToggle
 import com.websbaba.nitigrow.presentation.feature.settings.components.PrimaryCta
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -76,7 +76,7 @@ fun AutoReplyScreen(
     viewModel: AutoReplyViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val colors = Theme.colors
+    val colors = Niti.colors
     val snackbar = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -88,7 +88,7 @@ fun AutoReplyScreen(
     }
 
     Scaffold(
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         topBar = { SubScreenHeader(title = "Auto-replies", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
@@ -182,13 +182,13 @@ private fun RuleCard(
     onEnabled: (Boolean) -> Unit,
     content: @Composable () -> Unit
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Row(
@@ -201,12 +201,12 @@ private fun RuleCard(
                     title,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.ink
+                    color = colors.onSurface
                 )
                 Text(
                     subtitle,
                     fontSize = 11.5.sp,
-                    color = colors.muted,
+                    color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
@@ -226,7 +226,7 @@ private fun MessageBlock(
     onValueChange: (String) -> Unit,
     enabled: Boolean
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -236,14 +236,14 @@ private fun MessageBlock(
         textStyle = MaterialTheme.typography.bodyMedium.copy(
             fontSize = 12.5.sp,
             lineHeight = 19.sp,
-            color = if (enabled) colors.ink2 else colors.muted
+            color = if (enabled) colors.onSurface else colors.onSurfaceVariant
         ),
-        cursorBrush = SolidColor(colors.brand),
+        cursorBrush = SolidColor(colors.primary),
         decorationBox = { inner ->
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(colors.paper2, RoundedCornerShape(12.dp))
+                    .background(colors.surfaceLow, RoundedCornerShape(12.dp))
                     .padding(horizontal = 13.dp, vertical = 11.dp)
             ) { inner() }
         },
@@ -268,14 +268,14 @@ private fun TimeBox(
     onChange: (LocalTime) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     var showPicker by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp))
             .clickable(enabled = enabled) { showPicker = true }
             .padding(horizontal = 13.dp, vertical = 11.dp)
     ) {
@@ -284,13 +284,13 @@ private fun TimeBox(
             fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 1.sp,
-            color = colors.muted
+            color = colors.onSurfaceVariant
         )
         Text(
             timeFormatter.format(time),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = if (enabled) colors.ink else colors.muted,
+            color = if (enabled) colors.onSurface else colors.onSurfaceVariant,
             modifier = Modifier.padding(top = 2.dp)
         )
     }

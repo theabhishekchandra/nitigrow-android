@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.util.DispatcherProvider
 import com.websbaba.nitigrow.data.local.dao.ContactDao
@@ -31,12 +32,9 @@ class ContactRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refresh(): ApiResult<Unit> =
-        when (val res = safeApiCall(dispatchers.io) { api.list() }) {
-            is ApiResult.Success -> {
-                dao.upsertAll((res.data.data ?: emptyList()).map { it.toEntity() })
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.list() }.andThen { res ->
+            dao.upsertAll((res.data ?: emptyList()).map { it.toEntity() })
+            ApiResult.Success(Unit)
         }
 
     override suspend fun create(
@@ -45,15 +43,12 @@ class ContactRepositoryImpl @Inject constructor(
         email: String?,
         tags: List<String>
     ): ApiResult<Contact> =
-        when (val res = safeApiCall(dispatchers.io) {
+        safeApiCall(dispatchers.io) {
             api.create(CreateContactRequest(name, phone, email, tags))
-        }) {
-            is ApiResult.Success -> {
-                val entity = res.data.toEntity()
-                dao.upsert(entity)
-                ApiResult.Success(entity.toDomain())
-            }
-            is ApiResult.Error -> res
+        }.andThen { res ->
+            val entity = res.toEntity()
+            dao.upsert(entity)
+            ApiResult.Success(entity.toDomain())
         }
 
     override suspend fun update(
@@ -63,15 +58,12 @@ class ContactRepositoryImpl @Inject constructor(
         email: String?,
         tags: List<String>
     ): ApiResult<Contact> =
-        when (val res = safeApiCall(dispatchers.io) {
+        safeApiCall(dispatchers.io) {
             api.update(id, UpdateContactRequest(name, phone, email, tags))
-        }) {
-            is ApiResult.Success -> {
-                val entity = res.data.toEntity()
-                dao.upsert(entity)
-                ApiResult.Success(entity.toDomain())
-            }
-            is ApiResult.Error -> res
+        }.andThen { res ->
+            val entity = res.toEntity()
+            dao.upsert(entity)
+            ApiResult.Success(entity.toDomain())
         }
 
     override suspend fun delete(id: String): ApiResult<Unit> {
@@ -80,17 +72,14 @@ class ContactRepositoryImpl @Inject constructor(
     }
 
     override suspend fun importCsv(rows: List<CsvContactRow>): ApiResult<Int> =
-        when (val res = safeApiCall(dispatchers.io) {
+        safeApiCall(dispatchers.io) {
             api.bulkImport(
                 BulkImportRequest(
                     rows.map { CreateContactRequest(it.name, it.phone, it.email, it.tags) }
                 )
             )
-        }) {
-            is ApiResult.Success -> {
-                refresh()
-                ApiResult.Success(res.data.imported)
-            }
-            is ApiResult.Error -> res
+        }.andThen { res ->
+            refresh()
+            ApiResult.Success(res.imported)
         }
 }

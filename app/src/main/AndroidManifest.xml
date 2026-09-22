@@ -22,6 +22,10 @@
          still works without the ad ID. -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
 
+    <!-- The CAMERA permission is stripped above, but lint (and Play's device filter) still want
+         the hardware declared optional so no device is excluded for lacking a camera. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
@@ -36,7 +40,7 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="false"
         android:theme="@style/Theme.NitiGrow"
-        tools:targetApi="36">
+        tools:targetApi="37">
 
         <provider
             android:name="androidx.startup.InitializationProvider"

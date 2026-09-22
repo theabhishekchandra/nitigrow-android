@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.util.DispatcherProvider
 import com.websbaba.nitigrow.data.local.dao.ConversationDao
@@ -28,12 +29,9 @@ class InboxRepositoryImpl @Inject constructor(
 
     override suspend fun refresh(): ApiResult<Unit> =
         // GET messages/conversations returns a bare array (no envelope).
-        when (val res = safeApiCall(dispatchers.io) { api.list() }) {
-            is ApiResult.Success -> {
-                dao.upsertAll(res.data.map { it.toEntity() })
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.list() }.andThen { res ->
+            dao.upsertAll(res.map { it.toEntity() })
+            ApiResult.Success(Unit)
         }
 
     override suspend fun markRead(conversationId: String): ApiResult<Unit> {

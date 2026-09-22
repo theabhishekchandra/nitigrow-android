@@ -59,7 +59,7 @@ fun ContactRow(contact: Contact, onClick: () -> Unit, modifier: Modifier = Modif
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = contact.phone,
+                text = formatPhoneForDisplay(contact.phone),
                 style = NitiType.label.copy(fontWeight = FontWeight.Normal),
                 color = colors.onSurfaceVariant,
                 maxLines = 1
@@ -106,4 +106,16 @@ fun LetterHeader(letter: Char, modifier: Modifier = Modifier) {
             .background(Niti.colors.surface)
             .padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 4.dp)
     )
+}
+
+/**
+ * "919622731324" / "+919622731324" → "+91 96227 31324". Numbers that aren't a plain
+ * Indian mobile (other country codes, odd lengths) are shown exactly as stored.
+ */
+internal fun formatPhoneForDisplay(stored: String): String {
+    val digits = stored.filter { it.isDigit() }
+    val plain = stored.trim().all { it.isDigit() || it == '+' || it == ' ' }
+    return if (plain && digits.length == 12 && digits.startsWith("91")) {
+        "+91 ${digits.substring(2, 7)} ${digits.substring(7)}"
+    } else stored
 }

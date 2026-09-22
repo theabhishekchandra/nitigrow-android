@@ -12,7 +12,7 @@ data class ContactDto(
     @SerializedName("notes") val notes: String?,
     @SerializedName("createdAt") val createdAt: String,
     @SerializedName("updatedAt") val updatedAt: String,
-    @SerializedName("isBlocked") val isBlocked: Boolean = false
+    @SerializedName("blocked") val isBlocked: Boolean = false
 )
 
 // Backend returns { contacts: [...], total, page, pages } (page-based).

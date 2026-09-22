@@ -1,16 +1,15 @@
 package com.websbaba.nitigrow.presentation.feature.leads.components
 
-import java.text.NumberFormat
+import com.websbaba.nitigrow.core.util.relativeTime
+import com.websbaba.nitigrow.core.util.formatIndian
 import java.util.Locale
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INR formatting helpers shared by the leads kanban / list / detail screens.
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val inrFormat: NumberFormat = NumberFormat.getInstance(Locale("en", "IN"))
-
 /** Indian digit grouping, e.g. 140000 → "₹1,40,000". */
-internal fun formatInr(amount: Long): String = "₹" + inrFormat.format(amount)
+internal fun formatInr(amount: Long): String = "₹" + formatIndian(amount)
 
 /**
  * Compact column-sum format matching the web design:
@@ -22,22 +21,6 @@ internal fun formatInrCompact(amount: Long): String =
     } else {
         formatInr(amount)
     }
-
-/** "2h ago" / "3d ago" / "just now" — the same shorthand the web app uses. */
-internal fun relativeTime(then: java.time.Instant, now: java.time.Instant = java.time.Instant.now()): String {
-    val seconds = java.time.temporal.ChronoUnit.SECONDS.between(then, now).coerceAtLeast(0)
-    val minutes = seconds / 60
-    val hours = minutes / 60
-    val days = hours / 24
-    return when {
-        seconds < 45 -> "just now"
-        minutes < 60 -> "${minutes}m ago"
-        hours < 24 -> "${hours}h ago"
-        days < 7 -> "${days}d ago"
-        days < 30 -> "${days / 7}w ago"
-        else -> "${days / 30}mo ago"
-    }
-}
 
 /** "WhatsApp inbound · Anita · 2h ago" — source, owner (or Unassigned) and last update. */
 internal fun leadMeta(

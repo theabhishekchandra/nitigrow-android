@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.util.DispatcherProvider
 import com.websbaba.nitigrow.data.remote.api.TemplatesApi
@@ -33,9 +34,8 @@ class TemplatesRepositoryImpl @Inject constructor(
     }
 
     override suspend fun list(): ApiResult<List<MessageTemplate>> =
-        when (val r = safeApiCall(dispatchers.io) { api.list() }) {
-            is ApiResult.Success -> ApiResult.Success(r.data.map { it.toDomain() })
-            is ApiResult.Error -> r
+        safeApiCall(dispatchers.io) { api.list() }.andThen { r ->
+            ApiResult.Success(r.map { it.toDomain() })
         }
 
     override suspend fun create(
@@ -50,15 +50,13 @@ class TemplatesRepositoryImpl @Inject constructor(
             language = language,
             components = listOf(CreateTemplateComponent(type = "BODY", format = "TEXT", text = body))
         )
-        return when (val r = safeApiCall(dispatchers.io) { api.create(req) }) {
-            is ApiResult.Success -> ApiResult.Success(r.data.toDomain())
-            is ApiResult.Error -> r
+        return safeApiCall(dispatchers.io) { api.create(req) }.andThen { r ->
+            ApiResult.Success(r.toDomain())
         }
     }
 
     override suspend fun delete(id: String): ApiResult<Unit> =
-        when (val r = safeApiCall(dispatchers.io) { api.delete(id); Unit }) {
-            is ApiResult.Success -> ApiResult.Success(Unit)
-            is ApiResult.Error -> r
+        safeApiCall(dispatchers.io) { api.delete(id); Unit }.andThen { r ->
+            ApiResult.Success(Unit)
         }
 }

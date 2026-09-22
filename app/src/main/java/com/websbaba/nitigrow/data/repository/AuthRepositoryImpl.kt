@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.storage.TokenDataStore
 import com.websbaba.nitigrow.core.util.DispatcherProvider
@@ -29,20 +30,16 @@ class AuthRepositoryImpl @Inject constructor(
      * tokens in the body; persist them encrypted and return the domain user.
      */
     override suspend fun login(email: String, password: String): ApiResult<User> =
-        when (val res = safeApiCall(dispatchers.io) { api.login(LoginRequest(email.trim(), password)) }) {
-            is ApiResult.Success -> {
-                val dto = res.data
-                val refresh = dto.refreshToken
-                    ?: return ApiResult.Error(message = "Login failed: missing refresh token")
-                tokenStore.saveSession(
-                    access = dto.accessToken,
-                    refresh = refresh,
-                    userId = dto.user.id,
-                    tenantId = dto.user.tenantId
-                )
-                ApiResult.Success(dto.user.toUser())
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.login(LoginRequest(email.trim(), password)) }.andThen { dto ->
+            val refresh = dto.refreshToken
+                ?: return ApiResult.Error(message = "Login failed: missing refresh token")
+            tokenStore.saveSession(
+                access = dto.accessToken,
+                refresh = refresh,
+                userId = dto.user.id,
+                tenantId = dto.user.tenantId
+            )
+            ApiResult.Success(dto.user.toUser())
         }
 
     /**
@@ -77,9 +74,8 @@ class AuthRepositoryImpl @Inject constructor(
 
     /** Validates the current session and refreshes the user/tenant snapshot. */
     suspend fun getMe(): ApiResult<User> =
-        when (val res = safeApiCall(dispatchers.io) { api.me() }) {
-            is ApiResult.Success -> ApiResult.Success(res.data.user.toUser())
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.me() }.andThen { res ->
+            ApiResult.Success(res.user.toUser())
         }
 
     // --- Legacy phone-OTP path (kept for the existing OTP feature) ---
@@ -91,18 +87,14 @@ class AuthRepositoryImpl @Inject constructor(
         }
 
     override suspend fun verifyOtp(phone: String, code: String): ApiResult<User> =
-        when (val res = safeApiCall(dispatchers.io) { api.verifyOtp(VerifyOtpRequest(phone, code)) }) {
-            is ApiResult.Success -> {
-                val dto = res.data
-                tokenStore.saveSession(
-                    access = dto.accessToken,
-                    refresh = dto.refreshToken.orEmpty(),
-                    userId = dto.user.id,
-                    tenantId = dto.user.tenantId
-                )
-                ApiResult.Success(dto.user.toUser())
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.verifyOtp(VerifyOtpRequest(phone, code)) }.andThen { dto ->
+            tokenStore.saveSession(
+                access = dto.accessToken,
+                refresh = dto.refreshToken.orEmpty(),
+                userId = dto.user.id,
+                tenantId = dto.user.tenantId
+            )
+            ApiResult.Success(dto.user.toUser())
         }
 
     override suspend fun logout(): ApiResult<Unit> {

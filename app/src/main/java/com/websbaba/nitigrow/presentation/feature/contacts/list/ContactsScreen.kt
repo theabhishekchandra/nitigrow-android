@@ -1,5 +1,6 @@
 package com.websbaba.nitigrow.presentation.feature.contacts.list
 
+import com.websbaba.nitigrow.core.util.formatIndian
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -62,10 +63,8 @@ import com.websbaba.nitigrow.core.ui.theme.NitiStatusBar
 import com.websbaba.nitigrow.core.ui.theme.NitiType
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
 import java.time.Duration
 import java.time.Instant
-import java.util.Locale
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ContactsScreen — CRM contact list (design: "Contacts" tab).
@@ -74,7 +73,6 @@ import java.util.Locale
 //   A–Z sectioned rows with tag pills · A–Z scrubber · [＋ Add contact]
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val nf: NumberFormat = NumberFormat.getInstance(Locale("en", "IN"))
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -326,15 +324,15 @@ private fun ContactsSkeleton() {
 
 /** "1,240 in CRM · synced 2 min ago"; the sync part appears once a refresh has succeeded. */
 internal fun crmSubtitle(count: Int, lastSyncedAt: Instant?, now: Instant = Instant.now()): String = buildString {
-    append("${nf.format(count)} in CRM")
+    append("${formatIndian(count)} in CRM")
     lastSyncedAt?.let { append(" · synced ${agoLabel(it, now)}") }
 }
 
 /** "148 leads · 12 new this week" — falls back to a generic line until stats are cached. */
 internal fun leadsSubtitle(total: Long?, new: Long?): String = when {
     total == null -> "Your lead pipeline"
-    new != null && new > 0 -> "${nf.format(total)} ${if (total == 1L) "lead" else "leads"} · ${nf.format(new)} new"
-    else -> "${nf.format(total)} ${if (total == 1L) "lead" else "leads"}"
+    new != null && new > 0 -> "${formatIndian(total)} ${if (total == 1L) "lead" else "leads"} · ${formatIndian(new)} new"
+    else -> "${formatIndian(total)} ${if (total == 1L) "lead" else "leads"}"
 }
 
 /** "just now" / "2 min ago" / "3 hr ago" / "2 d ago". */

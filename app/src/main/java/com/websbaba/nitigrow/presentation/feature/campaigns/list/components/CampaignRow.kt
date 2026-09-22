@@ -1,5 +1,7 @@
 package com.websbaba.nitigrow.presentation.feature.campaigns.list.components
 
+import com.websbaba.nitigrow.core.util.DayTimeFormat
+import com.websbaba.nitigrow.core.util.formatIndian
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,11 +37,7 @@ import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
 import com.websbaba.nitigrow.core.ui.theme.NitiIcons
 import com.websbaba.nitigrow.core.ui.theme.NitiTone
 import com.websbaba.nitigrow.core.ui.theme.NitiType
-import java.text.NumberFormat
 import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlin.math.roundToInt
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,10 +50,7 @@ import kotlin.math.roundToInt
 //   FAILED     → error pill + failed count; CANCELLED → neutral pill
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val nf: NumberFormat = NumberFormat.getInstance(Locale("en", "IN"))
 
-private val scheduleFormat =
-    DateTimeFormatter.ofPattern("EEE, d MMM · h:mm a", Locale.ENGLISH).withZone(ZoneId.systemDefault())
 
 /** Fraction of the audience already sent, clamped to 0..1. */
 internal fun campaignProgress(campaign: Campaign): Float =
@@ -122,7 +117,7 @@ private fun CampaignDetail(campaign: Campaign) {
                 }
                 Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "${nf.format(campaign.sentCount)} of ${nf.format(campaign.audienceSize)} sent",
+                        text = "${formatIndian(campaign.sentCount)} of ${formatIndian(campaign.audienceSize)} sent",
                         style = bodyStyle,
                         color = colors.onSurfaceVariant
                     )
@@ -136,7 +131,7 @@ private fun CampaignDetail(campaign: Campaign) {
         }
         CampaignStatus.SCHEDULED -> IconLine(
             icon = NitiIcons.Clock,
-            text = campaign.scheduledAt?.let(scheduleFormat::format) ?: "Time not set"
+            text = campaign.scheduledAt?.let(DayTimeFormat::format) ?: "Time not set"
         )
         CampaignStatus.COMPLETED -> Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             RateText("Delivered", campaign.deliveryRate)
@@ -145,7 +140,7 @@ private fun CampaignDetail(campaign: Campaign) {
         CampaignStatus.DRAFT -> IconLine(icon = NitiIcons.Pencil, text = "Not scheduled yet")
         CampaignStatus.FAILED -> IconLine(
             icon = NitiIcons.Warning,
-            text = if (campaign.failedCount > 0) "${nf.format(campaign.failedCount)} messages failed" else "Sending failed"
+            text = if (campaign.failedCount > 0) "${formatIndian(campaign.failedCount)} messages failed" else "Sending failed"
         )
         CampaignStatus.CANCELLED -> IconLine(icon = NitiIcons.Close, text = "Cancelled before sending")
     }
@@ -214,7 +209,7 @@ fun CampaignStatusPill(status: CampaignStatus, modifier: Modifier = Modifier) {
 
 private fun campaignMetaLine(campaign: Campaign): String = buildList {
     if (campaign.templateName.isNotBlank()) add(campaign.templateName)
-    add("${nf.format(campaign.audienceSize)} contacts")
+    add("${formatIndian(campaign.audienceSize)} contacts")
 }.joinToString(" · ")
 
 // ── Previews ─────────────────────────────────────────────────────────────────

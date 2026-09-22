@@ -6,6 +6,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.ErrorType
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.realtime.RealtimeClient
 import com.websbaba.nitigrow.core.realtime.RealtimeEvent
@@ -116,15 +117,16 @@ class ChatRepositoryImpl @Inject constructor(
         return clientId
     }
 
-    private suspend fun performSend(clientId: String) {
-        val pending = messageDao.getByClientId(clientId) ?: return
+    private suspend fun performSend(clientId: String): ApiResult<Unit> {
+        val pending = messageDao.getByClientId(clientId)
+            ?: return ApiResult.Error(message = "Message no longer exists")
         // conversationId IS the contactId. Backend has no reply-to support.
         val req = SendMessageRequest(
             contactId = pending.conversationId,
             text = pending.text,
             clientId = clientId
         )
-        when (val res = safeApiCall(dispatchers.io) { chatApi.send(req) }) {
+        return when (val res = safeApiCall(dispatchers.io) { chatApi.send(req) }) {
             is ApiResult.Success -> {
                 val dto = res.data.message
                 messageDao.confirmServerId(
@@ -132,21 +134,27 @@ class ChatRepositoryImpl @Inject constructor(
                     serverId = dto.id,
                     status = dto.status.uppercase()
                 )
+                ApiResult.Success(Unit)
             }
             is ApiResult.Error -> {
                 Timber.w("Send failed: ${res.message}")
-                messageDao.setFailed(clientId, "FAILED", res.message)
+                if (res.type == ErrorType.Network) {
+                    // Left PENDING, not FAILED: SendPendingWorker (enqueued by
+                    // PendingMessageScheduler whenever connectivity returns) walks every
+                    // PENDING row and retries it, so this goes out on its own once the
+                    // device is back online instead of needing a manual retry tap.
+                    Timber.i("Send deferred (offline), will retry on reconnect: $clientId")
+                } else {
+                    messageDao.setFailed(clientId, "FAILED", res.message)
+                }
+                res
             }
         }
     }
 
     override suspend fun retry(clientId: String): ApiResult<Unit> {
         messageDao.updateStatus(clientId, "PENDING")
-        performSend(clientId)
-        return when (messageDao.getByClientId(clientId)?.status) {
-            "FAILED" -> ApiResult.Error(message = "Retry failed")
-            else -> ApiResult.Success(Unit)
-        }
+        return performSend(clientId)
     }
 
     override suspend fun markRead(conversationId: String): ApiResult<Unit> {

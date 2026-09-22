@@ -37,9 +37,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.presentation.feature.templates.components.TemplateCard
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 
 private val ListHorizontalPadding: Dp = 18.dp
@@ -74,14 +74,14 @@ private fun TemplatesScreenContent(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onCreate,
-                containerColor = Theme.colors.brand,
-                contentColor = Theme.colors.paper,
+                containerColor = Niti.colors.primary,
+                contentColor = Niti.colors.surface,
                 shape = RoundedCornerShape(16.dp),
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text("New template", fontWeight = FontWeight.SemiBold) },
             )
         },
-        containerColor = Theme.colors.paper,
+        containerColor = Niti.colors.surface,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -121,7 +121,7 @@ private fun TemplatesScreenContent(
                             Text(
                                 "No templates in this filter yet.",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Theme.colors.muted,
+                                color = Niti.colors.onSurfaceVariant,
                             )
                         }
                     }
@@ -151,7 +151,7 @@ private fun TemplatesHeader(
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = Theme.colors.ink,
+                tint = Niti.colors.onSurface,
             )
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -159,13 +159,13 @@ private fun TemplatesHeader(
                 text = "Message templates",
                 style = MaterialTheme.typography.headlineMedium,
                 fontSize = 21.sp,
-                color = Theme.colors.ink,
+                color = Niti.colors.onSurface,
             )
             Text(
                 text = "Synced with Meta · $approvedCount approved",
                 style = MaterialTheme.typography.bodySmall,
                 fontSize = 11.5.sp,
-                color = Theme.colors.muted,
+                color = Niti.colors.onSurfaceVariant,
             )
         }
     }
@@ -212,10 +212,10 @@ private fun SelectorChip(
         text = label,
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.SemiBold,
-        color = if (selected) Theme.colors.paper else Theme.colors.ink3,
+        color = if (selected) Niti.colors.surface else Niti.colors.onSurfaceVariant,
         modifier = Modifier
             .clip(ChipShape)
-            .background(if (selected) Theme.colors.brand else Theme.colors.paper2)
+            .background(if (selected) Niti.colors.primary else Niti.colors.surfaceLow)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 7.dp),
     )

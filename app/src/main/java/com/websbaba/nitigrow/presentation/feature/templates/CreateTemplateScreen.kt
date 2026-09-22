@@ -53,9 +53,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.core.ui.theme.BubbleInShape
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 
 private val ScreenPadding: Dp = 18.dp
@@ -110,7 +110,7 @@ private fun CreateTemplateScreenContent(
     onSubmit: () -> Unit,
     onClose: () -> Unit,
 ) {
-    Scaffold(containerColor = Theme.colors.paper) { padding ->
+    Scaffold(containerColor = Niti.colors.surface) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -159,7 +159,7 @@ private fun CreateTemplateHeader(onClose: () -> Unit) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = Theme.colors.ink,
+                tint = Niti.colors.onSurface,
             )
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -167,12 +167,12 @@ private fun CreateTemplateHeader(onClose: () -> Unit) {
                 text = "New template",
                 style = MaterialTheme.typography.headlineMedium,
                 fontSize = 21.sp,
-                color = Theme.colors.ink,
+                color = Niti.colors.onSurface,
             )
             Text(
                 text = "Goes to Meta for review — usually under 24 hours.",
                 style = MaterialTheme.typography.bodySmall,
-                color = Theme.colors.muted,
+                color = Niti.colors.onSurfaceVariant,
             )
         }
     }
@@ -189,7 +189,7 @@ private fun StepProgress(step: CreateStep) {
         Text(
             text = "STEP ${stepIndex(step)} OF 3 — ${stepLabel(step).uppercase()}",
             style = MaterialTheme.typography.labelSmall,
-            color = Theme.colors.muted,
+            color = Niti.colors.onSurfaceVariant,
         )
         Spacer(Modifier.height(6.dp))
         Box(
@@ -197,14 +197,14 @@ private fun StepProgress(step: CreateStep) {
                 .fillMaxWidth()
                 .height(8.dp)
                 .clip(RoundedCornerShape(4.dp))
-                .background(Theme.colors.paper2),
+                .background(Niti.colors.surfaceLow),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(fraction)
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Theme.colors.brand),
+                    .background(Niti.colors.primary),
             )
         }
     }
@@ -282,21 +282,21 @@ private fun LanguagePicker(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(InputShape)
-                    .background(Theme.colors.card)
-                    .border(1.dp, Theme.colors.border, InputShape)
+                    .background(Niti.colors.surfaceLow)
+                    .border(1.dp, Niti.colors.outlineVariant, InputShape)
                     .clickable { expanded = true }
                     .padding(horizontal = 14.dp, vertical = 13.dp),
             ) {
                 Text(
                     text = "${value.label} — ${displayName(value)}",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Theme.colors.ink,
+                    color = Niti.colors.onSurface,
                     modifier = Modifier.weight(1f),
                 )
                 Icon(
                     Icons.Filled.ArrowDropDown,
                     contentDescription = "Choose language",
-                    tint = Theme.colors.muted,
+                    tint = Niti.colors.onSurfaceVariant,
                 )
             }
             DropdownMenu(
@@ -337,7 +337,7 @@ private fun BodyStep(
         Text(
             "Use {{1}}, {{2}} … for variables Meta will fill at send time.",
             style = MaterialTheme.typography.bodySmall,
-            color = Theme.colors.muted,
+            color = Niti.colors.onSurfaceVariant,
         )
         DesignTextField(
             label = "Body",
@@ -353,7 +353,7 @@ private fun BodyStep(
                 "${state.body.length} / $TEMPLATE_BODY_MAX_LENGTH",
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 0.2.sp,
-                color = if (state.body.length >= TEMPLATE_BODY_MAX_LENGTH) Theme.colors.danger else Theme.colors.muted,
+                color = if (state.body.length >= TEMPLATE_BODY_MAX_LENGTH) Niti.colors.error else Niti.colors.onSurfaceVariant,
             )
         }
     }
@@ -370,13 +370,13 @@ private fun PreviewStep(state: CreateTemplateUiState) {
         Text(
             "Preview",
             style = MaterialTheme.typography.headlineSmall,
-            color = Theme.colors.ink,
+            color = Niti.colors.onSurface,
         )
         TemplatePreviewBubble(body = state.body.ifBlank { "Your template body will appear here." })
         Text(
             "Name: ${state.name.ifBlank { "(unnamed)" }}  ·  ${state.language.label}  ·  ${state.category.name.lowercase().replaceFirstChar { it.uppercase() }}",
             style = MaterialTheme.typography.bodySmall,
-            color = Theme.colors.muted,
+            color = Niti.colors.onSurfaceVariant,
         )
     }
 }
@@ -384,23 +384,23 @@ private fun PreviewStep(state: CreateTemplateUiState) {
 @Composable
 private fun TemplatePreviewBubble(body: String) {
     Surface(
-        color = Theme.colors.bubbleIn,
-        contentColor = Theme.colors.bubbleInInk,
+        color = Niti.colors.bubbleIn,
+        contentColor = Niti.colors.onBubbleIn,
         shape = BubbleInShape,
-        border = BorderStroke(1.dp, Theme.colors.bubbleInBorder),
+        border = BorderStroke(1.dp, Niti.colors.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(PreviewBubblePadding)) {
             Text(
                 "WHATSAPP MESSAGE",
                 style = MaterialTheme.typography.labelSmall,
-                color = Theme.colors.muted,
+                color = Niti.colors.onSurfaceVariant,
             )
             Spacer(Modifier.height(6.dp))
             Text(
                 body,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Theme.colors.bubbleInInk,
+                color = Niti.colors.onBubbleIn,
             )
         }
     }
@@ -424,10 +424,10 @@ private fun StepButtons(
             OutlinedButton(
                 onClick = onBackStep,
                 shape = CtaShape,
-                border = BorderStroke(1.dp, Theme.colors.border),
+                border = BorderStroke(1.dp, Niti.colors.outlineVariant),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Theme.colors.card,
-                    contentColor = Theme.colors.ink,
+                    containerColor = Niti.colors.surfaceLow,
+                    contentColor = Niti.colors.onSurface,
                 ),
                 contentPadding = PaddingValues(vertical = 14.dp),
                 modifier = Modifier.weight(1f),
@@ -447,10 +447,10 @@ private fun StepButtons(
             enabled = enabled,
             shape = CtaShape,
             colors = ButtonDefaults.buttonColors(
-                containerColor = Theme.colors.brand,
-                contentColor = Theme.colors.paper,
-                disabledContainerColor = Theme.colors.paper3,
-                disabledContentColor = Theme.colors.muted,
+                containerColor = Niti.colors.primary,
+                contentColor = Niti.colors.surface,
+                disabledContainerColor = Niti.colors.surfaceContainer,
+                disabledContentColor = Niti.colors.onSurfaceVariant,
             ),
             contentPadding = PaddingValues(vertical = 14.dp),
             modifier = Modifier.weight(2f),
@@ -475,7 +475,7 @@ private fun FieldLabel(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelMedium,
-        color = Theme.colors.ink3,
+        color = Niti.colors.onSurfaceVariant,
         modifier = Modifier.padding(bottom = 6.dp),
     )
 }
@@ -499,7 +499,7 @@ private fun DesignTextField(
     Column(modifier = modifier) {
         FieldLabel(label)
         val textStyle = MaterialTheme.typography.bodyLarge.copy(
-            color = Theme.colors.ink,
+            color = Niti.colors.onSurface,
             fontFamily = if (monospace) FontFamily.Monospace else MaterialTheme.typography.bodyLarge.fontFamily,
         )
         BasicTextField(
@@ -507,7 +507,7 @@ private fun DesignTextField(
             onValueChange = onValueChange,
             singleLine = singleLine,
             textStyle = textStyle,
-            cursorBrush = SolidColor(Theme.colors.brand),
+            cursorBrush = SolidColor(Niti.colors.primary),
             decorationBox = { innerTextField ->
                 Box(
                     contentAlignment = Alignment.TopStart,
@@ -515,8 +515,8 @@ private fun DesignTextField(
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = minHeight)
                         .clip(InputShape)
-                        .background(Theme.colors.card)
-                        .border(1.dp, Theme.colors.border, InputShape)
+                        .background(Niti.colors.surfaceLow)
+                        .border(1.dp, Niti.colors.outlineVariant, InputShape)
                         .padding(horizontal = 14.dp, vertical = 13.dp),
                 ) {
                     innerTextField()
@@ -530,7 +530,7 @@ private fun DesignTextField(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
                 fontSize = 11.5.sp,
-                color = Theme.colors.muted,
+                color = Niti.colors.onSurfaceVariant,
             )
         }
     }
@@ -546,10 +546,10 @@ private fun SelectorPill(
         text = label,
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.SemiBold,
-        color = if (selected) Theme.colors.paper else Theme.colors.ink3,
+        color = if (selected) Niti.colors.surface else Niti.colors.onSurfaceVariant,
         modifier = Modifier
             .clip(PillShape)
-            .background(if (selected) Theme.colors.brand else Theme.colors.paper2)
+            .background(if (selected) Niti.colors.primary else Niti.colors.surfaceLow)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 7.dp),
     )

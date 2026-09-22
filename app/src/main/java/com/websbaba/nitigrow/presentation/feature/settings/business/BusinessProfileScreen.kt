@@ -37,13 +37,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.presentation.components.ErrorBanner
 import com.websbaba.nitigrow.presentation.feature.settings.components.FieldLabel
 import com.websbaba.nitigrow.presentation.feature.settings.components.NgTextField
 import com.websbaba.nitigrow.presentation.feature.settings.components.PrimaryCta
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ fun BusinessProfileScreen(
     viewModel: BusinessProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val colors = Theme.colors
+    val colors = Niti.colors
     val snackbar = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -77,11 +77,11 @@ fun BusinessProfileScreen(
     }
 
     Scaffold(
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         topBar = { SubScreenHeader(title = "Business profile", onBack = onBack) },
         bottomBar = {
             Column(modifier = Modifier.navigationBarsPadding()) {
-                HorizontalDivider(color = colors.border2)
+                HorizontalDivider(color = colors.outlineVariant)
                 Box(modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 16.dp)) {
                     PrimaryCta(
                         text = "Save changes",
@@ -110,7 +110,7 @@ private fun BusinessProfileForm(
     onName: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
@@ -128,7 +128,7 @@ private fun BusinessProfileForm(
         Text(
             "Managed by your account",
             fontSize = 11.5.sp,
-            color = colors.muted,
+            color = colors.onSurfaceVariant,
             modifier = Modifier.padding(top = 6.dp)
         )
 
@@ -141,7 +141,7 @@ private fun BusinessProfileForm(
 
 @Composable
 private fun LogoBlock() {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
@@ -150,13 +150,13 @@ private fun LogoBlock() {
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(64.dp)
-                .background(colors.card, RoundedCornerShape(18.dp))
-                .border(1.dp, colors.border, RoundedCornerShape(18.dp))
+                .background(colors.surfaceLow, RoundedCornerShape(18.dp))
+                .border(1.dp, colors.outlineVariant, RoundedCornerShape(18.dp))
         ) {
             Icon(
                 Icons.Filled.Storefront,
                 contentDescription = "Business logo",
-                tint = colors.brand,
+                tint = colors.primary,
                 modifier = Modifier.size(30.dp)
             )
         }
@@ -165,7 +165,7 @@ private fun LogoBlock() {
             "Business logo",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
-            color = colors.ink
+            color = colors.onSurface
         )
     }
 }

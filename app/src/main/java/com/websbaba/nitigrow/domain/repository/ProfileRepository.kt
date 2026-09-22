@@ -27,6 +27,6 @@ interface ProfileRepository {
     suspend fun requestDataExport(): ApiResult<Unit>
     suspend fun requestAccountDelete(password: String): ApiResult<Unit>
 
-    suspend fun inviteMember(email: String, role: String): ApiResult<TeamMember>
+    suspend fun inviteMember(name: String, email: String, role: String): ApiResult<TeamMember>
     suspend fun removeMember(memberId: String): ApiResult<Unit>
 }

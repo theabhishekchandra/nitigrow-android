@@ -11,12 +11,12 @@ plugins {
 
 android {
     namespace = "com.websbaba.nitigrow"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.websbaba.nitigrow"
-        minSdk = 26              // Android 8.0 — covers 95%+ of Indian devices
-        targetSdk = 36
+        minSdk = 26
+        targetSdk = 37
         // Driven from CI so every uploaded build has a unique, monotonic code
         // (Play rejects a reused versionCode). Falls back to 1 for local builds.
         versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 1

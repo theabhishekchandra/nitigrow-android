@@ -43,10 +43,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.domain.model.Contact
 import com.websbaba.nitigrow.presentation.feature.inbox.list.components.Avatar
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -81,7 +81,7 @@ fun ContactPickerSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Theme.colors.paper,
+        containerColor = Niti.colors.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = { SheetDragHandle() },
     ) {
@@ -106,7 +106,7 @@ private fun SheetDragHandle() {
             .width(38.dp)
             .height(4.dp)
             .clip(RoundedCornerShape(999.dp))
-            .background(Theme.colors.muted3)
+            .background(Niti.colors.outlineVariant)
     )
 }
 
@@ -115,7 +115,7 @@ private fun ContactPickerContent(
     contacts: List<Contact>,
     onPick: (Contact) -> Unit,
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     var query by remember { mutableStateOf("") }
 
     val filtered = remember(contacts, query) {
@@ -136,7 +136,7 @@ private fun ContactPickerContent(
             text = "Choose contact",
             style = MaterialTheme.typography.headlineMedium,
             fontSize = 19.sp,
-            color = colors.ink,
+            color = colors.onSurface,
         )
 
         Spacer(Modifier.height(12.dp))
@@ -155,7 +155,7 @@ private fun ContactPickerContent(
                 Text(
                     text = "No matching contacts",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = colors.muted,
+                    color = colors.onSurfaceVariant,
                 )
             }
         } else {
@@ -174,13 +174,13 @@ private fun ContactPickerContent(
 
 @Composable
 private fun SearchField(query: String, onQueryChange: (String) -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp))
             .padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(9.dp),
@@ -188,15 +188,15 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit) {
         Icon(
             Icons.Filled.Search,
             contentDescription = null,
-            tint = colors.muted,
+            tint = colors.onSurfaceVariant,
             modifier = Modifier.size(16.dp),
         )
         BasicTextField(
             value = query,
             onValueChange = onQueryChange,
             singleLine = true,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.ink),
-            cursorBrush = SolidColor(colors.brand),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
+            cursorBrush = SolidColor(colors.primary),
             modifier = Modifier.weight(1f),
             decorationBox = { inner ->
                 Box {
@@ -204,7 +204,7 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit) {
                         Text(
                             text = "Search name or phone",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = colors.muted,
+                            color = colors.onSurfaceVariant,
                         )
                     }
                     inner()
@@ -216,7 +216,7 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit) {
 
 @Composable
 private fun ContactRow(contact: Contact, onClick: () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column {
         Row(
             modifier = Modifier
@@ -233,7 +233,7 @@ private fun ContactRow(contact: Contact, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium,
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.ink,
+                    color = colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -241,17 +241,17 @@ private fun ContactRow(contact: Contact, onClick: () -> Unit) {
                     text = contact.phone,
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 11.5.sp,
-                    color = colors.muted,
+                    color = colors.onSurfaceVariant,
                 )
             }
             Icon(
                 Icons.Filled.ChevronRight,
                 contentDescription = null,
-                tint = colors.muted2,
+                tint = colors.outline,
                 modifier = Modifier.size(16.dp),
             )
         }
-        HorizontalDivider(thickness = 1.dp, color = colors.border2)
+        HorizontalDivider(thickness = 1.dp, color = colors.outlineVariant)
     }
 }
 

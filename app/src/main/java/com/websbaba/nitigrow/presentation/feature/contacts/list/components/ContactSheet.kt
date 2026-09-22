@@ -58,9 +58,19 @@ import com.websbaba.nitigrow.core.ui.theme.NitiType
 
 internal const val IN_PREFIX = "+91"
 
-/** Number as typed in the field: the +91 prefix is shown separately, so drop it. */
-internal fun phoneForEditing(stored: String): String =
-    if (stored.startsWith(IN_PREFIX)) stored.removePrefix(IN_PREFIX).trim() else stored
+/**
+ * Number as typed in the field: the +91 prefix is shown separately, so drop it.
+ * The backend stores Indian numbers both as "+91…" and as bare "91…" (12 digits,
+ * no plus), so both are recognised. Anything else is left as it is.
+ */
+internal fun phoneForEditing(stored: String): String {
+    val trimmed = stored.trim()
+    if (trimmed.startsWith(IN_PREFIX)) return trimmed.removePrefix(IN_PREFIX).trim()
+    val digits = trimmed.filter { it.isDigit() }
+    return if (trimmed.all { it.isDigit() || it == ' ' } && digits.length == 12 && digits.startsWith("91")) {
+        digits.removePrefix("91")
+    } else trimmed
+}
 
 /** Full number to save: digits (and a leading +), defaulting to the +91 country code. */
 internal fun phoneForSaving(typed: String): String {

@@ -26,12 +26,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.websbaba.nitigrow.core.util.collapseWhitespace
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.presentation.feature.templates.Template
 import com.websbaba.nitigrow.presentation.feature.templates.TemplateCategory
 import com.websbaba.nitigrow.presentation.feature.templates.TemplateLanguage
 import com.websbaba.nitigrow.presentation.feature.templates.TemplateStatus
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -59,13 +60,13 @@ fun TemplateCard(
 ) {
     val isRejected = template.status == TemplateStatus.REJECTED
     val borderColor =
-        if (isRejected) Theme.colors.danger.copy(alpha = 0.25f) else Theme.colors.border
+        if (isRejected) Niti.colors.error.copy(alpha = 0.25f) else Niti.colors.outlineVariant
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(CardShape)
-            .background(Theme.colors.card)
+            .background(Niti.colors.surfaceLow)
             .border(1.dp, borderColor, CardShape)
             .clickable(onClick = onClick)
             .padding(CardPadding),
@@ -84,7 +85,7 @@ fun TemplateCard(
                     fontFamily = FontFamily.Monospace,
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Theme.colors.ink,
+                    color = Niti.colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
@@ -104,16 +105,16 @@ fun TemplateCard(
                 text = rejectionReason,
                 fontSize = 11.5.sp,
                 lineHeight = 17.sp,
-                color = Theme.colors.danger,
+                color = Niti.colors.error,
                 maxLines = BodyPreviewLines,
                 overflow = TextOverflow.Ellipsis,
             )
         } else {
             Text(
-                text = template.body,
+                text = template.body.collapseWhitespace(),
                 fontSize = 12.sp,
                 lineHeight = 18.sp,
-                color = Theme.colors.ink3,
+                color = Niti.colors.onSurfaceVariant,
                 maxLines = BodyPreviewLines,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -130,8 +131,8 @@ private fun CategoryMiniPill(category: TemplateCategory) {
     }
     Pill(
         label = label,
-        background = Theme.colors.paper2,
-        foreground = Theme.colors.muted,
+        background = Niti.colors.surfaceLow,
+        foreground = Niti.colors.onSurfaceVariant,
         horizontalPadding = 8.dp,
         verticalPadding = 2.dp,
     )
@@ -141,11 +142,11 @@ private fun CategoryMiniPill(category: TemplateCategory) {
 private fun StatusPill(status: TemplateStatus) {
     val (bg, fg, label) = when (status) {
         TemplateStatus.APPROVED ->
-            Triple(Theme.colors.brandSoft, Theme.colors.brand, "APPROVED")
+            Triple(Niti.colors.primaryTone.container, Niti.colors.primary, "APPROVED")
         TemplateStatus.PENDING ->
-            Triple(Theme.colors.turmericSoft, Theme.colors.turmericInk, "IN REVIEW")
+            Triple(Niti.colors.secondaryTone.container, Niti.colors.secondaryTone.onContainer, "IN REVIEW")
         TemplateStatus.REJECTED ->
-            Triple(Theme.colors.danger.copy(alpha = 0.12f), Theme.colors.danger, "REJECTED")
+            Triple(Niti.colors.error.copy(alpha = 0.12f), Niti.colors.error, "REJECTED")
     }
     Pill(
         label = label,

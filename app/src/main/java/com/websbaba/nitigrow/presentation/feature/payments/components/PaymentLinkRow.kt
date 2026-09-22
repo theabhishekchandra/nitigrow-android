@@ -1,5 +1,7 @@
 package com.websbaba.nitigrow.presentation.feature.payments.components
 
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.util.formatIndian
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,8 +30,6 @@ import androidx.compose.ui.unit.sp
 import com.websbaba.nitigrow.presentation.feature.payments.SentLinkStatus
 import com.websbaba.nitigrow.presentation.feature.payments.SentPaymentLink
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
-import java.text.NumberFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -51,7 +51,6 @@ import java.util.Locale
 // • 32dp bordered copy button, shown only when the link has a real URL.
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val InrFormat: NumberFormat = NumberFormat.getInstance(Locale("en", "IN"))
 
 private val TimeFmt = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
 private val DayFmt = DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)
@@ -63,13 +62,13 @@ fun PaymentLinkRow(
     modifier: Modifier = Modifier,
     onCopyLink: (String) -> Unit = {},
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(15.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(15.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(15.dp))
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -77,11 +76,11 @@ fun PaymentLinkRow(
         RupeeGlyph()
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "₹${InrFormat.format(link.amountInr)}",
+                text = "₹${formatIndian(link.amountInr)}",
                 style = MaterialTheme.typography.bodyLarge,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = colors.ink,
+                color = colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -89,7 +88,7 @@ fun PaymentLinkRow(
                 text = "${link.contactName} · ${linkWhen(link.sentAt)}",
                 style = MaterialTheme.typography.bodySmall,
                 fontSize = 11.5.sp,
-                color = colors.muted,
+                color = colors.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 1.dp),
@@ -104,12 +103,12 @@ fun PaymentLinkRow(
 
 @Composable
 private fun RupeeGlyph() {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Box(
         modifier = Modifier
             .size(42.dp)
             .clip(RoundedCornerShape(13.dp))
-            .background(colors.turmericSoft),
+            .background(colors.secondaryTone.container),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -118,19 +117,19 @@ private fun RupeeGlyph() {
                 fontSize = 19.sp,
                 fontWeight = FontWeight.SemiBold,
             ),
-            color = colors.turmericInk,
+            color = colors.secondaryTone.onContainer,
         )
     }
 }
 
 @Composable
 private fun StatusPill(status: SentLinkStatus) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val (bg, fg, label) = when (status) {
-        SentLinkStatus.PAID -> Triple(colors.brandSoft, colors.brand, "Paid")
-        SentLinkStatus.PENDING -> Triple(colors.turmericSoft, colors.turmericInk, "Pending")
-        SentLinkStatus.EXPIRED -> Triple(colors.paper2, colors.muted, "Expired")
-        SentLinkStatus.FAILED -> Triple(colors.danger.copy(alpha = 0.12f), colors.danger, "Failed")
+        SentLinkStatus.PAID -> Triple(colors.primaryTone.container, colors.primary, "Paid")
+        SentLinkStatus.PENDING -> Triple(colors.secondaryTone.container, colors.secondaryTone.onContainer, "Pending")
+        SentLinkStatus.EXPIRED -> Triple(colors.surfaceLow, colors.onSurfaceVariant, "Expired")
+        SentLinkStatus.FAILED -> Triple(colors.error.copy(alpha = 0.12f), colors.error, "Failed")
     }
     Box(
         modifier = Modifier
@@ -149,20 +148,20 @@ private fun StatusPill(status: SentLinkStatus) {
 
 @Composable
 private fun CopyButton(onClick: () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Box(
         modifier = Modifier
             .size(32.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(10.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             Icons.Filled.ContentCopy,
             contentDescription = "Copy payment link",
-            tint = colors.muted,
+            tint = colors.onSurfaceVariant,
             modifier = Modifier.size(14.dp),
         )
     }

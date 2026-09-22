@@ -4,9 +4,9 @@ import com.websbaba.nitigrow.data.remote.dto.AvatarUploadResponse
 import com.websbaba.nitigrow.data.remote.dto.DeleteAccountRequest
 import com.websbaba.nitigrow.data.remote.dto.GenericMessageDto
 import com.websbaba.nitigrow.data.remote.dto.InviteMemberRequest
+import com.websbaba.nitigrow.data.remote.dto.InviteMemberResponse
 import com.websbaba.nitigrow.data.remote.dto.MeResponseDto
 import com.websbaba.nitigrow.data.remote.dto.NotificationPrefsRequest
-import com.websbaba.nitigrow.data.remote.dto.TeamListResponse
 import com.websbaba.nitigrow.data.remote.dto.TeamMemberDto
 import com.websbaba.nitigrow.data.remote.dto.UpdateProfileRequest
 import com.websbaba.nitigrow.data.remote.dto.UserDto
@@ -37,10 +37,10 @@ interface ProfileApi {
     suspend fun tenant(): MeResponseDto
 
     @GET("team")
-    suspend fun team(): TeamListResponse
+    suspend fun team(): List<TeamMemberDto>
 
     @POST("team/invite")
-    suspend fun invite(@Body body: InviteMemberRequest): TeamMemberDto
+    suspend fun invite(@Body body: InviteMemberRequest): InviteMemberResponse
 
     @DELETE("team/{id}")
     suspend fun removeMember(@Path("id") id: String): GenericMessageDto

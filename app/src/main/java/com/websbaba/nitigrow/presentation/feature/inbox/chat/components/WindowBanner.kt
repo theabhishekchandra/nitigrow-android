@@ -59,10 +59,14 @@ internal fun formatWindowRemaining(remainingMillis: Long): String {
     }
 }
 
+/**
+ * Whether the 24h customer-service window is open right now, re-evaluated once a minute.
+ * A null [windowExpiresAt] (no messages yet, or the last one was outbound) reads as open —
+ * there's nothing confirming it's closed, so the composer isn't blocked on a guess.
+ */
 @Composable
-fun WindowStatusBanner(windowExpiresAt: Instant?, modifier: Modifier = Modifier) {
-    if (windowExpiresAt == null) return
-
+fun rememberWindowOpen(windowExpiresAt: Instant?): Boolean {
+    if (windowExpiresAt == null) return true
     var nowMillis by remember(windowExpiresAt) {
         mutableLongStateOf(System.currentTimeMillis())
     }
@@ -72,7 +76,24 @@ fun WindowStatusBanner(windowExpiresAt: Instant?, modifier: Modifier = Modifier)
             nowMillis = System.currentTimeMillis()
         }
     }
+    return windowExpiresAt.toEpochMilli() - nowMillis > 0L
+}
 
+@Composable
+fun WindowStatusBanner(windowExpiresAt: Instant?, modifier: Modifier = Modifier) {
+    if (windowExpiresAt == null) return
+
+    // Own ticker (rather than rememberWindowOpen) so the "closes in Xh Ym" label keeps
+    // counting down live, not just the open/closed boolean.
+    var nowMillis by remember(windowExpiresAt) {
+        mutableLongStateOf(System.currentTimeMillis())
+    }
+    LaunchedEffect(windowExpiresAt) {
+        while (true) {
+            delay(TICKER_MILLIS)
+            nowMillis = System.currentTimeMillis()
+        }
+    }
     val remainingMillis = windowExpiresAt.toEpochMilli() - nowMillis
     val open = remainingMillis > 0L
     val tone = if (open) Niti.colors.tertiaryTone else Niti.colors.errorTone

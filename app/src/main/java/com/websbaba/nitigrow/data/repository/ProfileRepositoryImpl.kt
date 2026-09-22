@@ -1,6 +1,7 @@
 package com.websbaba.nitigrow.data.repository
 
 import com.websbaba.nitigrow.core.network.ApiResult
+import com.websbaba.nitigrow.core.network.andThen
 import com.websbaba.nitigrow.core.network.safeApiCall
 import com.websbaba.nitigrow.core.storage.TokenDataStore
 import com.websbaba.nitigrow.core.util.DispatcherProvider
@@ -63,42 +64,30 @@ class ProfileRepositoryImpl @Inject constructor(
     override fun observeLanguage(): Flow<String> = tokenStore.languageTag
 
     override suspend fun refreshProfile(): ApiResult<Unit> =
-        when (val res = safeApiCall(dispatchers.io) { api.me() }) {
-            is ApiResult.Success -> {
-                profileDao.upsert(res.data.toProfileEntity())
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.me() }.andThen { res ->
+            profileDao.upsert(res.toProfileEntity())
+            ApiResult.Success(Unit)
         }
 
     override suspend fun refreshTenant(): ApiResult<Unit> =
-        when (val res = safeApiCall(dispatchers.io) { api.tenant() }) {
-            is ApiResult.Success -> {
-                res.data.tenant?.let { tenantDao.upsert(it.toEntity()) }
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.tenant() }.andThen { res ->
+            res.tenant?.let { tenantDao.upsert(it.toEntity()) }
+            ApiResult.Success(Unit)
         }
 
     override suspend fun refreshTeam(): ApiResult<Unit> =
-        when (val res = safeApiCall(dispatchers.io) { api.team() }) {
-            is ApiResult.Success -> {
-                teamDao.upsertAll((res.data.data ?: emptyList()).map { it.toEntity() })
-                ApiResult.Success(Unit)
-            }
-            is ApiResult.Error -> res
+        safeApiCall(dispatchers.io) { api.team() }.andThen { res ->
+            teamDao.upsertAll(res.map { it.toEntity() })
+            ApiResult.Success(Unit)
         }
 
     override suspend fun updateProfile(name: String, email: String): ApiResult<User> =
-        when (val res = safeApiCall(dispatchers.io) {
+        safeApiCall(dispatchers.io) {
             api.updateProfile(UpdateProfileRequest(name, email))
-        }) {
-            is ApiResult.Success -> {
-                val entity = res.data.toProfileEntity()
-                profileDao.upsert(entity)
-                ApiResult.Success(entity.toDomainUser())
-            }
-            is ApiResult.Error -> res
+        }.andThen { res ->
+            val entity = res.toProfileEntity()
+            profileDao.upsert(entity)
+            ApiResult.Success(entity.toDomainUser())
         }
 
     override suspend fun uploadAvatar(bytes: ByteArray, mimeType: String): ApiResult<String> {
@@ -148,16 +137,13 @@ class ProfileRepositoryImpl @Inject constructor(
             api.requestAccountDelete(DeleteAccountRequest(password)); Unit
         }
 
-    override suspend fun inviteMember(email: String, role: String): ApiResult<TeamMember> =
-        when (val res = safeApiCall(dispatchers.io) {
-            api.invite(InviteMemberRequest(email, role))
-        }) {
-            is ApiResult.Success -> {
-                val entity = res.data.toEntity()
-                teamDao.upsert(entity)
-                ApiResult.Success(entity.toDomain())
-            }
-            is ApiResult.Error -> res
+    override suspend fun inviteMember(name: String, email: String, role: String): ApiResult<TeamMember> =
+        safeApiCall(dispatchers.io) {
+            api.invite(InviteMemberRequest(name, email, role))
+        }.andThen { res ->
+            val entity = res.user.toEntity()
+            teamDao.upsert(entity)
+            ApiResult.Success(entity.toDomain())
         }
 
     override suspend fun removeMember(memberId: String): ApiResult<Unit> {

@@ -34,9 +34,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.presentation.feature.conflicts.components.ConflictCard
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -77,9 +77,9 @@ fun ConflictsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Theme.colors.brand,
-                    titleContentColor = Theme.colors.paper,
-                    navigationIconContentColor = Theme.colors.paper,
+                    containerColor = Niti.colors.primary,
+                    titleContentColor = Niti.colors.surface,
+                    navigationIconContentColor = Niti.colors.surface,
                 ),
             )
         },
@@ -88,7 +88,7 @@ fun ConflictsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Theme.colors.paper),
+                .background(Niti.colors.surface),
         ) {
             if (state.conflicts.isEmpty()) {
                 EmptyState()
@@ -131,7 +131,7 @@ private fun ExplainerBanner(conflictCount: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Theme.colors.brandSoft)
+            .background(Niti.colors.primaryTone.container)
             .padding(16.dp),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -139,7 +139,7 @@ private fun ExplainerBanner(conflictCount: Int) {
                 text = "$conflictCount items need your attention",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = Theme.colors.brandInk,
+                color = Niti.colors.primaryTone.onContainer,
             )
             BulletLine("Server-timestamp wins for edits.")
             BulletLine("Deletions on web override local pending edits.")
@@ -153,7 +153,7 @@ private fun BulletLine(text: String) {
     Text(
         text = "•  $text",
         style = MaterialTheme.typography.bodySmall,
-        color = Theme.colors.brandInk,
+        color = Niti.colors.primaryTone.onContainer,
     )
 }
 
@@ -169,7 +169,7 @@ private fun EmptyState() {
         Icon(
             imageVector = Icons.Filled.CloudDone,
             contentDescription = null, // decorative — paired with text below
-            tint = Theme.colors.success,
+            tint = Niti.colors.success,
             modifier = Modifier.size(EmptyIconSize),
         )
         Box(modifier = Modifier.size(16.dp))
@@ -177,14 +177,14 @@ private fun EmptyState() {
             text = "All synced. No conflicts.",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = Theme.colors.ink,
+            color = Niti.colors.onSurface,
             textAlign = TextAlign.Center,
         )
         Box(modifier = Modifier.size(8.dp))
         Text(
             text = "When you make changes offline and they collide with the server, you'll see them here.",
             style = MaterialTheme.typography.bodyMedium,
-            color = Theme.colors.muted,
+            color = Niti.colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
     }
@@ -196,7 +196,7 @@ private fun EmptyState() {
 @Composable
 private fun ConflictsScreenPopulatedPreview() {
     NitiGrowTheme {
-        Box(modifier = Modifier.background(Theme.colors.paper)) {
+        Box(modifier = Modifier.background(Niti.colors.surface)) {
             ConflictList(
                 state = ConflictUiState(
                     conflicts = listOf(
@@ -224,7 +224,7 @@ private fun ConflictsScreenEmptyPreview() {
     NitiGrowTheme {
         Box(
             modifier = Modifier
-                .background(Theme.colors.paper)
+                .background(Niti.colors.surface)
                 .fillMaxSize()
                 .padding(32.dp),
         ) {

@@ -37,6 +37,14 @@ object DatabaseModule {
         }
     }
 
+    // v3 -> v4 conversations cache the server's reply-window expiry. Existing rows get -1
+    // ("unknown") until the next inbox refresh fills them in.
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `conversations` ADD COLUMN `windowExpiresAtEpochMs` INTEGER NOT NULL DEFAULT -1")
+        }
+    }
+
     // v2 -> v3 billing went read-only: drop the Razorpay-era plans/subscription/payments
     // cache and create the new billing_status snapshot + invoices cache. These tables are
     // disposable (re-synced from the API), so dropping them loses nothing.
@@ -71,7 +79,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): NitiGrowDatabase =
         Room.databaseBuilder(context, NitiGrowDatabase::class.java, Constants.DATABASE_NAME)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             // Destructive only on downgrade (dev rollbacks) — never silently wipe
             // user data on a forward upgrade.
             .fallbackToDestructiveMigrationOnDowngrade()

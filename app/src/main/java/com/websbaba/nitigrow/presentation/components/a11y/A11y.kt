@@ -80,7 +80,7 @@ fun A11yIconButton(
  * users see only the dot — but TalkBack reads the label so the colour is
  * never the only signal (phase-3 Section 5.3).
  *
- * @param color the visible dot color (e.g. Theme.colors.success)
+ * @param color the visible dot color (e.g. Niti.colors.success)
  * @param label the spoken label (e.g. "Delivered")
  * @param modifier modifier — by default we DON'T add a touch target since the
  *                 dot is decorative; pass [minTouchTarget] if it's interactive.

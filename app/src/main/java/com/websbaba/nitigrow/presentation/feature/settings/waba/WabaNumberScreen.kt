@@ -45,11 +45,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.domain.model.WabaStatus
 import com.websbaba.nitigrow.presentation.feature.settings.components.StatusPill
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.flow.collectLatest
 import java.text.NumberFormat
 import java.time.Instant
@@ -77,7 +77,7 @@ fun WabaNumberScreen(
     viewModel: WabaNumberViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val colors = Theme.colors
+    val colors = Niti.colors
     val snackbar = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -90,11 +90,11 @@ fun WabaNumberScreen(
     }
 
     Scaffold(
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         topBar = {
             SubScreenHeader(title = "WhatsApp account", onBack = onBack) {
                 IconButton(onClick = viewModel::refresh) {
-                    Icon(Icons.Filled.Refresh, contentDescription = "Refresh", tint = colors.ink3)
+                    Icon(Icons.Filled.Refresh, contentDescription = "Refresh", tint = colors.onSurfaceVariant)
                 }
             }
         },
@@ -116,7 +116,7 @@ private fun WabaNumberBody(
     onRelink: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
@@ -132,8 +132,8 @@ private fun WabaNumberBody(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
-                .background(colors.card)
-                .border(1.dp, colors.border, RoundedCornerShape(14.dp))
+                .background(colors.surfaceLow)
+                .border(1.dp, colors.outlineVariant, RoundedCornerShape(14.dp))
                 .clickable(role = Role.Button, onClick = onRelink)
                 .padding(vertical = 13.dp)
         ) {
@@ -141,7 +141,7 @@ private fun WabaNumberBody(
                 "Re-link WhatsApp account",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.ink
+                color = colors.onSurface
             )
         }
     }
@@ -149,13 +149,13 @@ private fun WabaNumberBody(
 
 @Composable
 private fun AccountCard(state: WabaNumberUiState) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(18.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(18.dp))
             .padding(18.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -163,12 +163,12 @@ private fun AccountCard(state: WabaNumberUiState) {
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(46.dp)
-                    .background(colors.brandSoft, CircleShape)
+                    .background(colors.primaryTone.container, CircleShape)
             ) {
                 Icon(
                     Icons.Filled.Whatsapp,
                     contentDescription = null,
-                    tint = colors.brand,
+                    tint = colors.primary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -178,20 +178,20 @@ private fun AccountCard(state: WabaNumberUiState) {
                     state.phone.ifBlank { "Not linked" },
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = colors.ink
+                    color = colors.onSurface
                 )
                 if (state.displayName.isNotBlank()) {
                     Text(
                         "Display name: ${state.displayName}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = colors.muted,
+                        color = colors.onSurfaceVariant,
                         modifier = Modifier.padding(top = 1.dp)
                     )
                 }
             }
             StatusPillFor(state.status)
         }
-        HorizontalDivider(color = colors.border2, modifier = Modifier.padding(vertical = 14.dp))
+        HorizontalDivider(color = colors.outlineVariant, modifier = Modifier.padding(vertical = 14.dp))
         KeyValueRow(label = "Quality rating") {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -215,7 +215,7 @@ private fun AccountCard(state: WabaNumberUiState) {
                 state.messagingLimit,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.ink
+                color = colors.onSurface
             )
         }
         state.verifiedAt?.let { at ->
@@ -224,7 +224,7 @@ private fun AccountCard(state: WabaNumberUiState) {
                     formatVerifiedAt(at),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.ink
+                    color = colors.onSurface
                 )
             }
         }
@@ -242,7 +242,7 @@ private fun KeyValueRow(label: String, value: @Composable () -> Unit) {
         Text(
             label,
             style = MaterialTheme.typography.bodyMedium,
-            color = Theme.colors.muted,
+            color = Niti.colors.onSurfaceVariant,
             modifier = Modifier.weight(1f)
         )
         value()
@@ -251,41 +251,41 @@ private fun KeyValueRow(label: String, value: @Composable () -> Unit) {
 
 @Composable
 private fun StatusPillFor(status: WabaStatus) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val (bg, fg, label) = when (status) {
-        WabaStatus.ACTIVE -> Triple(colors.brandSoft, colors.brand, "VERIFIED")
-        WabaStatus.PENDING -> Triple(colors.turmericSoft, colors.turmericInk, "PENDING")
-        WabaStatus.SUSPENDED -> Triple(colors.danger.copy(alpha = 0.12f), colors.danger, "SUSPENDED")
-        WabaStatus.FAILED -> Triple(colors.danger.copy(alpha = 0.12f), colors.danger, "FAILED")
-        WabaStatus.NOT_LINKED -> Triple(colors.paper2, colors.ink3, "NOT LINKED")
+        WabaStatus.ACTIVE -> Triple(colors.primaryTone.container, colors.primary, "VERIFIED")
+        WabaStatus.PENDING -> Triple(colors.secondaryTone.container, colors.secondaryTone.onContainer, "PENDING")
+        WabaStatus.SUSPENDED -> Triple(colors.error.copy(alpha = 0.12f), colors.error, "SUSPENDED")
+        WabaStatus.FAILED -> Triple(colors.error.copy(alpha = 0.12f), colors.error, "FAILED")
+        WabaStatus.NOT_LINKED -> Triple(colors.surfaceLow, colors.onSurfaceVariant, "NOT LINKED")
     }
     StatusPill(label, bg = bg, fg = fg)
 }
 
 @Composable
 private fun qualityColor(rating: String): Color = when (rating.uppercase(Locale.ROOT)) {
-    "GREEN" -> Theme.colors.brand
-    "YELLOW" -> Theme.colors.warning
-    "RED" -> Theme.colors.danger
-    else -> Theme.colors.muted
+    "GREEN" -> Niti.colors.primary
+    "YELLOW" -> Niti.colors.warning
+    "RED" -> Niti.colors.error
+    else -> Niti.colors.onSurfaceVariant
 }
 
 @Composable
 private fun TierUsageCard(used: Int, limit: Int) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     val nf = remember { NumberFormat.getIntegerInstance(Locale.ENGLISH) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Text(
             "TIER USAGE TODAY",
             style = MaterialTheme.typography.labelSmall,
-            color = colors.muted,
+            color = colors.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 10.dp)
         )
         Row(modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
@@ -293,26 +293,26 @@ private fun TierUsageCard(used: Int, limit: Int) {
                 "Business-initiated",
                 fontSize = 12.5.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.ink,
+                color = colors.onSurface,
                 modifier = Modifier.weight(1f)
             )
             Text(
                 "${nf.format(used)} / ${nf.format(limit)}",
                 fontSize = 12.5.sp,
-                color = colors.muted
+                color = colors.onSurfaceVariant
             )
         }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
-                .background(colors.paper2, RoundedCornerShape(4.dp))
+                .background(colors.surfaceLow, RoundedCornerShape(4.dp))
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(fraction = (used.toFloat() / limit).coerceIn(0f, 1f))
                     .height(8.dp)
-                    .background(colors.brand, RoundedCornerShape(4.dp))
+                    .background(colors.primary, RoundedCornerShape(4.dp))
             )
         }
     }

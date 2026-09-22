@@ -1,5 +1,7 @@
 package com.websbaba.nitigrow.presentation.feature.analytics
 
+import com.websbaba.nitigrow.core.ui.theme.Niti
+import com.websbaba.nitigrow.core.util.formatIndian
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -51,8 +53,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.websbaba.nitigrow.core.ui.theme.NitiGrowTheme
-import com.websbaba.nitigrow.core.ui.theme.Theme
-import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle as DateTextStyle
@@ -100,7 +100,7 @@ private fun AnalyticsScreenContent(
                 onBack = onBack,
             )
         },
-        containerColor = Theme.colors.paper,
+        containerColor = Niti.colors.surface,
     ) { padding ->
         when {
             state.isLoading && state.timeSeries.isEmpty() ->
@@ -149,13 +149,13 @@ private fun AnalyticsHeader(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = Theme.colors.ink,
+                tint = Niti.colors.onSurface,
             )
         }
         Text(
             text = "Analytics",
             style = MaterialTheme.typography.headlineMedium,
-            color = Theme.colors.ink,
+            color = Niti.colors.onSurface,
             modifier = Modifier.weight(1f),
         )
         AnalyticsPeriod.entries.forEach { period ->
@@ -174,10 +174,10 @@ private fun PeriodPill(label: String, selected: Boolean, onClick: () -> Unit) {
         text = label,
         fontSize = 12.sp,
         fontWeight = FontWeight.Bold,
-        color = if (selected) Theme.colors.paper else Theme.colors.ink3,
+        color = if (selected) Niti.colors.surface else Niti.colors.onSurfaceVariant,
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(if (selected) Theme.colors.brand else Theme.colors.paper2)
+            .background(if (selected) Niti.colors.primary else Niti.colors.surfaceLow)
             .selectable(selected = selected, role = Role.Button, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 6.dp),
     )
@@ -187,14 +187,13 @@ private fun PeriodPill(label: String, selected: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun KpiRow(state: AnalyticsUiState) {
-    val nf = remember { NumberFormat.getInstance(Locale("en", "IN")) }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(KpiGap),
     ) {
         KpiCard(
             label = "MESSAGES SENT",
-            value = nf.format(state.totalSent),
+            value = formatIndian(state.totalSent),
             modifier = Modifier.weight(1f),
         )
         // AVG RESPONSE TIME is intentionally omitted: the analytics API exposes
@@ -207,21 +206,21 @@ private fun KpiRow(state: AnalyticsUiState) {
 private fun KpiCard(label: String, value: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(Theme.colors.card, RoundedCornerShape(CardCorner))
-            .border(1.dp, Theme.colors.border, RoundedCornerShape(CardCorner))
+            .background(Niti.colors.surfaceLow, RoundedCornerShape(CardCorner))
+            .border(1.dp, Niti.colors.outlineVariant, RoundedCornerShape(CardCorner))
             .padding(14.dp),
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.2.sp),
-            color = Theme.colors.muted,
+            color = Niti.colors.onSurfaceVariant,
         )
         Spacer(Modifier.height(6.dp))
         Text(
             text = value,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Theme.colors.ink,
+            color = Niti.colors.onSurface,
         )
     }
 }
@@ -274,7 +273,7 @@ private fun MessageVolumeCard(points: List<DailyPoint>) {
                 Text(
                     text = "No messages in this period",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Theme.colors.muted,
+                    color = Niti.colors.onSurfaceVariant,
                 )
             }
         } else {
@@ -304,9 +303,9 @@ private fun MessageVolumeCard(points: List<DailyPoint>) {
                                 .fillMaxHeight(fraction)
                                 .background(
                                     color = if (index == highlightIndex) {
-                                        Theme.colors.brand
+                                        Niti.colors.primary
                                     } else {
-                                        Theme.colors.brand.copy(alpha = 0.25f)
+                                        Niti.colors.primary.copy(alpha = 0.25f)
                                     },
                                     shape = RoundedCornerShape(
                                         topStart = 6.dp,
@@ -329,7 +328,7 @@ private fun MessageVolumeCard(points: List<DailyPoint>) {
                         text = bar.label,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Theme.colors.muted2,
+                        color = Niti.colors.outline,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         modifier = Modifier.weight(1f),
@@ -344,7 +343,6 @@ private fun MessageVolumeCard(points: List<DailyPoint>) {
 
 @Composable
 private fun FunnelCard(state: AnalyticsUiState) {
-    val nf = remember { NumberFormat.getInstance(Locale("en", "IN")) }
     AnalyticsCard(label = "FUNNEL", labelGap = 12.dp) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -352,20 +350,20 @@ private fun FunnelCard(state: AnalyticsUiState) {
         ) {
             FunnelStat(
                 label = "DELIVERED",
-                value = nf.format(state.totalDelivered),
+                value = formatIndian(state.totalDelivered),
                 pct = pctOfSent(state.totalDelivered, state.totalSent),
-                background = Theme.colors.paper2,
-                valueColor = Theme.colors.ink,
-                labelColor = Theme.colors.muted,
+                background = Niti.colors.surfaceLow,
+                valueColor = Niti.colors.onSurface,
+                labelColor = Niti.colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
             FunnelStat(
                 label = "READ",
-                value = nf.format(state.totalRead),
+                value = formatIndian(state.totalRead),
                 pct = pctOfSent(state.totalRead, state.totalSent),
-                background = Theme.colors.turmericSoft,
-                valueColor = Theme.colors.turmericInk,
-                labelColor = Theme.colors.turmericInk,
+                background = Niti.colors.secondaryTone.container,
+                valueColor = Niti.colors.secondaryTone.onContainer,
+                labelColor = Niti.colors.secondaryTone.onContainer,
                 modifier = Modifier.weight(1f),
             )
             // REPLIES is intentionally omitted: the analytics API has no
@@ -423,14 +421,14 @@ private fun AnalyticsCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Theme.colors.card, RoundedCornerShape(CardCorner))
-            .border(1.dp, Theme.colors.border, RoundedCornerShape(CardCorner))
+            .background(Niti.colors.surfaceLow, RoundedCornerShape(CardCorner))
+            .border(1.dp, Niti.colors.outlineVariant, RoundedCornerShape(CardCorner))
             .padding(16.dp),
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = Theme.colors.muted,
+            color = Niti.colors.onSurfaceVariant,
         )
         Spacer(Modifier.height(labelGap))
         content()
@@ -466,7 +464,7 @@ private fun AnalyticsSkeleton(modifier: Modifier = Modifier) {
 
 @Composable
 private fun SkeletonBlock(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.background(Theme.colors.paper3, RoundedCornerShape(CardCorner)))
+    Box(modifier = modifier.background(Niti.colors.surfaceContainer, RoundedCornerShape(CardCorner)))
 }
 
 @Composable
@@ -481,13 +479,13 @@ private fun AnalyticsEmptyState(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .size(110.dp)
-                .background(Theme.colors.paper2, CircleShape),
+                .background(Niti.colors.surfaceLow, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Filled.BarChart,
                 contentDescription = null,
-                tint = Theme.colors.muted3,
+                tint = Niti.colors.outlineVariant,
                 modifier = Modifier.size(46.dp),
             )
         }
@@ -495,14 +493,14 @@ private fun AnalyticsEmptyState(modifier: Modifier = Modifier) {
         Text(
             text = "No analytics yet",
             style = MaterialTheme.typography.headlineSmall,
-            color = Theme.colors.ink,
+            color = Niti.colors.onSurface,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
         Text(
             text = "Send your first broadcast and delivery stats will appear here.",
             style = MaterialTheme.typography.bodyMedium,
-            color = Theme.colors.muted,
+            color = Niti.colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
     }

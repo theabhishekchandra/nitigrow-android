@@ -29,5 +29,14 @@ data class ConversationEntity(
     val lastMessageOutbound: Boolean,
     val unreadCount: Int,
     val isPinned: Boolean,
-    val isMuted: Boolean
-)
+    val isMuted: Boolean,
+    /**
+     * When the reply window closes, from the server: an epoch-ms instant, 0 when the server
+     * says there is no open window, or [WINDOW_UNKNOWN] for rows cached before this column existed.
+     */
+    val windowExpiresAtEpochMs: Long = WINDOW_UNKNOWN
+) {
+    companion object {
+        const val WINDOW_UNKNOWN = -1L
+    }
+}

@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.websbaba.nitigrow.core.ui.theme.Niti
 import com.websbaba.nitigrow.domain.model.LoyaltyProgram
 import com.websbaba.nitigrow.domain.model.ReferralFunnel
 import com.websbaba.nitigrow.domain.model.ReferralLeader
@@ -51,7 +52,6 @@ import com.websbaba.nitigrow.presentation.components.ErrorBanner
 import com.websbaba.nitigrow.presentation.feature.inbox.list.components.Avatar
 import com.websbaba.nitigrow.presentation.feature.settings.components.NgToggle
 import com.websbaba.nitigrow.presentation.feature.settings.components.SubScreenHeader
-import com.websbaba.nitigrow.core.ui.theme.Theme
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
@@ -76,14 +76,14 @@ fun ReferralsScreen(
     viewModel: ReferralsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val colors = Theme.colors
+    val colors = Niti.colors
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        containerColor = colors.paper,
+        containerColor = colors.surface,
         topBar = { SubScreenHeader(title = "Refer & earn", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
@@ -91,7 +91,7 @@ fun ReferralsScreen(
             Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
-            ) { CircularProgressIndicator(color = colors.brand) }
+            ) { CircularProgressIndicator(color = colors.primary) }
             return@Scaffold
         }
 
@@ -162,13 +162,13 @@ fun ReferralsScreen(
 
 @Composable
 private fun CodeCard(saas: SaasReferral, onCopy: () -> Unit, onShare: () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(colors.sidebarBg)
+            .background(colors.hero)
             .padding(horizontal = 18.dp, vertical = 22.dp)
     ) {
         Text(
@@ -176,7 +176,7 @@ private fun CodeCard(saas: SaasReferral, onCopy: () -> Unit, onShare: () -> Unit
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 1.6.sp,
-            color = colors.sidebarInk.copy(alpha = 0.55f)
+            color = colors.onHero.copy(alpha = 0.55f)
         )
         Text(
             saas.code.uppercase(Locale.ROOT),
@@ -185,7 +185,7 @@ private fun CodeCard(saas: SaasReferral, onCopy: () -> Unit, onShare: () -> Unit
                 lineHeight = 44.sp,
                 letterSpacing = 3.sp
             ),
-            color = colors.sidebarTextActive,
+            color = colors.onHero,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp)
         )
@@ -193,7 +193,7 @@ private fun CodeCard(saas: SaasReferral, onCopy: () -> Unit, onShare: () -> Unit
             "You get ${rupees(saas.creditPerReferralPaise)} credit for every business that subscribes with your code.",
             fontSize = 12.5.sp,
             lineHeight = 19.sp,
-            color = colors.sidebarInk.copy(alpha = 0.7f),
+            color = colors.onHero.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 10.dp)
         )
@@ -206,7 +206,7 @@ private fun CodeCard(saas: SaasReferral, onCopy: () -> Unit, onShare: () -> Unit
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(12.dp))
-                    .border(1.dp, colors.sidebarInk.copy(alpha = 0.14f), RoundedCornerShape(12.dp))
+                    .border(1.dp, colors.onHero.copy(alpha = 0.14f), RoundedCornerShape(12.dp))
                     .clickable(role = Role.Button, onClick = onCopy)
                     .padding(vertical = 12.dp)
             ) {
@@ -214,7 +214,7 @@ private fun CodeCard(saas: SaasReferral, onCopy: () -> Unit, onShare: () -> Unit
                     "Copy code",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.sidebarInk
+                    color = colors.onHero
                 )
             }
             Box(
@@ -222,7 +222,7 @@ private fun CodeCard(saas: SaasReferral, onCopy: () -> Unit, onShare: () -> Unit
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(colors.brand)
+                    .background(colors.primary)
                     .clickable(role = Role.Button, onClick = onShare)
                     .padding(vertical = 12.dp)
             ) {
@@ -230,7 +230,7 @@ private fun CodeCard(saas: SaasReferral, onCopy: () -> Unit, onShare: () -> Unit
                     "Share on WhatsApp",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (colors.isLight) colors.paper else colors.brandInk
+                    color = if (colors.isLight) colors.surface else colors.primaryTone.onContainer
                 )
             }
         }
@@ -248,7 +248,7 @@ private fun SaasStatsRow(saas: SaasReferral) {
         StatCard(
             value = rupees(saas.creditPaise),
             label = "CREDIT EARNED",
-            valueColor = Theme.colors.brand,
+            valueColor = Niti.colors.primary,
             modifier = Modifier.weight(1f)
         )
     }
@@ -259,15 +259,15 @@ private fun StatCard(
     value: String,
     label: String,
     modifier: Modifier = Modifier,
-    valueColor: androidx.compose.ui.graphics.Color = Theme.colors.ink
+    valueColor: androidx.compose.ui.graphics.Color = Niti.colors.onSurface
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(16.dp))
             .padding(14.dp)
     ) {
         Text(value, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = valueColor)
@@ -276,7 +276,7 @@ private fun StatCard(
             fontSize = 10.5.sp,
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 0.8.sp,
-            color = colors.muted,
+            color = colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 2.dp)
         )
@@ -287,13 +287,13 @@ private fun StatCard(
 
 @Composable
 private fun ReferralCard(content: @Composable () -> Unit) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) { content() }
 }
@@ -304,7 +304,7 @@ private fun ProgramCard(
     isToggling: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     ReferralCard {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -315,12 +315,12 @@ private fun ProgramCard(
                     "Customer referral program",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.ink
+                    color = colors.onSurface
                 )
                 Text(
                     "Customers share a code; both earn a reward",
                     fontSize = 11.5.sp,
-                    color = colors.muted,
+                    color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
@@ -334,7 +334,7 @@ private fun ProgramCard(
             Text(
                 "Reward: ${p.referrerReward} to referrer / ${p.refereeReward} to referee · qualifies on ${p.qualifyOn.replace('_', ' ')}",
                 fontSize = 11.5.sp,
-                color = colors.muted,
+                color = colors.onSurfaceVariant,
                 modifier = Modifier.padding(top = 10.dp)
             )
         }
@@ -343,12 +343,12 @@ private fun ProgramCard(
 
 @Composable
 private fun FunnelCard(f: ReferralFunnel) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     ReferralCard {
         Text(
             "REFERRAL FUNNEL",
             style = MaterialTheme.typography.labelSmall,
-            color = colors.muted,
+            color = colors.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 10.dp)
         )
         Row(
@@ -365,29 +365,29 @@ private fun FunnelCard(f: ReferralFunnel) {
 
 @Composable
 private fun FunnelStat(label: String, value: Int) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("$value", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = colors.ink)
-        Text(label, fontSize = 10.5.sp, color = colors.muted, modifier = Modifier.padding(top = 2.dp))
+        Text("$value", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = colors.onSurface)
+        Text(label, fontSize = 10.5.sp, color = colors.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
     }
 }
 
 @Composable
 private fun LoyaltyCard(l: LoyaltyProgram) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     ReferralCard {
         Text(
             "Loyalty program",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = colors.ink
+            color = colors.onSurface
         )
         Text(
             if (l.enabled)
                 "On · ${l.pointsPerRupee} pt/₹ · ${l.minRedeemPoints} pts to redeem"
             else "Off",
             fontSize = 11.5.sp,
-            color = colors.muted,
+            color = colors.onSurfaceVariant,
             modifier = Modifier.padding(top = 2.dp)
         )
     }
@@ -397,23 +397,23 @@ private fun LoyaltyCard(l: LoyaltyProgram) {
 
 @Composable
 private fun LeadersCard(leaders: List<ReferralLeader>) {
-    val colors = Theme.colors
+    val colors = Niti.colors
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.card)
-            .border(1.dp, colors.border, RoundedCornerShape(16.dp))
+            .background(colors.surfaceLow)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 6.dp)
     ) {
         Text(
             "TOP REFERRERS",
             style = MaterialTheme.typography.labelSmall,
-            color = colors.muted,
+            color = colors.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
         )
         leaders.forEachIndexed { i, leader ->
-            if (i > 0) HorizontalDivider(color = colors.border2)
+            if (i > 0) HorizontalDivider(color = colors.outlineVariant)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
@@ -425,18 +425,18 @@ private fun LeadersCard(leaders: List<ReferralLeader>) {
                         leader.name ?: "—",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = colors.ink,
+                        color = colors.onSurface,
                         maxLines = 1
                     )
                     leader.phone?.let {
-                        Text(it, fontSize = 11.sp, color = colors.muted, maxLines = 1)
+                        Text(it, fontSize = 11.sp, color = colors.onSurfaceVariant, maxLines = 1)
                     }
                 }
                 Text(
                     "${leader.rewarded} rewarded",
                     fontSize = 12.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = colors.brand
+                    color = colors.primary
                 )
             }
         }

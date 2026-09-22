@@ -56,6 +56,13 @@ class LeadsViewModel @Inject constructor(
     }
 
     fun onMove(leadId: String, stage: LeadStage) {
-        viewModelScope.launch { moveStage(leadId, stage) }
+        viewModelScope.launch {
+            // The repository already rolls the local (optimistic) stage back on failure —
+            // this just needs to tell the user why the card didn't stay where they dropped it.
+            when (val res = moveStage(leadId, stage)) {
+                is ApiResult.Error -> _state.update { it.copy(error = res.message) }
+                is ApiResult.Success -> Unit
+            }
+        }
     }
 }

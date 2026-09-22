@@ -1,5 +1,7 @@
 package com.websbaba.nitigrow.core.network
 
+import com.google.gson.JsonParseException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -34,10 +36,35 @@ suspend inline fun <T> safeApiCall(
     } catch (e: IOException) {
         Timber.w(e, "Network IO")
         ApiResult.Error(message = "No internet connection", type = ErrorType.Network, cause = e)
+    } catch (e: JsonParseException) {
+        // Payload shape the DTOs don't expect (e.g. object where a list was promised).
+        Timber.e(e, "Unreadable response")
+        ApiResult.Error(message = UNREADABLE_RESPONSE, type = ErrorType.Parsing, cause = e)
     } catch (e: Exception) {
         Timber.e(e, "Unexpected")
-        ApiResult.Error(message = e.message ?: "Unknown error", type = ErrorType.Unknown, cause = e)
+        // Never surface raw exception text (class names, JSON paths) to users.
+        ApiResult.Error(message = GENERIC_ERROR, type = ErrorType.Unknown, cause = e)
     }
+}
+
+const val UNREADABLE_RESPONSE = "We got an unexpected response from the server. Please try again."
+const val GENERIC_ERROR = "Something went wrong. Please try again."
+
+/**
+ * Continues a successful call with [transform] — typically mapping the DTO and writing it to
+ * Room. Anything it throws (a mapper meeting an unexpected payload, a database error) becomes
+ * an [ApiResult.Error] instead of escaping into the caller's coroutine and crashing the app.
+ */
+suspend inline fun <T, R> ApiResult<T>.andThen(transform: (T) -> ApiResult<R>): ApiResult<R> = when (this) {
+    is ApiResult.Success -> try {
+        transform(data)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to process response")
+        ApiResult.Error(message = UNREADABLE_RESPONSE, type = ErrorType.Parsing, cause = e)
+    }
+    is ApiResult.Error -> this
 }
 
 /**

@@ -26,15 +26,25 @@ data class ConversationDto(
     val avatarUrl: String? get() = null
 
     val lastMessage: String get() = lastMessageObj?.text.orEmpty()
-    /** ISO-8601 timestamp; falls back to contact.updatedAt then epoch-zero. */
+    /**
+     * ISO-8601 timestamp of the last message. A chat with no messages has none, so it
+     * reads as epoch-zero (rendered blank, sorted last) rather than borrowing the
+     * contact's `updatedAt`, which would invent a message time that never happened.
+     */
     val lastMessageAt: String
-        get() = lastMessageObj?.createdAt ?: contact.updatedAt ?: "1970-01-01T00:00:00Z"
+        get() = lastMessageObj?.createdAt ?: NO_MESSAGE_AT
     val lastMessageStatus: String get() = lastMessageObj?.status ?: "sent"
     val lastMessageOutbound: Boolean get() = lastMessageObj?.outbound ?: false
 
-    // No backend route for pin/mute — always false.
-    val isPinned: Boolean get() = false
-    val isMuted: Boolean get() = false
+    val isPinned: Boolean get() = contact.isPinned
+    val isMuted: Boolean get() = contact.isMuted
+
+    /** When the 24h reply window closes, as the server computes it; null = no open window. */
+    val windowExpiresAt: String? get() = contact.windowExpiresAt
+
+    companion object {
+        const val NO_MESSAGE_AT = "1970-01-01T00:00:00Z"
+    }
 }
 
 /** The subset of the embedded Contact document the inbox list needs. */
@@ -42,5 +52,8 @@ data class ContactSummaryDto(
     @SerializedName("_id") val id: String,
     @SerializedName("name") val name: String? = null,
     @SerializedName("phone") val phone: String = "",
-    @SerializedName("updatedAt") val updatedAt: String? = null
+    @SerializedName("updatedAt") val updatedAt: String? = null,
+    @SerializedName("windowExpiresAt") val windowExpiresAt: String? = null,
+    @SerializedName("isPinned") val isPinned: Boolean = false,
+    @SerializedName("isMuted") val isMuted: Boolean = false
 )

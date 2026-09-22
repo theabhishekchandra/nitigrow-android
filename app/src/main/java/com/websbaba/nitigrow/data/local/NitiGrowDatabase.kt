@@ -54,7 +54,7 @@ import com.websbaba.nitigrow.data.local.entity.TenantEntity
         TenantEntity::class,
         TeamMemberEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
